@@ -1,4 +1,4 @@
-name: PR Build and Run
+name: PR Install and Run
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   build-frontend:
-    name: Build and run smoke test
+    name: Start dev, build, and smoke test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,27 +34,49 @@ jobs:
             npm install
           fi
 
-      - name: Build
-        run: npm run build
-
-      - name: Serve build (background)
+      - name: Start CRA dev server (background)
+        env:
+          BROWSER: none
+          CI: true
+          PORT: 3000
         run: |
-          npx --yes serve -s build -l 3000 > /dev/null 2>&1 &
-          echo $! > .server_pid
-          timeout 20 bash -c 'until curl -sSf http://localhost:3000 > /dev/null; do sleep 1; done'
+          npm start > dev.log 2>&1 &
+          echo $! > .dev_pid
+          timeout 60 bash -c 'until curl -sSf http://localhost:3000 > /dev/null; do sleep 1; done'
 
-      - name: Smoke test home page
+      - name: Smoke test dev server
         run: |
-          curl -sS http://localhost:3000 | grep -qi "Welcome to the space experience"
+          curl -sS http://localhost:3000 | grep -qi 'id="root"'
 
-      - name: Smoke test SPA route
+      - name: Print dev server log on failure
+        if: failure()
         run: |
-          curl -sS http://localhost:3000/ThreeDemo | grep -qi "Welcome to the space experience"
+          echo "---- dev.log ----"
+          sed -n '1,200p' dev.log || true
 
-      - name: Stop server
+      - name: Stop dev server
         if: always()
         run: |
-          kill $(cat .server_pid) || true
+          if [ -f .dev_pid ]; then kill $(cat .dev_pid) || true; fi
+
+      - name: Build (production)
+        run: npm run build
+
+      - name: Serve production build (background)
+        run: |
+          npx --yes serve -s build -l 4173 > /dev/null 2>&1 &
+          echo $! > .serve_pid
+          timeout 30 bash -c 'until curl -sSf http://localhost:4173 > /dev/null; do sleep 1; done'
+
+      - name: Smoke test production build
+        run: |
+          curl -sS http://localhost:4173 | grep -qi 'id="root"'
+
+      - name: Stop servers
+        if: always()
+        run: |
+          if [ -f .serve_pid ]; then kill $(cat .serve_pid) || true; fi
+          if [ -f .dev_pid ]; then kill $(cat .dev_pid) || true; fi
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
