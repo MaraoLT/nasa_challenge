@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Earth } from './render/Earth';
 import { Galaxy } from './render/Galaxy';
-import { CameraController } from './controller/cameraController';
+import { CameraController } from './controller/CameraController';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
@@ -24,35 +24,34 @@ function ThreeDemo() {
     // Append to the ref div
     mountRef.current.appendChild(renderer.domElement);
 
-    const earth = new Earth(1, 32).createEarthMesh();
+    const earthInstance = new Earth(1, 32);
+    const earth = earthInstance.createEarthMesh();
     scene.add(earth);
-    const atmosphere = new Earth(1, 32).createAtmosphere();
+    const atmosphere = earthInstance.createAtmosphere();
     scene.add(atmosphere);
     const galaxy = new Galaxy(90, 64).mesh;
     scene.add(galaxy);
 
     // Add lighting to illuminate the planet
-    // Ambient light provides soft overall illumination
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.8); // Increased intensity
+    // Only ambient light for the atmosphere and galaxy
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
     scene.add(ambientLight);
 
-    // Directional light acts like sunlight
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // Increased intensity
-    directionalLight.position.set(5, 3, 5); // Position like the sun
-    directionalLight.castShadow = true; // Enable shadows if needed
-    scene.add(directionalLight);
-
-    // Optional: Add a point light for additional illumination
-    const pointLight = new THREE.PointLight(0xffffff, 1.2, 100); // Increased intensity
-    pointLight.position.set(10, 10, 10);
-    scene.add(pointLight);
+    // Remove directional light - Earth uses custom shader lighting
+    // The atmosphere will only use ambient light for a subtle glow
+    // const pointLight = new THREE.PointLight(0xffffff, 1.2, 100);
+    // pointLight.position.set(10, 10, 10);
+    // scene.add(pointLight);
 
     camera.position.z = 5;
 
     // Initialize camera controller
-    const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0));
+    const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), earthInstance.radius * 1.01, earthInstance.radius * 20);
     cameraController.enableControls(renderer.domElement);
-    cameraController.setZoomLimits(1.5, 20);
+    cameraController.setZoomLimits(1.15, 20);
+
+    // Set initial sun direction (fixed in world space)
+    earthInstance.updateSunDirection(new THREE.Vector3(1, 0, 0));
 
     // Animation loop
     let animationId;
@@ -63,6 +62,10 @@ function ThreeDemo() {
       // Rotate the Earth and atmosphere
       earth.rotation.y += 0.01;
       atmosphere.rotation.y += 0.01;
+      
+      // Update Earth's model matrix for day/night calculations
+      earth.updateMatrixWorld();
+      earthInstance.updateModelMatrix();
 
       renderer.render(scene, camera);
       

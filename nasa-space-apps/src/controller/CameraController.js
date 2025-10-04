@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 
 export class CameraController {
-    constructor(camera, target = new THREE.Vector3(0, 0, 0)) {
+    constructor(camera, target = new THREE.Vector3(0, 0, 0), minDistance = 2, maxDistance = 50) {
         this.camera = camera;
         this.target = target.clone();
         
         // Camera movement settings
-        this.minDistance = 2;
-        this.maxDistance = 50;
+        this.minDistance = minDistance;
+        this.maxDistance = maxDistance;
         this.currentDistance = 5;
         
         // Rotation settings
