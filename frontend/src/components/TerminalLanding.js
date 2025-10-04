@@ -14,7 +14,12 @@ export default function TerminalLanding() {
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
   const [canClick, setCanClick] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [preloadedAssets, setPreloadedAssets] = useState({});
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
   const navigate = useNavigate();
+
+  const fullText = currentText;
 
   // Preload Three.js assets
   useEffect(() => {
@@ -44,6 +49,9 @@ export default function TerminalLanding() {
       console.log('All assets loaded successfully!');
       setPreloadedAssets(loadedAssets);
       setAssetsLoaded(true);
+      
+      // Store assets globally to avoid serialization issues
+      window.preloadedAssets = loadedAssets;
     };
 
     loadingManager.onError = (url) => {
@@ -96,10 +104,12 @@ export default function TerminalLanding() {
 
   // Enable click when both text is done and assets are loaded
   useEffect(() => {
-    if (displayedText === fullText && assetsLoaded) {
+    if (!isTyping && assetsLoaded) {
       setCanClick(true);
+    } else {
+      setCanClick(false);
     }
-  }, [displayedText, assetsLoaded, fullText]);
+  }, [isTyping, assetsLoaded]);
 
    const containerStyle = {
     width: "100%",
@@ -156,9 +166,17 @@ export default function TerminalLanding() {
     // Advance to next page, or navigate when done
     if (page < texts.length - 1) {
       setPage((p) => p + 1);
-    } else if (canClick) {
+    } else if (canClick && assetsLoaded) {
       navigate("/home"); // substitua pelo path desejado
     }
+  };
+
+  const getDisplayText = () => {
+    let text = displayedText;
+    if (!assetsLoaded) {
+      text += `\n\nLoading assets... ${Math.round(loadingProgress)}%`;
+    }
+    return text;
   };
 
   return (
@@ -169,8 +187,12 @@ export default function TerminalLanding() {
             {getDisplayText()}
             <span style={cursorStyle}>|</span>
           </pre>
-          {/* Optional: small hint when ready to proceed */}
-          {canClick}
+          {/* Optional: show loading progress */}
+          {!assetsLoaded && (
+            <div style={{color: "#00ff00", fontSize: "1rem", marginTop: "20px"}}>
+              Loading assets... {Math.round(loadingProgress)}%
+            </div>
+          )}
         </div>
       </div>
   );
