@@ -1,12 +1,28 @@
 import * as THREE from 'three';
 
 export class Earth {
-    constructor(radius = 50, segments = 64) {
+    constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0)) {
+        this.scene = scene;
         this.radius = radius;
         this.segments = segments;
-        this.mesh = this.createEarthMesh(radius, segments);
-        // this.group = new THREE.Group(); --- IGNORE ---
-        // this.group.add(this.mesh); --- IGNORE ---
+        this.position = initialPosition.clone();
+        
+        // Orbit properties
+        this.isOrbiting = false;
+        this.orbitCenter = new THREE.Vector3(0, 0, 0); // Default to sun at origin
+        this.orbitRadius = this.position.distanceTo(this.orbitCenter);
+        this.orbitSpeed = 0.005; // Default orbit speed
+        this.orbitAngle = Math.atan2(this.position.z - this.orbitCenter.z, this.position.x - this.orbitCenter.x);
+        
+        // Create Earth components
+        this.mesh = this.createEarthMesh();
+        this.atmosphere = this.createAtmosphere();
+        
+        // Set initial position
+        this.setPosition(this.position.x, this.position.y, this.position.z);
+        
+        // Add to scene
+        this.addToScene();
     }
 
     createEarthMesh() {
@@ -140,6 +156,128 @@ export class Earth {
     updateModelMatrix() {
         if (this.mesh && this.mesh.userData.material) {
             this.mesh.userData.material.uniforms.modelMatrix.value = this.mesh.matrixWorld;
+        }
+    }
+    
+    // Add all Earth components to scene
+    addToScene() {
+        if (this.mesh) {
+            this.scene.add(this.mesh);
+        }
+        if (this.atmosphere) {
+            this.scene.add(this.atmosphere);
+        }
+    }
+    
+    // Remove all Earth components from scene
+    removeFromScene() {
+        if (this.mesh) {
+            this.scene.remove(this.mesh);
+        }
+        if (this.atmosphere) {
+            this.scene.remove(this.atmosphere);
+        }
+    }
+    
+    // Set position for Earth and atmosphere
+    setPosition(x, y, z) {
+        this.position.set(x, y, z);
+        
+        if (this.mesh) {
+            this.mesh.position.copy(this.position);
+        }
+        
+        if (this.atmosphere) {
+            this.atmosphere.position.copy(this.position);
+        }
+    }
+    
+    // Get current position
+    getPosition() {
+        return this.position.clone();
+    }
+    
+    // Rotate Earth and atmosphere
+    rotate(deltaY = 0.01) {
+        if (this.mesh) {
+            this.mesh.rotation.y += deltaY;
+        }
+        if (this.atmosphere) {
+            this.atmosphere.rotation.y += deltaY;
+        }
+    }
+    
+    // Update Earth's model matrix for day/night calculations
+    updateMatrixWorld() {
+        if (this.mesh) {
+            this.mesh.updateMatrixWorld();
+            this.updateModelMatrix();
+        }
+    }
+    
+    // Start orbiting around a center point (usually the sun)
+    startOrbit(center = new THREE.Vector3(0, 0, 0), speed = 0.005) {
+        this.isOrbiting = true;
+        this.orbitCenter = center.clone();
+        this.orbitSpeed = speed;
+        
+        // Calculate initial orbit radius and angle based on current position
+        this.orbitRadius = this.position.distanceTo(this.orbitCenter);
+        this.orbitAngle = Math.atan2(this.position.z - this.orbitCenter.z, this.position.x - this.orbitCenter.x);
+    }
+    
+    // Stop orbiting
+    stopOrbit() {
+        this.isOrbiting = false;
+    }
+    
+    // Update orbit position
+    updateOrbit() {
+        if (!this.isOrbiting) return;
+        
+        // Update angle
+        this.orbitAngle += this.orbitSpeed;
+        
+        // Calculate new position in circular orbit
+        const x = this.orbitCenter.x + Math.cos(this.orbitAngle) * this.orbitRadius;
+        const y = this.orbitCenter.y; // Keep same Y level
+        const z = this.orbitCenter.z + Math.sin(this.orbitAngle) * this.orbitRadius;
+        
+        // Update position
+        this.setPosition(x, y, z);
+    }
+    
+    // Set orbit parameters
+    setOrbitParameters(radius, speed) {
+        this.orbitRadius = radius;
+        this.orbitSpeed = speed;
+    }
+    
+    // Get orbit status
+    getOrbitStatus() {
+        return {
+            isOrbiting: this.isOrbiting,
+            center: this.orbitCenter.clone(),
+            radius: this.orbitRadius,
+            speed: this.orbitSpeed,
+            angle: this.orbitAngle
+        };
+    }
+    
+    // Cleanup method
+    dispose() {
+        // Remove from scene first
+        this.removeFromScene();
+        
+        // Dispose geometry and materials
+        if (this.mesh) {
+            this.mesh.geometry.dispose();
+            this.mesh.material.dispose();
+        }
+        
+        if (this.atmosphere) {
+            this.atmosphere.geometry.dispose();
+            this.atmosphere.material.dispose();
         }
     }
 }

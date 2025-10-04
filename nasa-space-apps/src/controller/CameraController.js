@@ -8,7 +8,7 @@ export class CameraController {
         // Camera movement settings
         this.minDistance = minDistance;
         this.maxDistance = maxDistance;
-        this.currentDistance = 5;
+        this.currentDistance = Math.max(minDistance, 2); // Start at reasonable distance but respect minDistance
         
         // Rotation settings
         this.rotationSpeed = 0.005;
@@ -35,6 +35,11 @@ export class CameraController {
         // Auto-rotation (geostationary orbit only)
         this.autoRotate = false;
         this.autoRotateSpeed = 0.01; // Always matches Earth's rotation speed
+        
+        // Lock-in system for following objects
+        this.lockedTarget = null; // Reference to the object we're locked onto
+        this.lockMode = 'none'; // 'none', 'sun', 'earth'
+        this.isTransitioning = false; // Flag to prevent input during transitions
         
         this.update();
     }
@@ -102,6 +107,9 @@ export class CameraController {
     }
     
     onKeyDown(event) {
+        // Prevent input during transitions
+        if (this.isTransitioning) return;
+        
         switch(event.code) {
             case 'KeyR':
                 // Reset camera position
@@ -110,6 +118,18 @@ export class CameraController {
             case 'KeyG':
                 // Toggle geostationary orbit (matches Earth rotation)
                 this.autoRotate = !this.autoRotate;
+                break;
+            case 'Digit0':
+                // Lock onto sun with transition
+                this.lockOntoSunWithTransition();
+                break;
+            case 'Digit1':
+                // Lock onto earth with transition
+                this.lockOntoEarthWithTransition();
+                break;
+            case 'Escape':
+                // Unlock from any target
+                this.unlockTarget();
                 break;
             case 'ArrowUp':
                 // Move closer
@@ -128,6 +148,11 @@ export class CameraController {
     
     // Update camera position
     update() {
+        // Update target if locked onto an object (but not during transitions)
+        if (this.lockedTarget && this.lockedTarget.getPosition && !this.isTransitioning) {
+            this.target.copy(this.lockedTarget.getPosition());
+        }
+        
         // Auto-rotation
         if (this.autoRotate) {
             this.spherical.theta += this.autoRotateSpeed;
@@ -155,6 +180,127 @@ export class CameraController {
     setTarget(target) {
         this.target.copy(target);
         this.update();
+    }
+    
+    // Lock-in methods for following objects
+    setTargetObjects(sunInstance, earthInstance) {
+        this.sunInstance = sunInstance;
+        this.earthInstance = earthInstance;
+    }
+    
+    // Lock onto sun with smooth transition
+    lockOntoSunWithTransition(duration = 1500) {
+        if (!this.sunInstance) return;
+        
+        // Don't transition if already locked onto sun
+        if (this.lockMode === 'sun') return;
+        
+        // Temporarily unlock current target to prevent interference
+        const previousTarget = this.lockedTarget;
+        const previousMode = this.lockMode;
+        this.lockedTarget = null;
+        this.lockMode = 'none';
+        
+        const targetPosition = this.sunInstance.getPosition();
+        const targetDistance = Math.max(this.minDistance, 3);
+        
+        this.transitionToTarget(targetPosition, targetDistance, () => {
+            this.lockedTarget = this.sunInstance;
+            this.lockMode = 'sun';
+            console.log('Camera locked onto Sun');
+        }, duration);
+    }
+    
+    // Lock onto earth with smooth transition
+    lockOntoEarthWithTransition(duration = 1500) {
+        if (!this.earthInstance) return;
+        
+        // Don't transition if already locked onto earth
+        if (this.lockMode === 'earth') return;
+        
+        // Temporarily unlock current target to prevent interference
+        const previousTarget = this.lockedTarget;
+        const previousMode = this.lockMode;
+        this.lockedTarget = null;
+        this.lockMode = 'none';
+        
+        const targetPosition = this.earthInstance.getPosition();
+        const targetDistance = Math.max(this.minDistance, 2);
+        
+        this.transitionToTarget(targetPosition, targetDistance, () => {
+            this.lockedTarget = this.earthInstance;
+            this.lockMode = 'earth';
+            console.log('Camera locked onto Earth');
+        }, duration);
+    }
+    
+    // Generic smooth transition to a target
+    transitionToTarget(targetPosition, targetDistance, onComplete, duration = 1500) {
+        this.isTransitioning = true;
+        
+        // Calculate target spherical coordinates
+        const targetVector = this.camera.position.clone().sub(targetPosition);
+        const targetSpherical = new THREE.Spherical();
+        targetSpherical.setFromVector3(targetVector);
+        
+        // If we're too close or too far, adjust the distance
+        targetSpherical.radius = targetDistance;
+        
+        // Store starting values
+        const startTarget = this.target.clone();
+        const startTheta = this.spherical.theta;
+        const startPhi = this.spherical.phi;
+        const startRadius = this.spherical.radius;
+        
+        const startTime = Date.now();
+        
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Smooth easing function (ease-in-out)
+            const eased = progress < 0.5 
+                ? 2 * progress * progress 
+                : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+            
+            // Interpolate target position
+            this.target.lerpVectors(startTarget, targetPosition, eased);
+            
+            // Interpolate spherical coordinates
+            this.spherical.theta = startTheta + (targetSpherical.theta - startTheta) * eased;
+            this.spherical.phi = startPhi + (targetSpherical.phi - startPhi) * eased;
+            this.spherical.radius = startRadius + (targetSpherical.radius - startRadius) * eased;
+            this.currentDistance = this.spherical.radius;
+            
+            this.update();
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Transition complete
+                this.isTransitioning = false;
+                if (onComplete) onComplete();
+            }
+        };
+        
+        animate();
+    }
+    
+    // Unlock from current target
+    unlockTarget() {
+        this.lockedTarget = null;
+        this.lockMode = 'none';
+        this.isTransitioning = false; // Allow immediate control after unlock
+        console.log('Camera unlocked');
+    }
+    
+    // Get current lock status
+    getLockStatus() {
+        return {
+            mode: this.lockMode,
+            isLocked: this.lockedTarget !== null,
+            target: this.lockedTarget
+        };
     }
     
     // Set zoom limits

@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Earth } from './render/Earth';
 import { Galaxy } from './render/Galaxy';
 import { CameraController } from './controller/CameraController';
+import { Sun } from './render/Sun';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
@@ -24,11 +25,16 @@ function ThreeDemo() {
     // Append to the ref div
     mountRef.current.appendChild(renderer.domElement);
 
-    const earthInstance = new Earth(1, 32);
-    const earth = earthInstance.createEarthMesh();
-    scene.add(earth);
-    const atmosphere = earthInstance.createAtmosphere();
-    scene.add(atmosphere);
+    // Create sun instance - now handles its own scene addition
+    const sunInstance = new Sun(scene, 1); // Pass scene, radius = 1
+    sunInstance.setPosition(0, 0, 0); // Position sun at origin
+    
+    // Create earth instance with initial orbital position - now handles its own scene addition
+    const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(15, 0, 0)); // Pass scene, radius = 1, segments = 32, initial position
+    
+    // Start Earth's orbit around the sun
+    earthInstance.startOrbit(sunInstance.getPosition(), 0.01); // Orbit around sun with speed 0.01
+    
     const galaxy = new Galaxy(90, 64).mesh;
     scene.add(galaxy);
 
@@ -43,15 +49,22 @@ function ThreeDemo() {
     // pointLight.position.set(10, 10, 10);
     // scene.add(pointLight);
 
-    camera.position.z = 5;
+    // Optional: Add corona
+    sunInstance.addCorona();
 
-    // Initialize camera controller
-    const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), earthInstance.radius * 1.01, earthInstance.radius * 20);
+    camera.position.set(0, 0, 2); // Start closer but not too close
+
+    // Initialize camera controller - target the sun at origin
+    const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 0.8, 30); // Min distance 0.8 to see sun clearly
     cameraController.enableControls(renderer.domElement);
-    cameraController.setZoomLimits(1.15, 20);
+    cameraController.setZoomLimits(0.8, 30);
+    
+    // Set target objects for lock-in functionality
+    cameraController.setTargetObjects(sunInstance, earthInstance);
 
-    // Set initial sun direction (fixed in world space)
-    earthInstance.updateSunDirection(new THREE.Vector3(1, 0, 0));
+    // Set initial sun direction based on sun position relative to Earth
+    const sunDirection = sunInstance.getPosition().clone().sub(earthInstance.getPosition()).normalize();
+    earthInstance.updateSunDirection(sunDirection);
 
     // Animation loop
     let animationId;
@@ -59,13 +72,21 @@ function ThreeDemo() {
       // Update camera controller
       cameraController.update();
       
-      // Rotate the Earth and atmosphere
-      earth.rotation.y += 0.01;
-      atmosphere.rotation.y += 0.01;
+      // Update Earth's orbital position
+      earthInstance.updateOrbit();
+      
+      // Rotate the Earth and atmosphere using the new method
+      earthInstance.rotate(0.01);
       
       // Update Earth's model matrix for day/night calculations
-      earth.updateMatrixWorld();
-      earthInstance.updateModelMatrix();
+      earthInstance.updateMatrixWorld();
+      
+      // Update sun direction based on current Earth position
+      const sunDirection = sunInstance.getPosition().clone().sub(earthInstance.getPosition()).normalize();
+      earthInstance.updateSunDirection(sunDirection);
+
+      // Update sun animation
+      sunInstance.update();
 
       renderer.render(scene, camera);
       
@@ -95,6 +116,10 @@ function ThreeDemo() {
       
       window.removeEventListener('resize', handleResize);
       
+      // Dispose of objects
+      sunInstance.dispose();
+      earthInstance.dispose();
+      
       renderer.dispose();
       
       // Clear the mount point
@@ -122,6 +147,9 @@ function ThreeDemo() {
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>🖱️ Scroll: Zoom in/out</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ R: Reset camera</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ G: Geostationary orbit</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 0: Lock onto Sun</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 1: Lock onto Earth</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ ESC: Unlock camera</p>
         <p style={{ margin: '0 0 10px 0', fontSize: '12px' }}>⌨️ ↑↓: Zoom</p>
         <a href="/" style={{
           color: '#61dafb',
