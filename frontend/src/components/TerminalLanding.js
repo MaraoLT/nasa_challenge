@@ -3,27 +3,37 @@ import { useNavigate } from "react-router-dom"; // hook do React Router
 
 
 export default function TerminalLanding() {
-  const fullText = `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\nClick to follow up!`;
+  // Multi-page texts; advance through each, then navigate
+  const texts = [
+    `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\n\nClick to continue...`,
+    `Stay calm and follow the instructions displayed on your terminal.\nAuthorities are coordinating evacuation routes and shelter access.\nBring essentials and assist those nearby if possible.\nYour prompt action helps save lives.\n\nClick to begin training.`
+  ];
 
+  const [page, setPage] = useState(0);
+  const currentText = texts[page] ?? "";
   const [displayedText, setDisplayedText] = useState("");
+  const [isTyping, setIsTyping] = useState(true);
+  const [canClick, setCanClick] = useState(false);
   const navigate = useNavigate(); // hook para navegar
 
-  const [canClick, setCanClick] = useState(false); // novo estado
-
-
+  // Typewriter effect for the current page
   useEffect(() => {
-    let index = 0;
+    setDisplayedText("");
+    setIsTyping(true);
+    setCanClick(false);
+    let i = 0;
     const interval = setInterval(() => {
-      setDisplayedText(fullText.slice(0, index + 1));
-      index++;
-      if (index === fullText.length) {
+      i += 1;
+      setDisplayedText(currentText.slice(0, i));
+      if (i >= currentText.length) {
         clearInterval(interval);
+        setIsTyping(false);
         setCanClick(true);
       }
     }, 30); // velocidade da digitação em ms
 
     return () => clearInterval(interval);
-  }, []);
+  }, [currentText]);
 
    const containerStyle = {
     width: "100%",
@@ -70,8 +80,19 @@ export default function TerminalLanding() {
   `;
 
   const handleClick = () => {
-    if(canClick)
+    // If still typing, finish instantly
+    if (isTyping) {
+      setDisplayedText(currentText);
+      setIsTyping(false);
+      setCanClick(true);
+      return;
+    }
+    // Advance to next page, or navigate when done
+    if (page < texts.length - 1) {
+      setPage((p) => p + 1);
+    } else if (canClick) {
       navigate("/home"); // substitua pelo path desejado
+    }
   };
 
   return (
@@ -82,6 +103,8 @@ export default function TerminalLanding() {
             {displayedText}
             <span style={cursorStyle}>|</span>
           </pre>
+          {/* Optional: small hint when ready to proceed */}
+          {canClick}
         </div>
       </div>
   );
