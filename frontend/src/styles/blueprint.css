@@ -1,0 +1,193 @@
+/* Classic blueprint styling */
+
+.blueprint {
+  min-height: 100vh;
+  /* Space wallpaper outside the paper */
+  background-image:
+    linear-gradient(180deg, rgba(5,12,24,0.65), rgba(5,12,24,0.88)),
+    var(--bp-wallpaper);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #cfe8ff; /* light blueprint ink */
+  padding: 2rem;
+  display: grid;
+  place-items: center;
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+.blueprint__grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 2rem;
+  align-items: center;
+  padding: 0; /* padding moved to paper */
+  /* Fill remaining height beneath the title */
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: center; /* centers the rows vertically */
+}
+
+.blueprint__grid--switch {
+  grid-template-columns: 1.1fr 0.9fr; /* reverse visual weight when switched */
+}
+
+.blueprint__title {
+  margin: 0 0 1rem 0;
+font-size: clamp(2.2rem, 4vw, 5.0rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #e7f3ff;
+  text-shadow: 0 2px 0 rgba(255,255,255,0.06);
+}
+
+.blueprint__title--center {
+  text-align: center;
+  margin: 0 0 1.25rem 0;
+}
+
+.blueprint__text p {
+  margin: 0 0 1rem 0;
+  line-height: 1.7;
+  font-size: 1.35rem;
+  color: #d7ecff;
+}
+
+.blueprint__imageWrap {
+  display: grid;
+  place-items: center;
+}
+
+.blueprint__image {
+  width: 90%;
+  height: auto;
+  border: 1.5px dashed rgba(207, 232, 255, 0.6);
+  border-radius: 8px;
+  filter: contrast(1.05) saturate(0.9) hue-rotate(190deg);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  background-color: rgba(255,255,255,0.03);
+}
+
+@media (max-width: 920px) {
+  .blueprint__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Blueprint page navigation arrows */
+.bp-nav__btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(207, 232, 255, 0.35);
+  background: rgba(0,0,0,0.25);
+  color: #cfe8ff;
+  font-size: 28px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 4;
+  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+.bp-nav__btn:hover {
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+.bp-nav__btn:active {
+  transform: translateY(-50%) scale(0.98);
+}
+.bp-nav__btn.left { left: 16px; }
+.bp-nav__btn.right { right: 16px; }
+
+@media (max-width: 640px) {
+  .bp-nav__btn { width: 44px; height: 44px; font-size: 22px; }
+  .bp-nav__btn.left { left: 8px; }
+  .bp-nav__btn.right { right: 8px; }
+ }
+
+/* --- Slide enter/exit animations for blueprint paper --- */
+@keyframes bp-slide-in-left { from { transform: translateX(-110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes bp-slide-in-right { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes bp-slide-in-top { from { transform: translateY(-110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes bp-slide-in-bottom { from { transform: translateY(110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+@keyframes bp-slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-110%); opacity: 0; } }
+@keyframes bp-slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+@keyframes bp-slide-out-top { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-110%); opacity: 0; } }
+@keyframes bp-slide-out-bottom { from { transform: translateY(0); opacity: 1; } to { transform: translateY(110%); opacity: 0; } }
+
+.bp-anim-enter-left { animation: bp-slide-in-left 380ms ease-out both; }
+.bp-anim-enter-right { animation: bp-slide-in-right 380ms ease-out both; }
+.bp-anim-enter-top { animation: bp-slide-in-top 380ms ease-out both; }
+.bp-anim-enter-bottom { animation: bp-slide-in-bottom 380ms ease-out both; }
+
+.bp-anim-exit-left { animation: bp-slide-out-left 320ms ease-in both; }
+.bp-anim-exit-right { animation: bp-slide-out-right 320ms ease-in both; }
+.bp-anim-exit-top { animation: bp-slide-out-top 320ms ease-in both; }
+.bp-anim-exit-bottom { animation: bp-slide-out-bottom 320ms ease-in both; }
+
+/* Prevent interactions during transitions */
+.bp-animating { pointer-events: none; }
+
+/* --- Layered paper stack so the grid moves with the sheet --- */
+.blueprint__stage {
+  position: relative;
+  width: 70vw;
+  height: 80vh;
+  max-width: none;
+}
+
+.blueprint__paper {
+  position: relative; /* base paper participates in layout */
+  background: #0a2a43;
+  border-radius: 12px;
+  padding: 2rem; /* moved from grid */
+  box-shadow: 0 24px 60px rgba(0,0,0,0.45), 0 6px 18px rgba(0,0,0,0.35);
+  overflow: hidden;
+  will-change: transform, opacity;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grid lines attached to the paper itself so they move with it */
+.blueprint__paper::before,
+.blueprint__paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.blueprint__paper::before {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px;
+}
+.blueprint__paper::after {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px;
+  mix-blend-mode: overlay;
+}
+
+/* Overlay paper sits on top and is absolutely positioned to reveal base underneath */
+.blueprint__paper.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* Base paper sits below the overlay */
+.blueprint__paper.base {
+  position: relative;
+  z-index: 1;
+}
