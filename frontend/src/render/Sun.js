@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 
 export class Sun {
-    constructor(scene, radius = 1) {
+    constructor(scene, radius = 1, preloadedAssets = {}) {
         this.scene = scene;
         this.radius = radius;
         this.position = new THREE.Vector3(0, 0, 0);
         this.textureLoader = new THREE.TextureLoader();
+        this.preloadedAssets = preloadedAssets;
         
         // Initialize geometry
         this.sunGeometry = new THREE.SphereGeometry(this.radius, 64, 64);
@@ -28,8 +29,9 @@ export class Sun {
     }
     
     createSun() {
-        // Load Sun texture from public folder
-        const sunTexture = this.textureLoader.load('/resources/sun/Sun Map.png');
+        // Use preloaded texture if available, otherwise load normally
+        const sunTexture = this.preloadedAssets['/resources/sun/Sun Map.png'] 
+            || this.textureLoader.load('/resources/sun/Sun Map.png');
 
         // Create Sun material with emissive properties for self-illumination
         const sunMaterial = new THREE.MeshBasicMaterial({ 
