@@ -1,7 +1,7 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ThreeDemo from './ThreeDemo';
 
 function Home() {
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -38,6 +38,13 @@ function TestPage() {
       <p>This is the test page.</p>
       <Link to="/" className="cta secondary">Back home</Link>
     </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/ThreeDemo" element={<ThreeDemo />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
