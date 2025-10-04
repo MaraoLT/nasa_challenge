@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { Earth } from './render/Earth';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
@@ -21,11 +22,26 @@ function ThreeDemo() {
     // Append to the ref div
     mountRef.current.appendChild(renderer.domElement);
 
-    // Create the cube
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    const earth = new Earth(1, 32).createEarthMesh();
+    scene.add(earth);
+    const atmosphere = new Earth(1, 32).createAtmosphere();
+    scene.add(atmosphere);
+
+    // Add lighting to illuminate the planet
+    // Ambient light provides soft overall illumination
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.8); // Increased intensity
+    scene.add(ambientLight);
+
+    // Directional light acts like sunlight
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // Increased intensity
+    directionalLight.position.set(5, 3, 5); // Position like the sun
+    directionalLight.castShadow = true; // Enable shadows if needed
+    scene.add(directionalLight);
+
+    // Optional: Add a point light for additional illumination
+    const pointLight = new THREE.PointLight(0xffffff, 1.2, 100); // Increased intensity
+    pointLight.position.set(10, 10, 10);
+    scene.add(pointLight);
 
     camera.position.z = 5;
 
@@ -33,9 +49,9 @@ function ThreeDemo() {
     let animationId;
     const animate = () => {
       // Rotate the cube
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-      
+      earth.rotation.y += 0.01;
+      atmosphere.rotation.y += 0.01;
+
       renderer.render(scene, camera);
       
       animationId = requestAnimationFrame(animate);
@@ -61,9 +77,6 @@ function ThreeDemo() {
       
       window.removeEventListener('resize', handleResize);
       
-      // Clean up Three.js objects
-      geometry.dispose();
-      material.dispose();
       renderer.dispose();
       
       // Clear the mount point
