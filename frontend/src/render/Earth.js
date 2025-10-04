@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {Orbit} from './Orbit.js';
 
 export class Earth {
     constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0)) {
@@ -216,14 +217,14 @@ export class Earth {
     }
     
     // Start orbiting around a center point (usually the sun)
-    startOrbit(center = new THREE.Vector3(0, 0, 0), speed = 0.005) {
+    startOrbit() {
         this.isOrbiting = true;
-        this.orbitCenter = center.clone();
-        this.orbitSpeed = speed;
-        
-        // Calculate initial orbit radius and angle based on current position
-        this.orbitRadius = this.position.distanceTo(this.orbitCenter);
-        this.orbitAngle = Math.atan2(this.position.z - this.orbitCenter.z, this.position.x - this.orbitCenter.x);
+        this.orbit = new Orbit({
+            semiMajorAxis: 10, // Earth's distance from Sun in million km (scaled)
+            eccentricity: 0.0,  // Earth's orbital eccentricity
+            period: 30.0,        // Earth's orbital period in days
+            inclination: 0         // Earth's orbital inclination (minimal)
+        });
     }
     
     // Stop orbiting
@@ -232,19 +233,11 @@ export class Earth {
     }
     
     // Update orbit position
-    updateOrbit() {
+    updateOrbit(time) {
         if (!this.isOrbiting) return;
-        
-        // Update angle
-        this.orbitAngle += this.orbitSpeed;
-        
-        // Calculate new position in circular orbit
-        const x = this.orbitCenter.x + Math.cos(this.orbitAngle) * this.orbitRadius;
-        const y = this.orbitCenter.y; // Keep same Y level
-        const z = this.orbitCenter.z + Math.sin(this.orbitAngle) * this.orbitRadius;
-        
-        // Update position
-        this.setPosition(x, y, z);
+        const initialPosition = this.orbit.walkInTime(time);
+        console.log("Orbit position at time", time, ":", initialPosition);
+        this.setPosition(initialPosition[0], initialPosition[1], initialPosition[2]);
     }
     
     // Set orbit parameters

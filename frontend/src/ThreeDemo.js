@@ -33,7 +33,7 @@ function ThreeDemo() {
     const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(15, 0, 0)); // Pass scene, radius = 1, segments = 32, initial position
     
     // Start Earth's orbit around the sun
-    earthInstance.startOrbit(sunInstance.getPosition(), 0.01); // Orbit around sun with speed 0.01
+    earthInstance.startOrbit(); // Orbit around sun with speed 0.01
     
     const galaxy = new Galaxy(90, 64).mesh;
     scene.add(galaxy);
@@ -68,16 +68,22 @@ function ThreeDemo() {
 
     // Animation loop
     let animationId;
-    const animate = () => {
+    const startTimestamp = performance.now();
+    let lastTimestamp = startTimestamp;
+    const animate = (currentTimestamp) => {
+      const deltaTime = (currentTimestamp - lastTimestamp) / 1000; // seconds
+      lastTimestamp = currentTimestamp;
+      const absoluteTime = (currentTimestamp - startTimestamp) / 1000; // seconds since animation started
+
       // Update camera controller
       cameraController.update();
       
-      // Update Earth's orbital position
-      earthInstance.updateOrbit();
-      
-      // Rotate the Earth and atmosphere using the new method
-      earthInstance.rotate(0.01);
-      
+      // Update Earth's orbital position with absolute time
+      earthInstance.updateOrbit(absoluteTime);
+
+      // Rotate the Earth and atmosphere using deltaTime
+      earthInstance.rotate(0.01 * deltaTime);
+
       // Update Earth's model matrix for day/night calculations
       earthInstance.updateMatrixWorld();
       
@@ -103,7 +109,7 @@ function ThreeDemo() {
     window.addEventListener('resize', handleResize);
 
     // Start the animation immediately
-    animate();
+    requestAnimationFrame(animate);
 
     // Cleanup function
     return () => {
