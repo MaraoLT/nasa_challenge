@@ -14,7 +14,7 @@ export default function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/ThreeDemo" element={<ThreeDemo />} />
         <Route path="/Page1" element={<Page1 />} />
-        <Route path="/BlueprintPage" element={<BlueprintPage />} />
+        <Route path="/blueprint" element={<BlueprintPage />} />
       </Routes>
     </BrowserRouter>
   );
