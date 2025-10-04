@@ -7,6 +7,9 @@ function ThreeDemo() {
   useEffect(() => {
     if (!mountRef.current) return;
 
+    // Clear any existing content first
+    mountRef.current.innerHTML = '';
+
     // Create scene, camera, and renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -58,14 +61,15 @@ function ThreeDemo() {
       
       window.removeEventListener('resize', handleResize);
       
-      if (mountRef.current && renderer.domElement && mountRef.current.contains(renderer.domElement)) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-      
-      // Dispose of Three.js objects
+      // Clean up Three.js objects
       geometry.dispose();
       material.dispose();
       renderer.dispose();
+      
+      // Clear the mount point
+      if (mountRef.current) {
+        mountRef.current.innerHTML = '';
+      }
     };
   }, []);
 
