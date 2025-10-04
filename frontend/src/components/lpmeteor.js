@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const BALL_SIZE = 50;
+const BALL_SIZE = 100;
 const NUM_BALLS = 3;
 const BALL_IMAGE = "/meteoro3.jpg";
 
@@ -70,7 +70,7 @@ export default function MovingBalls() {
           x += dx;
           y += dy;
 
-          rotation += dx * 0.02;
+          rotation += dx * 0.05;
 
           // Rebate nas bordas
           if (x <= -BALL_SIZE * 4 || x >= window.innerWidth + 4 * BALL_SIZE) return randomEdgePosition();
