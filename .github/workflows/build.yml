@@ -64,10 +64,3 @@ jobs:
         run: |
           if [ -f .serve_pid ]; then kill $(cat .serve_pid) || true; fi
           if [ -f .dev_pid ]; then kill $(cat .dev_pid) || true; fi
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: nasa-space-apps/build
-          if-no-files-found: error
