@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Earth } from './render/Earth';
 import { Galaxy } from './render/Galaxy';
+import { CameraController } from './controller/cameraController';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
@@ -48,10 +49,18 @@ function ThreeDemo() {
 
     camera.position.z = 5;
 
+    // Initialize camera controller
+    const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0));
+    cameraController.enableControls(renderer.domElement);
+    cameraController.setZoomLimits(1.5, 20);
+
     // Animation loop
     let animationId;
     const animate = () => {
-      // Rotate the cube
+      // Update camera controller
+      cameraController.update();
+      
+      // Rotate the Earth and atmosphere
       earth.rotation.y += 0.01;
       atmosphere.rotation.y += 0.01;
 
@@ -78,6 +87,9 @@ function ThreeDemo() {
         cancelAnimationFrame(animationId);
       }
       
+      // Disable camera controls
+      cameraController.disableControls(renderer.domElement);
+      
       window.removeEventListener('resize', handleResize);
       
       renderer.dispose();
@@ -102,8 +114,12 @@ function ThreeDemo() {
         borderRadius: '8px',
         fontFamily: 'Arial, sans-serif'
       }}>
-        <h2 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>Three.js Demo</h2>
-        <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}>Rotating cube demo</p>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>Earth Explorer</h2>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>🖱️ Mouse: Rotate camera</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>🖱️ Scroll: Zoom in/out</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ R: Reset camera</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ G: Geostationary orbit</p>
+        <p style={{ margin: '0 0 10px 0', fontSize: '12px' }}>⌨️ ↑↓: Zoom</p>
         <a href="/" style={{
           color: '#61dafb',
           textDecoration: 'none',
