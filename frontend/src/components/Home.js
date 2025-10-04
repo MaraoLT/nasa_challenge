@@ -1,11 +1,9 @@
 import React from 'react';
-import './App.css';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import ThreeDemo from './ThreeDemo';
-
 import LPMeteor from './lpmeteor';
+import { Link } from 'react-router-dom';
 
-function Home() {
+
+export default function Home() {
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
 
   const handleMouseMove = React.useCallback((e) => {
@@ -27,8 +25,6 @@ function Home() {
         backgroundSize: "cover",      // cobre toda a área
         backgroundPosition: "center", // centraliza a imagem
         backgroundRepeat: "no-repeat", transform: translate(10) }} />
-      {/* <div className="layer layer-mid" style={{ transform: translate(20) }} /> */}
-      {/* <div className="layer layer-near" style={{ transform: translate(35) }} /> */}
 
       {/* Content */}
       <LPMeteor />
@@ -37,16 +33,5 @@ function Home() {
         <Link to="/ThreeDemo" className="cta">Open 3D Model</Link>
       </div>
     </div>
-  );
-}
-
-export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/ThreeDemo" element={<ThreeDemo />} />
-      </Routes>
-    </BrowserRouter>
   );
 }

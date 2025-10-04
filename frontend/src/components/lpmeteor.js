@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { ACESFilmicToneMapping } from "three/src/constants.js";
 
 const BALL_SIZE = 50;
 const NUM_BALLS = 3;
@@ -32,7 +31,7 @@ function randomEdgePosition() {
   const dx = edge === 2 ? 3 : edge === 3 ? -3 : (Math.random() - 0.5) * 2;
   const dy = edge === 0 ? 3 : edge === 1 ? -3 : (Math.random() - 0.5) * 2;
 
-  return { x, y, dx, dy ,color: `hsl(${Math.random() * 360}, 70%, 50%)`};
+  return { x, y, dx, dy, rotation: Math.random() * 360 };
 }
 
 export default function MovingBalls() {
@@ -57,13 +56,13 @@ export default function MovingBalls() {
     const moveBalls = () => {
       setBalls((prevBalls) =>
         prevBalls.map((ball) => {
-          let { x, y, dx, dy } = ball;
-          
+          let { x, y, dx, dy, rotation } = ball;
+
           const vectorX = mousePos.x - (x + BALL_SIZE / 2);
           const vectorY = mousePos.y - (y + BALL_SIZE / 2);
           const distance = Math.sqrt(vectorX ** 2 + vectorY ** 2);
 
-          const factor = Math.min(10000/(distance*distance), 0.08);
+          const factor = Math.min(10000 / (distance * distance), 0.08);
 
           dx += (vectorX / distance) * factor;
           dy += (vectorY / distance) * factor;
@@ -71,11 +70,13 @@ export default function MovingBalls() {
           x += dx;
           y += dy;
 
-          // Rebate nas bordas
-          if (x <= -BALL_SIZE*4 || x >= window.innerWidth + 4 * BALL_SIZE) return randomEdgePosition();
-          if (y <= -BALL_SIZE*4 || y >= window.innerHeight + 4 * BALL_SIZE) return randomEdgePosition();
+          rotation += dx * 0.02;
 
-          return { ...ball, x, y, dx, dy };
+          // Rebate nas bordas
+          if (x <= -BALL_SIZE * 4 || x >= window.innerWidth + 4 * BALL_SIZE) return randomEdgePosition();
+          if (y <= -BALL_SIZE * 4 || y >= window.innerHeight + 4 * BALL_SIZE) return randomEdgePosition();
+
+          return { ...ball, x, y, dx, dy, rotation };
         })
       );
 
@@ -86,11 +87,21 @@ export default function MovingBalls() {
     return () => cancelAnimationFrame(animationId);
   }, [mousePos]);
 
+  // Função para teleportar a bola clicada
+  const handleClick = (index) => {
+    setBalls((prev) => {
+      prev.map((ball, i) => (i === index ? randomEdgePosition() : ball));
+      console.log("clicou");
+    }
+    );
+  };
+
   return (
     <>
       {balls.map((ball, i) => (
         <div
           key={i}
+          onClick={() => handleClick(i)}
           style={{
             position: "absolute",
             left: ball.x,
@@ -103,6 +114,9 @@ export default function MovingBalls() {
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
             boxShadow: "0 0 10px rgba(0,0,0,0.3)",
+            cursor: "pointer",
+            transform: `rotate(${ball.rotation}deg)`,
+            filter: "drop-shadow(0 0 7px white)"
           }}
         />
       ))}
