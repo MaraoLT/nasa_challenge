@@ -16,7 +16,7 @@ export class Sun {
         this.corona = null;
         
         // Light properties
-        this.lightIntensity = 100.0;
+        this.lightIntensity = 10.0;
         this.lightColor = 0xffffff;
         
         // Create the Sun and lighting
