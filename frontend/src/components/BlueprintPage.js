@@ -98,7 +98,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
 
   const onPrev = () => {
     if (animating) return;
-    if (index === 0) return exitAnd(() => navigate('/'));
+    if (index === 0) return navigate('/home');
     const prevIdx = Math.max(0, index - 1);
     // Prepare overlay with previous content and slide it in on top
     setOverlayIndex(prevIdx);
@@ -114,7 +114,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
   };
   const onNext = () => {
     if (animating) return;
-    if (index === SUBPAGES.length - 1) return exitAnd(() => navigate('/ThreeDemo'));
+    if (index === SUBPAGES.length - 1) return navigate('/ThreeDemo');
     const nextIdx = Math.min(SUBPAGES.length - 1, index + 1);
     // Prepare base with next content and slide current out to reveal it
     setBaseIndex(nextIdx);

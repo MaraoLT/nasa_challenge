@@ -31,7 +31,7 @@ export default function Home() {
       <div className="content">
         <h1>Welcome to the space experience</h1>
         <Link to="/ThreeDemo" className="cta">Open 3D Model</Link>
-        <Link to="/BlueprintPage" className="cta">View Blueprints</Link>
+        <Link to="/blueprint" className="cta">Open Blueprint</Link>
       </div>
     </div>
   );

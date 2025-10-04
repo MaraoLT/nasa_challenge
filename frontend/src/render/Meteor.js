@@ -41,6 +41,10 @@ export class Meteor {
 
         const mesh = new THREE.Mesh(geometry, material);
         
+        // Ensure the meteor does not interact with shadows
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+        
         return mesh;
     }
     
