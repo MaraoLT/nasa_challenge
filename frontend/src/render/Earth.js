@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import {Orbit} from './Orbit.js';
 
 export class Earth {
-    constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0)) {
+    constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0), preloadedAssets = {}) {
         this.scene = scene;
         this.radius = radius;
         this.segments = segments;
         this.position = initialPosition.clone();
+        this.preloadedAssets = preloadedAssets;
         
         // Orbit properties
         this.isOrbiting = false;
@@ -29,13 +30,14 @@ export class Earth {
     createEarthMesh() {
         const geometry = new THREE.SphereGeometry(this.radius, this.segments, this.segments);
         
-        // Create texture loader
+        // Use preloaded textures if available, otherwise load normally
         const textureLoader = new THREE.TextureLoader();
-        
-        // Load Earth textures from public folder
-        const earthDayTexture = textureLoader.load('/resources/earth/Earth Map.jpg');
-        const earthNightTexture = textureLoader.load('/resources/earth/Earth Night Map.jpg');
-        const bumpTexture = textureLoader.load('/resources/earth/Earth Topographic Map.png');
+        const earthDayTexture = this.preloadedAssets['/resources/earth/Earth Map.jpg'] 
+            || textureLoader.load('/resources/earth/Earth Map.jpg');
+        const earthNightTexture = this.preloadedAssets['/resources/earth/Earth Night Map.jpg'] 
+            || textureLoader.load('/resources/earth/Earth Night Map.jpg');
+        const bumpTexture = this.preloadedAssets['/resources/earth/Earth Topographic Map.png'] 
+            || textureLoader.load('/resources/earth/Earth Topographic Map.png');
         
         // Configure texture settings for better quality
         earthDayTexture.wrapS = THREE.RepeatWrapping;
@@ -133,8 +135,9 @@ export class Earth {
     createAtmosphere() {
         const atmosphereGeometry = new THREE.SphereGeometry(this.radius * 1.02, this.segments, this.segments);
 
-        const TextureLoader = new THREE.TextureLoader();
-        const atmosphereTexture = TextureLoader.load('/resources/earth/Earth Clouds.jpg');
+        const textureLoader = new THREE.TextureLoader();
+        const atmosphereTexture = this.preloadedAssets['/resources/earth/Earth Clouds.jpg'] 
+            || textureLoader.load('/resources/earth/Earth Clouds.jpg');
         
         // Use MeshBasicMaterial so it's not affected by directional lighting
         const atmosphereMaterial = new THREE.MeshBasicMaterial({

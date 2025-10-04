@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // hook do React Router
-
+import { useNavigate } from "react-router-dom";
+import * as THREE from 'three';
 
 export default function TerminalLanding() {
   // Multi-page texts; advance through each, then navigate
@@ -30,10 +30,17 @@ export default function TerminalLanding() {
         setIsTyping(false);
         setCanClick(true);
       }
-    }, 30); // velocidade da digitação em ms
+    }, 30);
 
     return () => clearInterval(interval);
   }, [currentText]);
+
+  // Enable click when both text is done and assets are loaded
+  useEffect(() => {
+    if (displayedText === fullText && assetsLoaded) {
+      setCanClick(true);
+    }
+  }, [displayedText, assetsLoaded, fullText]);
 
    const containerStyle = {
     width: "100%",
@@ -47,7 +54,7 @@ export default function TerminalLanding() {
   };
 
   const textWrapperStyle = {
-    marginLeft: "20%",
+    marginLeft: "15%",
     marginTop: "10%",
     height: "60%", // ocupa altura total
     display: "flex",
@@ -100,7 +107,7 @@ export default function TerminalLanding() {
         <style>{styleSheet}</style>
         <div style={textWrapperStyle}>
           <pre style={textStyle}>
-            {displayedText}
+            {getDisplayText()}
             <span style={cursorStyle}>|</span>
           </pre>
           {/* Optional: small hint when ready to proceed */}

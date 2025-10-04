@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 
 export class Sun {
-    constructor(scene, radius = 1) {
+    constructor(scene, radius = 1, preloadedAssets = {}) {
         this.scene = scene;
         this.radius = radius;
         this.position = new THREE.Vector3(0, 0, 0);
         this.textureLoader = new THREE.TextureLoader();
+        this.preloadedAssets = preloadedAssets;
         
         // Initialize geometry
         this.sunGeometry = new THREE.SphereGeometry(this.radius, 64, 64);
@@ -16,7 +17,7 @@ export class Sun {
         this.corona = null;
         
         // Light properties
-        this.lightIntensity = 100.0;
+        this.lightIntensity = 50.0; // Much stronger sun light
         this.lightColor = 0xffffff;
         
         // Create the Sun and lighting
@@ -28,8 +29,9 @@ export class Sun {
     }
     
     createSun() {
-        // Load Sun texture from public folder
-        const sunTexture = this.textureLoader.load('/resources/sun/Sun Map.png');
+        // Use preloaded texture if available, otherwise load normally
+        const sunTexture = this.preloadedAssets['/resources/sun/Sun Map.png'] 
+            || this.textureLoader.load('/resources/sun/Sun Map.png');
 
         // Create Sun material with emissive properties for self-illumination
         const sunMaterial = new THREE.MeshBasicMaterial({ 
@@ -51,7 +53,7 @@ export class Sun {
     
     createLight() {
         // Create point light for sun illumination
-        this.pointLight = new THREE.PointLight(this.lightColor, this.lightIntensity, 0, 1);
+        this.pointLight = new THREE.PointLight(this.lightColor, this.lightIntensity, 0, 0.5);
         
         // Disable shadow casting for the point light to avoid artifacts
         this.pointLight.castShadow = false;

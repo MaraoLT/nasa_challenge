@@ -8,9 +8,16 @@ import { Meteor } from './render/Meteor';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
+  
+  // Get preloaded assets from global window object
+  const preloadedAssets = window.preloadedAssets || {};
+  const assetsPreloaded = sessionStorage.getItem('assetsPreloaded') === 'true';
 
   useEffect(() => {
     if (!mountRef.current) return;
+
+    console.log('ThreeDemo starting with preloaded assets:', assetsPreloaded ? 'Yes' : 'No');
+    console.log('Available assets:', Object.keys(preloadedAssets));
 
     // Clear any existing content first
     mountRef.current.innerHTML = '';
@@ -26,22 +33,22 @@ function ThreeDemo() {
     // Append to the ref div
     mountRef.current.appendChild(renderer.domElement);
 
-    // Create sun instance - now handles its own scene addition
-    const sunInstance = new Sun(scene, 15); // Pass scene, radius = 1
-    sunInstance.setPosition(0, 0, 0); // Position sun at origin
+    // Create sun instance with preloaded assets
+    const sunInstance = new Sun(scene, 15, preloadedAssets);
+    sunInstance.setPosition(0, 0, 0);
     
-    // Create earth instance with initial orbital position - now handles its own scene addition
-    const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0)); // Pass scene, radius = 1, segments = 32, initial position
+    // Create earth instance with preloaded assets
+    const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0), preloadedAssets);
     
     // Start Earth's orbit around the sun
-    earthInstance.startOrbit(); // Orbit around sun with speed 0.01
-    
-    const galaxy = new Galaxy(1000, 64).mesh;
+    earthInstance.startOrbit();
+
+    const galaxy = new Galaxy(500, 64, preloadedAssets).mesh;
     scene.add(galaxy);
 
     // Add lighting to illuminate the planet
-    // Only ambient light for the atmosphere and galaxy
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+    // Only ambient light for the atmosphere and galaxy - reduced for better sun contrast
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.1);
     scene.add(ambientLight);
 
     // Remove directional light - Earth uses custom shader lighting
@@ -120,7 +127,8 @@ function ThreeDemo() {
       currentMeteor = Meteor.createRandomMeteor(
         scene,
         5, 20, // radius between 5 and 20 (scaled up from 0.5-2.0)
-        meteorPosition
+        meteorPosition,
+        preloadedAssets
       );
       
       // Add some orbital motion

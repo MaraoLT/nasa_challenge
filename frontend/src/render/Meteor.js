@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import {Orbit} from './Orbit.js';
 
 export class Meteor {
-    constructor(scene, radius, segments = 32, initialPosition) {
+    constructor(scene, radius, segments = 32, initialPosition, preloadedAssets = {}) {
         this.scene = scene;
         this.radius = radius;
         this.segments = segments;
         this.position = initialPosition.clone();
+        this.preloadedAssets = preloadedAssets;
         
         // Initialize orbit properties
         this.isOrbiting = false;
@@ -26,22 +27,24 @@ export class Meteor {
         // Create irregular geoid geometry for asteroid-like shape
         const geometry = this.createGeoidGeometry(this.radius, this.segments);
         
-        // Create texture loader
+        // Use preloaded texture if available, otherwise load normally
         const textureLoader = new THREE.TextureLoader();
-
-        const meteorTexture = textureLoader.load('/resources/meteor/Meteor Map.jpg');
+        const meteorTexture = this.preloadedAssets['/resources/meteor/Meteor Map.jpg'] 
+            || textureLoader.load('/resources/meteor/Meteor Map.jpg');
         
         // Create a rocky/metallic material for the meteor
         const material = new THREE.MeshStandardMaterial({
-            color: 0x8B4513, // Dark brown/rocky color
+            color: 0xDDAA77, // Brighter, more reflective color
             map: meteorTexture,
-            roughness: 0.9,
-            metalness: 0.1,
+            roughness: 0.8, // Much smoother surface for better light reflection
+            metalness: 0.2, // Higher metallic content for better sun reflection
+            emissive: 0x442200, // Warmer, brighter emissive glow
+            emissiveIntensity: 0.15, // Reduced emissive to let sun lighting dominate
         });
 
         const mesh = new THREE.Mesh(geometry, material);
         
-        // Ensure meteor doesn't cast shadows that could interfere with galaxy
+        // Ensure the meteor does not interact with shadows
         mesh.castShadow = false;
         mesh.receiveShadow = false;
         
@@ -219,15 +222,15 @@ export class Meteor {
     }
     
     // Static method to create random meteors with different properties
-    static createRandomMeteor(scene, minRadius = 0.1, maxRadius = 0.5, position) {
+    static createRandomMeteor(scene, minRadius = 0.1, maxRadius = 0.5, position, preloadedAssets = {}) {
         const randomRadius = minRadius + Math.random() * (maxRadius - minRadius);
         const randomSegments = 16 + Math.floor(Math.random() * 16); // 16-32 segments
         
-        return new Meteor(scene, randomRadius, randomSegments, position);
+        return new Meteor(scene, randomRadius, randomSegments, position, preloadedAssets);
     }
     
     // Static method to create a meteor field
-    static createMeteorField(scene, count = 10, centerPosition = new THREE.Vector3(0, 0, 0), fieldRadius = 20) {
+    static createMeteorField(scene, count = 10, centerPosition = new THREE.Vector3(0, 0, 0), fieldRadius = 20, preloadedAssets = {}) {
         const meteors = [];
         
         for (let i = 0; i < count; i++) {
@@ -242,7 +245,7 @@ export class Meteor {
                 centerPosition.z + Math.sin(angle) * distance
             );
             
-            const meteor = Meteor.createRandomMeteor(scene, 0.05, 0.3, position);
+            const meteor = Meteor.createRandomMeteor(scene, 0.05, 0.3, position, preloadedAssets);
             
             // Add random orbit if desired
             if (Math.random() > 0.5) {
