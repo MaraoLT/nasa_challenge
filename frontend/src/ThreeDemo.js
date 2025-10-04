@@ -4,6 +4,7 @@ import { Earth } from './render/Earth';
 import { Galaxy } from './render/Galaxy';
 import { CameraController } from './controller/CameraController';
 import { Sun } from './render/Sun';
+import { Meteor } from './render/Meteor';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
@@ -66,6 +67,58 @@ function ThreeDemo() {
     const sunDirection = sunInstance.getPosition().clone().sub(earthInstance.getPosition()).normalize();
     earthInstance.updateSunDirection(sunDirection);
 
+    // Meteor management
+    let currentMeteor = null;
+    
+    // Function to create a new meteor
+    const createNewMeteor = () => {
+      // Remove existing meteor if any
+      if (currentMeteor) {
+        currentMeteor.dispose();
+        currentMeteor = null;
+        // Clear meteor reference in camera controller
+        cameraController.setCurrentMeteor(null);
+      }
+      
+      // Create new meteor with random position around the system
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 20 + Math.random() * 10; // Distance between 20-30 units
+      const height = (Math.random() - 0.5) * 10; // Some vertical spread
+      
+      const meteorPosition = new THREE.Vector3(
+        Math.cos(angle) * distance,
+        height,
+        Math.sin(angle) * distance
+      );
+      
+      // Create meteor with max size of 2
+      currentMeteor = Meteor.createRandomMeteor(
+        scene,
+        0.5, 2.0, // radius between 0.5 and 2.0
+        meteorPosition
+      );
+      
+      // Add some orbital motion
+      currentMeteor.startOrbit(sunInstance.getPosition(), 0.002 + Math.random() * 0.003);
+      
+      // Set meteor reference in camera controller
+      cameraController.setCurrentMeteor(currentMeteor);
+      
+      console.log('New meteor created!');
+    };
+    
+    // Keyboard event handler for meteor creation
+    const handleKeyPress = (event) => {
+      switch(event.code) {
+        case 'KeyM':
+          createNewMeteor();
+          break;
+      }
+    };
+    
+    // Add keyboard event listener
+    window.addEventListener('keydown', handleKeyPress);
+
     // Animation loop
     let animationId;
     const startTimestamp = performance.now();
@@ -93,6 +146,12 @@ function ThreeDemo() {
 
       // Update sun animation
       sunInstance.update();
+      
+      // Update meteor if it exists
+      if (currentMeteor) {
+        currentMeteor.updateOrbit();
+        currentMeteor.rotate(0.02); // Faster rotation for meteors
+      }
 
       renderer.render(scene, camera);
       
@@ -120,11 +179,19 @@ function ThreeDemo() {
       // Disable camera controls
       cameraController.disableControls(renderer.domElement);
       
+      // Remove keyboard event listener
+      window.removeEventListener('keydown', handleKeyPress);
+      
       window.removeEventListener('resize', handleResize);
       
       // Dispose of objects
       sunInstance.dispose();
       earthInstance.dispose();
+      if (currentMeteor) {
+        currentMeteor.dispose();
+        // Clear meteor reference in camera controller
+        cameraController.setCurrentMeteor(null);
+      }
       
       renderer.dispose();
       
@@ -155,6 +222,8 @@ function ThreeDemo() {
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ G: Geostationary orbit</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 0: Lock onto Sun</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 1: Lock onto Earth</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 2: Lock onto Meteor</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ M: Create new Meteor</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ ESC: Unlock camera</p>
         <p style={{ margin: '0 0 10px 0', fontSize: '12px' }}>⌨️ ↑↓: Zoom</p>
         <a href="/" style={{

@@ -127,6 +127,10 @@ export class CameraController {
                 // Lock onto earth with transition
                 this.lockOntoEarthWithTransition();
                 break;
+            case 'Digit2':
+                // Lock onto meteor if it exists
+                this.lockOntoMeteorIfExists();
+                break;
             case 'Escape':
                 // Unlock from any target
                 this.unlockTarget();
@@ -188,6 +192,20 @@ export class CameraController {
         this.earthInstance = earthInstance;
     }
     
+    // Set current meteor for locking (called when meteor is created/destroyed)
+    setCurrentMeteor(meteorInstance) {
+        this.currentMeteor = meteorInstance;
+    }
+    
+    // Internal method to lock onto meteor if one exists
+    lockOntoMeteorIfExists() {
+        if (this.currentMeteor) {
+            this.lockOntoMeteor(this.currentMeteor);
+        } else {
+            console.log('No meteor to lock onto. Press M to create one!');
+        }
+    }
+    
     // Lock onto sun with smooth transition
     lockOntoSunWithTransition(duration = 1500) {
         if (!this.sunInstance) return;
@@ -201,10 +219,9 @@ export class CameraController {
         this.lockedTarget = null;
         this.lockMode = 'none';
         
-        const targetPosition = this.sunInstance.getPosition();
         const targetDistance = Math.max(this.minDistance, 3);
         
-        this.transitionToTarget(targetPosition, targetDistance, () => {
+        this.transitionToTarget(this.sunInstance, targetDistance, () => {
             this.lockedTarget = this.sunInstance;
             this.lockMode = 'sun';
             console.log('Camera locked onto Sun');
@@ -224,27 +241,40 @@ export class CameraController {
         this.lockedTarget = null;
         this.lockMode = 'none';
         
-        const targetPosition = this.earthInstance.getPosition();
         const targetDistance = Math.max(this.minDistance, 2);
         
-        this.transitionToTarget(targetPosition, targetDistance, () => {
+        this.transitionToTarget(this.earthInstance, targetDistance, () => {
             this.lockedTarget = this.earthInstance;
             this.lockMode = 'earth';
             console.log('Camera locked onto Earth');
         }, duration);
     }
     
+    // Lock onto meteor with smooth transition
+    lockOntoMeteor(meteorInstance, duration = 1500) {
+        if (!meteorInstance) return;
+        
+        // Don't transition if already locked onto this meteor
+        if (this.lockMode === 'meteor' && this.lockedTarget === meteorInstance) return;
+        
+        // Temporarily unlock current target to prevent interference
+        const previousTarget = this.lockedTarget;
+        const previousMode = this.lockMode;
+        this.lockedTarget = null;
+        this.lockMode = 'none';
+        
+        const targetDistance = Math.max(this.minDistance, 1.5); // Closer for meteors
+        
+        this.transitionToTarget(meteorInstance, targetDistance, () => {
+            this.lockedTarget = meteorInstance;
+            this.lockMode = 'meteor';
+            console.log('Camera locked onto Meteor');
+        }, duration);
+    }
+    
     // Generic smooth transition to a target
-    transitionToTarget(targetPosition, targetDistance, onComplete, duration = 1500) {
+    transitionToTarget(targetObject, targetDistance, onComplete, duration = 1500) {
         this.isTransitioning = true;
-        
-        // Calculate target spherical coordinates
-        const targetVector = this.camera.position.clone().sub(targetPosition);
-        const targetSpherical = new THREE.Spherical();
-        targetSpherical.setFromVector3(targetVector);
-        
-        // If we're too close or too far, adjust the distance
-        targetSpherical.radius = targetDistance;
         
         // Store starting values
         const startTarget = this.target.clone();
@@ -263,8 +293,19 @@ export class CameraController {
                 ? 2 * progress * progress 
                 : 1 - Math.pow(-2 * progress + 2, 2) / 2;
             
-            // Interpolate target position
-            this.target.lerpVectors(startTarget, targetPosition, eased);
+            // Get current target position (updates with moving objects)
+            const currentTargetPosition = targetObject.getPosition();
+            
+            // Calculate target spherical coordinates relative to current target position
+            const targetVector = this.camera.position.clone().sub(currentTargetPosition);
+            const targetSpherical = new THREE.Spherical();
+            targetSpherical.setFromVector3(targetVector);
+            
+            // Adjust the distance to desired value
+            targetSpherical.radius = targetDistance;
+            
+            // Interpolate target position (follows moving object)
+            this.target.lerpVectors(startTarget, currentTargetPosition, eased);
             
             // Interpolate spherical coordinates
             this.spherical.theta = startTheta + (targetSpherical.theta - startTheta) * eased;
