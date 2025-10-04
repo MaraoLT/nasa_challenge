@@ -120,6 +120,10 @@ export class Earth {
         
         const mesh = new THREE.Mesh(geometry, material);
         
+        // Ensure Earth doesn't cast shadows that could interfere with galaxy
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+        
         // Store reference to material for updating sun direction
         mesh.userData.material = material;
         
@@ -141,6 +145,11 @@ export class Earth {
         });
         
         const atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+        
+        // Ensure atmosphere doesn't cast shadows
+        atmosphereMesh.castShadow = false;
+        atmosphereMesh.receiveShadow = false;
+        
         return atmosphereMesh;
     }
     
