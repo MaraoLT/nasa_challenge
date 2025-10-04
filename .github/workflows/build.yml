@@ -1,0 +1,63 @@
+name: PR Build and Run
+
+on:
+  pull_request:
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-frontend:
+    name: Build and run smoke test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nasa-space-apps
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: nasa-space-apps/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Serve build (background)
+        run: |
+          npx --yes serve -s build -l 3000 > /dev/null 2>&1 &
+          echo $! > .server_pid
+          timeout 20 bash -c 'until curl -sSf http://localhost:3000 > /dev/null; do sleep 1; done'
+
+      - name: Smoke test home page
+        run: |
+          curl -sS http://localhost:3000 | grep -qi "Welcome to the space experience"
+
+      - name: Smoke test SPA route
+        run: |
+          curl -sS http://localhost:3000/ThreeDemo | grep -qi "Welcome to the space experience"
+
+      - name: Stop server
+        if: always()
+        run: |
+          kill $(cat .server_pid) || true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: nasa-space-apps/build
+          if-no-files-found: error
