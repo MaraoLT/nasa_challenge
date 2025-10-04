@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ThreeDemo from './ThreeDemo';
 
 function Home() {
@@ -8,8 +8,8 @@ function Home() {
 
   const handleMouseMove = React.useCallback((e) => {
     const { innerWidth: w, innerHeight: h } = window;
-    const x = ((e.clientX / w) - 0.5) * 2; // -1..1
-    const y = ((e.clientY / h) - 0.5) * 2; // -1..1
+    const x = ((e.clientX / w) - 0.5) * 2;
+    const y = ((e.clientY / h) - 0.5) * 2;
     setOffset({ x, y });
   }, []);
 
@@ -25,26 +25,9 @@ function Home() {
       {/* Content */}
       <div className="content">
         <h1>Welcome to the space experience</h1>
-        <Link to="/test" className="cta">Next page</Link>
+        <Link to="/ThreeDemo" className="cta">Open 3D Model</Link>
       </div>
     </div>
-  );
-}
-
-function TestPage() {
-  return (
-    <div className="page">
-      <h2>Test</h2>
-      <p>This is the test page.</p>
-      <Link to="/" className="cta secondary">Back home</Link>
-    </div>
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/ThreeDemo" element={<ThreeDemo />} />
-        </Routes>
-      </div>
-    </Router>
   );
 }
 
@@ -53,7 +36,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/test" element={<TestPage />} />
+        <Route path="/ThreeDemo" element={<ThreeDemo />} />
       </Routes>
     </BrowserRouter>
   );
