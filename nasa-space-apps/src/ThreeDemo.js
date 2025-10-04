@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Earth } from './render/Earth';
+import { Galaxy } from './render/Galaxy';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
@@ -26,6 +27,8 @@ function ThreeDemo() {
     scene.add(earth);
     const atmosphere = new Earth(1, 32).createAtmosphere();
     scene.add(atmosphere);
+    const galaxy = new Galaxy(90, 64).mesh;
+    scene.add(galaxy);
 
     // Add lighting to illuminate the planet
     // Ambient light provides soft overall illumination
