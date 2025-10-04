@@ -21,7 +21,7 @@ export default function TerminalLanding() {
 
   const fullText = currentText;
 
-  // Preload Three.js assets
+  // Preload Three.js assets and preprocessed objects
   useEffect(() => {
     const loadingManager = new THREE.LoadingManager();
     const textureLoader = new THREE.TextureLoader(loadingManager);
@@ -36,22 +36,85 @@ export default function TerminalLanding() {
       '/resources/galaxy/Galaxy Map.jpg'
     ];
 
-    // Object to hold loaded assets
+    // Object to hold loaded assets and preprocessed objects
     const loadedAssets = {};
+    const preprocessedObjects = {};
+    let totalItems = texturePaths.length + 4; // textures + 4 preprocessing steps
+    let loadedItems = 0;
 
-    loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-      const progress = (itemsLoaded / itemsTotal) * 100;
-      console.log(`Loading progress: ${progress}% (${itemsLoaded}/${itemsTotal}) - ${url}`);
+    const updateProgress = () => {
+      loadedItems++;
+      const progress = (loadedItems / totalItems) * 100;
+      console.log(`Loading progress: ${progress}% (${loadedItems}/${totalItems})`);
       setLoadingProgress(progress);
     };
 
     loadingManager.onLoad = () => {
-      console.log('All assets loaded successfully!');
-      setPreloadedAssets(loadedAssets);
-      setAssetsLoaded(true);
+      console.log('All textures loaded, starting preprocessing...');
       
-      // Store assets globally to avoid serialization issues
-      window.preloadedAssets = loadedAssets;
+      // Preprocess complex geometries and materials
+      setTimeout(() => {
+        try {
+          // 1. Pregenerate Earth geometries
+          console.log('Preprocessing Earth geometries...');
+          preprocessedObjects.earthGeometry = new THREE.SphereGeometry(1, 64, 64);
+          preprocessedObjects.atmosphereGeometry = new THREE.SphereGeometry(1.015, 64, 64);
+          updateProgress();
+
+          // 2. Pregenerate Sun geometry and materials
+          console.log('Preprocessing Sun objects...');
+          preprocessedObjects.sunGeometry = new THREE.SphereGeometry(1, 64, 64);
+          preprocessedObjects.sunMaterial = new THREE.MeshBasicMaterial({ 
+            map: loadedAssets['/resources/sun/Sun Map.png'],
+            color: 0xffff88
+          });
+          updateProgress();
+
+          // 3. Pregenerate Galaxy geometry
+          console.log('Preprocessing Galaxy geometry...');
+          preprocessedObjects.galaxyGeometry = new THREE.SphereGeometry(500, 64, 64);
+          preprocessedObjects.galaxyMaterial = new THREE.MeshBasicMaterial({
+            map: loadedAssets['/resources/galaxy/Galaxy Map.jpg'],
+            side: THREE.BackSide,
+            transparent: true,
+            opacity: 0.8
+          });
+          updateProgress();
+
+          // 4. Pregenerate multiple meteor geometries for variety
+          console.log('Preprocessing Meteor geometries...');
+          preprocessedObjects.meteorGeometries = [];
+          preprocessedObjects.meteorMaterials = [];
+          
+          // Create 10 different meteor shapes for variety
+          for (let i = 0; i < 10; i++) {
+            const geometry = createMeteorGeometry(0.1 + Math.random() * 0.4, 16 + Math.floor(Math.random() * 16));
+            const material = new THREE.MeshStandardMaterial({
+              color: 0xDDAA77,
+              map: loadedAssets['/resources/meteor/Meteor Map.jpg'],
+              roughness: 0.4,
+              metalness: 0.6,
+              emissive: 0x442200,
+              emissiveIntensity: 0.15,
+            });
+            preprocessedObjects.meteorGeometries.push(geometry);
+            preprocessedObjects.meteorMaterials.push(material);
+          }
+          updateProgress();
+
+          console.log('All preprocessing completed!');
+          setPreloadedAssets(loadedAssets);
+          setAssetsLoaded(true);
+          
+          // Store everything globally
+          window.preloadedAssets = loadedAssets;
+          window.preprocessedObjects = preprocessedObjects;
+          
+        } catch (error) {
+          console.error('Error during preprocessing:', error);
+          setAssetsLoaded(true); // Allow continuation even if preprocessing fails
+        }
+      }, 100); // Small delay to allow UI update
     };
 
     loadingManager.onError = (url) => {
@@ -65,12 +128,12 @@ export default function TerminalLanding() {
         (texture) => {
           console.log(`Loaded texture: ${path}`);
           loadedAssets[path] = texture;
+          updateProgress();
         },
-        (progress) => {
-          console.log(`Loading ${path}: ${(progress.loaded / progress.total * 100)}%`);
-        },
+        undefined,
         (error) => {
           console.error(`Failed to load texture: ${path}`, error);
+          updateProgress(); // Continue even if texture fails
         }
       );
     });
@@ -79,6 +142,12 @@ export default function TerminalLanding() {
       // Cleanup if component unmounts
       Object.values(loadedAssets).forEach(texture => {
         if (texture.dispose) texture.dispose();
+      });
+      Object.values(preprocessedObjects.meteorGeometries || []).forEach(geometry => {
+        if (geometry.dispose) geometry.dispose();
+      });
+      Object.values(preprocessedObjects.meteorMaterials || []).forEach(material => {
+        if (material.dispose) material.dispose();
       });
     };
   }, []);
@@ -177,6 +246,41 @@ export default function TerminalLanding() {
       text += `\n\nLoading assets... ${Math.round(loadingProgress)}%`;
     }
     return text;
+  };
+
+  // Helper function to create meteor geometry with procedural deformation
+  const createMeteorGeometry = (radius, segments) => {
+    const geometry = new THREE.SphereGeometry(radius, segments, segments);
+    const position = geometry.attributes.position;
+    const vertex = new THREE.Vector3();
+    const seed = Math.random() * 1000;
+    
+    for (let i = 0; i < position.count; i++) {
+      vertex.fromBufferAttribute(position, i);
+      const direction = vertex.clone().normalize();
+      
+      const noise1 = simpleNoise(direction.x * 3 + seed, direction.y * 3 + seed, direction.z * 3 + seed);
+      const noise2 = simpleNoise(direction.x * 8 + seed, direction.y * 8 + seed, direction.z * 8 + seed);
+      const noise3 = simpleNoise(direction.x * 15 + seed, direction.y * 15 + seed, direction.z * 15 + seed);
+      
+      const deformation = noise1 * 0.3 + noise2 * 0.15 + noise3 * 0.08;
+      const newRadius = radius * (0.85 + deformation * 0.3);
+      vertex.multiplyScalar(newRadius / vertex.length());
+      
+      position.setXYZ(i, vertex.x, vertex.y, vertex.z);
+    }
+    
+    geometry.computeVertexNormals();
+    return geometry;
+  };
+
+  // Simple noise function
+  const simpleNoise = (x, y, z) => {
+    return (
+      Math.sin(x * 2.1 + y * 1.3 + z * 0.7) * 0.5 +
+      Math.sin(x * 1.7 + y * 2.9 + z * 1.1) * 0.3 +
+      Math.sin(x * 3.3 + y * 0.9 + z * 2.3) * 0.2
+    ) / 3;
   };
 
   return (

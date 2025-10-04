@@ -2,12 +2,13 @@ import * as THREE from 'three';
 import {Orbit} from './Orbit.js';
 
 export class Meteor {
-    constructor(scene, radius, segments = 32, initialPosition, preloadedAssets = {}) {
+    constructor(scene, radius, segments = 32, initialPosition, preloadedAssets = {}, preprocessedObjects = {}) {
         this.scene = scene;
         this.radius = radius;
         this.segments = segments;
         this.position = initialPosition.clone();
         this.preloadedAssets = preloadedAssets;
+        this.preprocessedObjects = preprocessedObjects;
         
         // Initialize orbit properties
         this.isOrbiting = false;
@@ -24,23 +25,42 @@ export class Meteor {
     }
 
     createMeteorMesh() {
-        // Create irregular geoid geometry for asteroid-like shape
-        const geometry = this.createGeoidGeometry(this.radius, this.segments);
+        let geometry, material;
         
-        // Use preloaded texture if available, otherwise load normally
-        const textureLoader = new THREE.TextureLoader();
-        const meteorTexture = this.preloadedAssets['/resources/meteor/Meteor Map.jpg'] 
-            || textureLoader.load('/resources/meteor/Meteor Map.jpg');
-        
-        // Create a rocky/metallic material for the meteor
-        const material = new THREE.MeshStandardMaterial({
-            color: 0xDDAA77, // Brighter, more reflective color
-            map: meteorTexture,
-            roughness: 0.8, // Much smoother surface for better light reflection
-            metalness: 0.2, // Higher metallic content for better sun reflection
-            emissive: 0x442200, // Warmer, brighter emissive glow
-            emissiveIntensity: 0.15, // Reduced emissive to let sun lighting dominate
-        });
+        // Use preprocessed objects if available
+        if (this.preprocessedObjects.meteorGeometries && this.preprocessedObjects.meteorMaterials && 
+            this.preprocessedObjects.meteorGeometries.length > 0) {
+            console.log('Using preprocessed meteor objects');
+            
+            // Pick a random preprocessed geometry and material
+            const randomIndex = Math.floor(Math.random() * this.preprocessedObjects.meteorGeometries.length);
+            geometry = this.preprocessedObjects.meteorGeometries[randomIndex].clone();
+            material = this.preprocessedObjects.meteorMaterials[randomIndex].clone();
+            
+            // Scale geometry to match the desired radius
+            const scaleFactor = this.radius / 0.3; // 0.3 is average radius from preprocessing
+            geometry.scale(scaleFactor, scaleFactor, scaleFactor);
+            
+        } else {
+            console.log('Creating meteor objects normally');
+            // Create irregular geoid geometry for asteroid-like shape
+            geometry = this.createGeoidGeometry(this.radius, this.segments);
+            
+            // Use preloaded texture if available, otherwise load normally
+            const textureLoader = new THREE.TextureLoader();
+            const meteorTexture = this.preloadedAssets['/resources/meteor/Meteor Map.jpg'] 
+                || textureLoader.load('/resources/meteor/Meteor Map.jpg');
+            
+            // Create a rocky/metallic material for the meteor
+            material = new THREE.MeshStandardMaterial({
+                color: 0xDDAA77, // Brighter, more reflective color
+                map: meteorTexture,
+                roughness: 0.4, // Much smoother surface for better light reflection
+                metalness: 0.6, // Higher metallic content for better sun reflection
+                emissive: 0x442200, // Warmer, brighter emissive glow
+                emissiveIntensity: 0.15, // Reduced emissive to let sun lighting dominate
+            });
+        }
 
         const mesh = new THREE.Mesh(geometry, material);
         
@@ -222,15 +242,15 @@ export class Meteor {
     }
     
     // Static method to create random meteors with different properties
-    static createRandomMeteor(scene, minRadius = 0.1, maxRadius = 0.5, position, preloadedAssets = {}) {
+    static createRandomMeteor(scene, minRadius = 0.1, maxRadius = 0.5, position, preloadedAssets = {}, preprocessedObjects = {}) {
         const randomRadius = minRadius + Math.random() * (maxRadius - minRadius);
         const randomSegments = 16 + Math.floor(Math.random() * 16); // 16-32 segments
         
-        return new Meteor(scene, randomRadius, randomSegments, position, preloadedAssets);
+        return new Meteor(scene, randomRadius, randomSegments, position, preloadedAssets, preprocessedObjects);
     }
     
     // Static method to create a meteor field
-    static createMeteorField(scene, count = 10, centerPosition = new THREE.Vector3(0, 0, 0), fieldRadius = 20, preloadedAssets = {}) {
+    static createMeteorField(scene, count = 10, centerPosition = new THREE.Vector3(0, 0, 0), fieldRadius = 20, preloadedAssets = {}, preprocessedObjects = {}) {
         const meteors = [];
         
         for (let i = 0; i < count; i++) {
@@ -245,7 +265,7 @@ export class Meteor {
                 centerPosition.z + Math.sin(angle) * distance
             );
             
-            const meteor = Meteor.createRandomMeteor(scene, 0.05, 0.3, position, preloadedAssets);
+            const meteor = Meteor.createRandomMeteor(scene, 0.05, 0.3, position, preloadedAssets, preprocessedObjects);
             
             // Add random orbit if desired
             if (Math.random() > 0.5) {

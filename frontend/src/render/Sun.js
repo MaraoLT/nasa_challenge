@@ -1,15 +1,23 @@
 import * as THREE from 'three';
 
 export class Sun {
-    constructor(scene, radius = 1, preloadedAssets = {}) {
+    constructor(scene, radius = 1, preloadedAssets = {}, preprocessedObjects = {}) {
         this.scene = scene;
         this.radius = radius;
         this.position = new THREE.Vector3(0, 0, 0);
         this.textureLoader = new THREE.TextureLoader();
         this.preloadedAssets = preloadedAssets;
+        this.preprocessedObjects = preprocessedObjects;
         
-        // Initialize geometry
-        this.sunGeometry = new THREE.SphereGeometry(this.radius, 64, 64);
+        // Use preprocessed geometry if available, otherwise create new
+        if (preprocessedObjects.sunGeometry) {
+            console.log('Using preprocessed sun geometry');
+            this.sunGeometry = preprocessedObjects.sunGeometry.clone();
+            this.sunGeometry.scale(this.radius, this.radius, this.radius);
+        } else {
+            console.log('Creating sun geometry normally');
+            this.sunGeometry = new THREE.SphereGeometry(this.radius, 64, 64);
+        }
 
         // Initialize meshes and light (will be created in create methods)
         this.sun = null;
@@ -29,26 +37,25 @@ export class Sun {
     }
     
     createSun() {
-        // Use preloaded texture if available, otherwise load normally
-        const sunTexture = this.preloadedAssets['/resources/sun/Sun Map.png'] 
-            || this.textureLoader.load('/resources/sun/Sun Map.png');
+        // Use preprocessed material if available
+        if (this.preprocessedObjects.sunMaterial) {
+            console.log('Using preprocessed sun material');
+            this.sunMaterial = this.preprocessedObjects.sunMaterial.clone();
+        } else {
+            console.log('Creating sun material normally');
+            // Use preloaded texture if available, otherwise load normally
+            const sunTexture = this.preloadedAssets['/resources/sun/Sun Map.png'] 
+                || this.textureLoader.load('/resources/sun/Sun Map.png');
 
-        // Create Sun material with emissive properties for self-illumination
-        const sunMaterial = new THREE.MeshBasicMaterial({ 
-            map: sunTexture,
-            color: 0xffff88, // Slight yellow tint
-        });
-        
-        // Alternative: Use MeshStandardMaterial with emissive for more realistic look
-        // const sunMaterial = new THREE.MeshStandardMaterial({ 
-        //     map: sunTexture, 
-        //     emissiveMap: sunTexture,
-        //     emissive: 0xffff00,
-        //     emissiveIntensity: 2.0
-        // });
+            // Create Sun material with emissive properties for self-illumination
+            this.sunMaterial = new THREE.MeshBasicMaterial({ 
+                map: sunTexture,
+                color: 0xffff88, // Slight yellow tint
+            });
+        }
         
         // Create Sun mesh
-        this.sun = new THREE.Mesh(this.sunGeometry, sunMaterial);
+        this.sun = new THREE.Mesh(this.sunGeometry, this.sunMaterial);
     }
     
     createLight() {

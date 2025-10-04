@@ -9,8 +9,9 @@ import { Meteor } from './render/Meteor';
 function ThreeDemo() {
   const mountRef = useRef(null);
   
-  // Get preloaded assets from global window object
+  // Get preloaded assets and preprocessed objects from global window object
   const preloadedAssets = window.preloadedAssets || {};
+  const preprocessedObjects = window.preprocessedObjects || {};
   const assetsPreloaded = sessionStorage.getItem('assetsPreloaded') === 'true';
 
   useEffect(() => {
@@ -18,6 +19,7 @@ function ThreeDemo() {
 
     console.log('ThreeDemo starting with preloaded assets:', assetsPreloaded ? 'Yes' : 'No');
     console.log('Available assets:', Object.keys(preloadedAssets));
+    console.log('Available preprocessed objects:', Object.keys(preprocessedObjects));
 
     // Clear any existing content first
     mountRef.current.innerHTML = '';
@@ -33,17 +35,25 @@ function ThreeDemo() {
     // Append to the ref div
     mountRef.current.appendChild(renderer.domElement);
 
-    // Create sun instance with preloaded assets
-    const sunInstance = new Sun(scene, 15, preloadedAssets);
+    // Create sun instance with preloaded assets and preprocessed objects
+    const sunInstance = new Sun(scene, 15, preloadedAssets, preprocessedObjects);
     sunInstance.setPosition(0, 0, 0);
     
-    // Create earth instance with preloaded assets
-    const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0), preloadedAssets);
+    // Create earth instance with preloaded assets and preprocessed objects
+    const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
     
     // Start Earth's orbit around the sun
     earthInstance.startOrbit();
 
-    const galaxy = new Galaxy(500, 64, preloadedAssets).mesh;
+    // Use preprocessed galaxy if available, otherwise create normally
+    let galaxy;
+    if (preprocessedObjects.galaxyGeometry && preprocessedObjects.galaxyMaterial) {
+      console.log('Using preprocessed galaxy objects');
+      galaxy = new THREE.Mesh(preprocessedObjects.galaxyGeometry, preprocessedObjects.galaxyMaterial);
+    } else {
+      console.log('Creating galaxy normally');
+      galaxy = new Galaxy(500, 64, preloadedAssets).mesh;
+    }
     scene.add(galaxy);
 
     // Add lighting to illuminate the planet
@@ -128,7 +138,8 @@ function ThreeDemo() {
         scene,
         5, 20, // radius between 5 and 20 (scaled up from 0.5-2.0)
         meteorPosition,
-        preloadedAssets
+        preloadedAssets,
+        preprocessedObjects
       );
       
       // Add some orbital motion

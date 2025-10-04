@@ -2,12 +2,13 @@ import * as THREE from 'three';
 import {Orbit} from './Orbit.js';
 
 export class Earth {
-    constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0), preloadedAssets = {}) {
+    constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0), preloadedAssets = {}, preprocessedObjects = {}) {
         this.scene = scene;
         this.radius = radius;
         this.segments = segments;
         this.position = initialPosition.clone();
         this.preloadedAssets = preloadedAssets;
+        this.preprocessedObjects = preprocessedObjects;
         
         // Orbit properties
         this.isOrbiting = false;
@@ -28,7 +29,16 @@ export class Earth {
     }
 
     createEarthMesh() {
-        const geometry = new THREE.SphereGeometry(this.radius, this.segments, this.segments);
+        // Use preprocessed geometry if available, otherwise create new
+        let geometry;
+        if (this.preprocessedObjects.earthGeometry) {
+            console.log('Using preprocessed earth geometry');
+            geometry = this.preprocessedObjects.earthGeometry.clone();
+            geometry.scale(this.radius, this.radius, this.radius);
+        } else {
+            console.log('Creating earth geometry normally');
+            geometry = new THREE.SphereGeometry(this.radius, this.segments, this.segments);
+        }
         
         // Use preloaded textures if available, otherwise load normally
         const textureLoader = new THREE.TextureLoader();
@@ -133,7 +143,16 @@ export class Earth {
     }
 
     createAtmosphere() {
-        const atmosphereGeometry = new THREE.SphereGeometry(this.radius * 1.02, this.segments, this.segments);
+        // Use preprocessed atmosphere geometry if available, otherwise create new
+        let atmosphereGeometry;
+        if (this.preprocessedObjects.atmosphereGeometry) {
+            console.log('Using preprocessed atmosphere geometry');
+            atmosphereGeometry = this.preprocessedObjects.atmosphereGeometry.clone();
+            atmosphereGeometry.scale(this.radius * 1.02, this.radius * 1.02, this.radius * 1.02);
+        } else {
+            console.log('Creating atmosphere geometry normally');
+            atmosphereGeometry = new THREE.SphereGeometry(this.radius * 1.02, this.segments, this.segments);
+        }
 
         const textureLoader = new THREE.TextureLoader();
         const atmosphereTexture = this.preloadedAssets['/resources/earth/Earth Clouds.jpg'] 
