@@ -42,8 +42,8 @@ function ThreeDemo() {
     
     // Start Earth's orbit around the sun
     earthInstance.startOrbit();
-    
-    const galaxy = new Galaxy(200, 64, preloadedAssets).mesh;
+
+    const galaxy = new Galaxy(500, 64, preloadedAssets).mesh;
     scene.add(galaxy);
 
     // Add lighting to illuminate the planet

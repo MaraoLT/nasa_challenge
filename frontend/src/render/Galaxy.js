@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export class Galaxy {
-    constructor(radius = 1500, segments = 64, preloadedAssets = {}) {
+    constructor(radius = 500, segments = 64, preloadedAssets = {}) {
         this.radius = radius;
         this.segments = segments;
         this.preloadedAssets = preloadedAssets;
