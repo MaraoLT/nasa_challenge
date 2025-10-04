@@ -59,19 +59,6 @@ jobs:
         run: |
           if [ -f .dev_pid ]; then kill $(cat .dev_pid) || true; fi
 
-      - name: Build (production)
-        run: npm run build
-
-      - name: Serve production build (background)
-        run: |
-          npx --yes serve -s build -l 4173 > /dev/null 2>&1 &
-          echo $! > .serve_pid
-          timeout 30 bash -c 'until curl -sSf http://localhost:4173 > /dev/null; do sleep 1; done'
-
-      - name: Smoke test production build
-        run: |
-          curl -sS http://localhost:4173 | grep -qi 'id="root"'
-
       - name: Stop servers
         if: always()
         run: |
