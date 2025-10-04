@@ -30,14 +30,15 @@ export class Meteor {
         
         // Create texture loader
         const textureLoader = new THREE.TextureLoader();
+
+        const meteorTexture = textureLoader.load('/resources/meteor/Meteor Map.jpg');
         
         // Create a rocky/metallic material for the meteor
         const material = new THREE.MeshStandardMaterial({
             color: 0x8B4513, // Dark brown/rocky color
+            map: meteorTexture,
             roughness: 0.9,
             metalness: 0.1,
-            // You can add a texture here if you have one
-            // map: textureLoader.load('/resources/meteor/rock_texture.jpg'),
         });
 
         const mesh = new THREE.Mesh(geometry, material);
