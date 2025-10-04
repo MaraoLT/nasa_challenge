@@ -3,6 +3,7 @@ name: PR Build and Run
 on:
   pull_request:
 
+
 concurrency:
   group: pr-${{ github.ref }}
   cancel-in-progress: true
@@ -21,14 +22,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: '22'
+          cache: npm
           cache-dependency-path: nasa-space-apps/package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (prefer ci, fallback to install)
         run: |
           if [ -f package-lock.json ]; then
-            npm ci
+            npm ci || npm install
           else
             npm install
           fi
