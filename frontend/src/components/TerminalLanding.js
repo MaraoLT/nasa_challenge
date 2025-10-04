@@ -3,12 +3,16 @@ import { useNavigate } from "react-router-dom";
 import * as THREE from 'three';
 
 export default function TerminalLanding() {
-  const fullText = `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\n\nInitializing defense systems...`;
+  // Multi-page texts; advance through each, then navigate
+  const texts = [
+    `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\n\nClick to continue...`,
+    `Stay calm and follow the instructions displayed on your terminal.\nAuthorities are coordinating evacuation routes and shelter access.\nBring essentials and assist those nearby if possible.\nYour prompt action helps save lives.\n\nClick to begin training.`
+  ];
 
+  const [page, setPage] = useState(0);
+  const currentText = texts[page] ?? "";
   const [displayedText, setDisplayedText] = useState("");
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
-  const [preloadedAssets, setPreloadedAssets] = useState({});
+  const [isTyping, setIsTyping] = useState(true);
   const [canClick, setCanClick] = useState(false);
   const navigate = useNavigate();
 
@@ -73,17 +77,22 @@ export default function TerminalLanding() {
 
   // Terminal typing effect
   useEffect(() => {
-    let index = 0;
+    setDisplayedText("");
+    setIsTyping(true);
+    setCanClick(false);
+    let i = 0;
     const interval = setInterval(() => {
-      setDisplayedText(fullText.slice(0, index + 1));
-      index++;
-      if (index === fullText.length) {
+      i += 1;
+      setDisplayedText(currentText.slice(0, i));
+      if (i >= currentText.length) {
         clearInterval(interval);
+        setIsTyping(false);
+        setCanClick(true);
       }
     }, 30);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [currentText]);
 
   // Enable click when both text is done and assets are loaded
   useEffect(() => {
@@ -137,34 +146,19 @@ export default function TerminalLanding() {
   `;
 
   const handleClick = () => {
-    if(canClick) {
-      // Store preloaded assets in sessionStorage as a flag
-      // The actual textures will be accessible globally
-      window.preloadedAssets = preloadedAssets;
-      sessionStorage.setItem('assetsPreloaded', 'true');
-      navigate("/ThreeDemo");
+    // If still typing, finish instantly
+    if (isTyping) {
+      setDisplayedText(currentText);
+      setIsTyping(false);
+      setCanClick(true);
+      return;
     }
-  };
-
-  // Dynamic text based on loading state
-  const getDisplayText = () => {
-    let text = displayedText;
-    
-    if (displayedText === fullText) {
-      if (!assetsLoaded) {
-        text += `\n\nLoading defense systems... ${Math.round(loadingProgress)}%`;
-        
-        // Add loading bar
-        const barLength = 30;
-        const filledLength = Math.round((loadingProgress / 100) * barLength);
-        const loadingBar = '[' + '█'.repeat(filledLength) + '░'.repeat(barLength - filledLength) + ']';
-        text += `\n${loadingBar}`;
-      } else {
-        text += '\n\nSystems online! Click to access Earth Defense Interface!';
-      }
+    // Advance to next page, or navigate when done
+    if (page < texts.length - 1) {
+      setPage((p) => p + 1);
+    } else if (canClick) {
+      navigate("/home"); // substitua pelo path desejado
     }
-    
-    return text;
   };
 
   return (
@@ -175,6 +169,8 @@ export default function TerminalLanding() {
             {getDisplayText()}
             <span style={cursorStyle}>|</span>
           </pre>
+          {/* Optional: small hint when ready to proceed */}
+          {canClick}
         </div>
       </div>
   );
