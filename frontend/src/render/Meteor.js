@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {Orbit} from './Orbit.js';
 
 export class Meteor {
     constructor(scene, radius, segments = 32, initialPosition) {
@@ -7,12 +8,9 @@ export class Meteor {
         this.segments = segments;
         this.position = initialPosition.clone();
         
-        // Orbit properties
+        // Initialize orbit properties
         this.isOrbiting = false;
-        this.orbitCenter = new THREE.Vector3(0, 0, 0); // Default to sun at origin
-        this.orbitRadius = this.position.distanceTo(this.orbitCenter);
-        this.orbitSpeed = 0.005; // Default orbit speed
-        this.orbitAngle = Math.atan2(this.position.z - this.orbitCenter.z, this.position.x - this.orbitCenter.x);
+        this.orbit = null;
         
         // Create Meteor components
         this.mesh = this.createMeteorMesh();
@@ -42,6 +40,10 @@ export class Meteor {
         });
 
         const mesh = new THREE.Mesh(geometry, material);
+        
+        // Ensure the meteor does not interact with shadows
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
         
         return mesh;
     }
@@ -140,12 +142,18 @@ export class Meteor {
     // Start orbiting around a center point (usually the sun)
     startOrbit(center = new THREE.Vector3(0, 0, 0), speed = 0.005) {
         this.isOrbiting = true;
-        this.orbitCenter = center.clone();
-        this.orbitSpeed = speed;
         
-        // Calculate initial orbit radius and angle based on current position
-        this.orbitRadius = this.position.distanceTo(this.orbitCenter);
-        this.orbitAngle = Math.atan2(this.position.z - this.orbitCenter.z, this.position.x - this.orbitCenter.x);
+        // Calculate orbital parameters based on current position and desired speed
+        const distance = this.position.distanceTo(center);
+        
+        this.orbit = new Orbit({
+            semiMajorAxis: distance, // Distance from center (sun)
+            eccentricity: 0.1 + Math.random() * 0.3,  // Random eccentricity for variety
+            period: 180.0 + Math.random() * 360.0,    // Random period between 180-540 seconds (longer for larger scale)
+            inclination: (Math.random() - 0.5) * Math.PI / 3, // Random inclination
+            omega: Math.random() * Math.PI * 2,       // Random orientation
+            raan: Math.random() * Math.PI * 2         // Random ascending node
+        });
     }
     
     // Stop orbiting
@@ -154,35 +162,47 @@ export class Meteor {
     }
     
     // Update orbit position
-    updateOrbit() {
-        if (!this.isOrbiting) return;
+    updateOrbit(time) {
+        if (!this.isOrbiting || !this.orbit) return;
         
-        // Update angle
-        this.orbitAngle += this.orbitSpeed;
-        
-        // Calculate new position in circular orbit
-        const x = this.orbitCenter.x + Math.cos(this.orbitAngle) * this.orbitRadius;
-        const y = this.orbitCenter.y; // Keep same Y level
-        const z = this.orbitCenter.z + Math.sin(this.orbitAngle) * this.orbitRadius;
-        
-        // Update position
-        this.setPosition(x, y, z);
+        const orbitPosition = this.orbit.walkInTime(time);
+        console.log("Meteor orbit position at time", time, ":", orbitPosition);
+        this.setPosition(orbitPosition[0], orbitPosition[1], orbitPosition[2]);
     }
     
-    // Set orbit parameters
+    // Set orbit parameters (legacy method for compatibility)
     setOrbitParameters(radius, speed) {
-        this.orbitRadius = radius;
-        this.orbitSpeed = speed;
+        // This method is kept for compatibility but now uses Orbit class
+        if (this.orbit) {
+            // Recreate orbit with new parameters
+            this.orbit = new Orbit({
+                semiMajorAxis: radius,
+                eccentricity: 0.1,
+                period: 60.0 / speed, // Convert speed to period
+                inclination: 0,
+                omega: 0,
+                raan: 0
+            });
+        }
     }
     
     // Get orbit status
     getOrbitStatus() {
+        if (!this.orbit) {
+            return {
+                isOrbiting: this.isOrbiting,
+                orbit: null
+            };
+        }
+        
         return {
             isOrbiting: this.isOrbiting,
-            center: this.orbitCenter.clone(),
-            radius: this.orbitRadius,
-            speed: this.orbitSpeed,
-            angle: this.orbitAngle
+            semiMajorAxis: this.orbit.a,
+            eccentricity: this.orbit.e,
+            period: this.orbit.T,
+            inclination: this.orbit.inclination,
+            omega: this.orbit.omega,
+            raan: this.orbit.raan
         };
     }
     

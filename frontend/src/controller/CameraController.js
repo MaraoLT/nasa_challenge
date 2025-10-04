@@ -8,11 +8,11 @@ export class CameraController {
         // Camera movement settings
         this.minDistance = minDistance;
         this.maxDistance = maxDistance;
-        this.currentDistance = Math.max(minDistance, 2); // Start at reasonable distance but respect minDistance
+        this.currentDistance = Math.max(minDistance, 50); // Start at reasonable distance but respect minDistance
         
         // Rotation settings
-        this.rotationSpeed = 0.005;
-        this.zoomSpeed = 0.1;
+        this.rotationSpeed = 0.01;
+        this.zoomSpeed = 0.5;
         
         // Mouse state
         this.isMouseDown = false;
@@ -137,13 +137,13 @@ export class CameraController {
                 break;
             case 'ArrowUp':
                 // Move closer
-                this.currentDistance = Math.max(this.minDistance, this.currentDistance - 0.5);
+                this.currentDistance = Math.max(this.minDistance, this.currentDistance - 5); // Larger steps for new scale
                 this.spherical.radius = this.currentDistance;
                 this.update();
                 break;
             case 'ArrowDown':
                 // Move further
-                this.currentDistance = Math.min(this.maxDistance, this.currentDistance + 0.5);
+                this.currentDistance = Math.min(this.maxDistance, this.currentDistance + 5); // Larger steps for new scale
                 this.spherical.radius = this.currentDistance;
                 this.update();
                 break;
@@ -155,6 +155,9 @@ export class CameraController {
         // Update target if locked onto an object (but not during transitions)
         if (this.lockedTarget && this.lockedTarget.getPosition && !this.isTransitioning) {
             this.target.copy(this.lockedTarget.getPosition());
+            
+            // Dynamically adjust minimum distance based on locked target's radius
+            this.updateMinDistanceForTarget();
         }
         
         // Auto-rotation
@@ -171,9 +174,40 @@ export class CameraController {
         this.camera.lookAt(this.target);
     }
     
+    // Update minimum distance based on the current locked target
+    updateMinDistanceForTarget() {
+        if (!this.lockedTarget) return;
+        
+        let targetRadius = 1; // Default radius
+        
+        // Get radius based on target type
+        if (this.lockedTarget.radius !== undefined) {
+            targetRadius = this.lockedTarget.radius;
+        } else if (this.lockMode === 'sun' && this.sunInstance) {
+            targetRadius = 15; // Sun radius from ThreeDemo.js
+        } else if (this.lockMode === 'earth' && this.earthInstance) {
+            targetRadius = 1; // Earth radius from ThreeDemo.js
+        } else if (this.lockMode === 'meteor' && this.currentMeteor) {
+            targetRadius = this.currentMeteor.radius || 10; // Meteor radius or default
+        }
+        
+        const newMinDistance = targetRadius * 1.1;
+        
+        // Update minimum distance if it's different
+        if (Math.abs(this.minDistance - newMinDistance) > 0.1) {
+            this.minDistance = newMinDistance;
+            
+            // Ensure current distance respects new minimum
+            if (this.currentDistance < this.minDistance) {
+                this.currentDistance = this.minDistance;
+                this.spherical.radius = this.currentDistance;
+            }
+        }
+    }
+    
     // Reset camera to default position
     resetCamera() {
-        this.currentDistance = 5;
+        this.currentDistance = 75; // Appropriate default distance for new scale
         this.spherical.radius = this.currentDistance;
         this.spherical.theta = 0;
         this.spherical.phi = Math.PI / 2;
@@ -219,11 +253,14 @@ export class CameraController {
         this.lockedTarget = null;
         this.lockMode = 'none';
         
-        const targetDistance = Math.max(this.minDistance, 3);
+        // Set dynamic minimum distance for sun (radius 15)
+        const sunRadius = 15;
+        const targetDistance = sunRadius * 2; // Start at 2x radius for good view
         
         this.transitionToTarget(this.sunInstance, targetDistance, () => {
             this.lockedTarget = this.sunInstance;
             this.lockMode = 'sun';
+            this.updateMinDistanceForTarget(); // Update min distance after locking
             console.log('Camera locked onto Sun');
         }, duration);
     }
@@ -241,11 +278,14 @@ export class CameraController {
         this.lockedTarget = null;
         this.lockMode = 'none';
         
-        const targetDistance = Math.max(this.minDistance, 2);
+        // Set dynamic minimum distance for earth (radius 1)
+        const earthRadius = 1;
+        const targetDistance = earthRadius * 3; // Start at 3x radius for good view
         
         this.transitionToTarget(this.earthInstance, targetDistance, () => {
             this.lockedTarget = this.earthInstance;
             this.lockMode = 'earth';
+            this.updateMinDistanceForTarget(); // Update min distance after locking
             console.log('Camera locked onto Earth');
         }, duration);
     }
@@ -263,11 +303,14 @@ export class CameraController {
         this.lockedTarget = null;
         this.lockMode = 'none';
         
-        const targetDistance = Math.max(this.minDistance, 1.5); // Closer for meteors
+        // Set dynamic minimum distance for meteor (variable radius 5-20)
+        const meteorRadius = meteorInstance.radius || 10;
+        const targetDistance = meteorRadius * 2.5; // Start at 2.5x radius for good view
         
         this.transitionToTarget(meteorInstance, targetDistance, () => {
             this.lockedTarget = meteorInstance;
             this.lockMode = 'meteor';
+            this.updateMinDistanceForTarget(); // Update min distance after locking
             console.log('Camera locked onto Meteor');
         }, duration);
     }

@@ -120,6 +120,10 @@ export class Earth {
         
         const mesh = new THREE.Mesh(geometry, material);
         
+        // Ensure Earth doesn't cast shadows that could interfere with galaxy
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+        
         // Store reference to material for updating sun direction
         mesh.userData.material = material;
         
@@ -141,6 +145,11 @@ export class Earth {
         });
         
         const atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+        
+        // Ensure atmosphere doesn't cast shadows
+        atmosphereMesh.castShadow = false;
+        atmosphereMesh.receiveShadow = false;
+        
         return atmosphereMesh;
     }
     
@@ -220,9 +229,9 @@ export class Earth {
     startOrbit() {
         this.isOrbiting = true;
         this.orbit = new Orbit({
-            semiMajorAxis: 10, // Earth's distance from Sun in million km (scaled)
+            semiMajorAxis: 150, // Earth's distance from Sun in million km (scaled)
             eccentricity: 0.0,  // Earth's orbital eccentricity
-            period: 30.0,        // Earth's orbital period in days
+            period: 365.0,        // Earth's orbital period in days
             inclination: 0         // Earth's orbital inclination (minimal)
         });
     }
@@ -237,7 +246,7 @@ export class Earth {
         if (!this.isOrbiting) return;
         const initialPosition = this.orbit.walkInTime(time);
         console.log("Orbit position at time", time, ":", initialPosition);
-        this.setPosition(initialPosition[0], initialPosition[1], initialPosition[2]);
+        this.setPosition(initialPosition[1], initialPosition[2], initialPosition[0]);
     }
     
     // Set orbit parameters
