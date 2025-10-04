@@ -21,22 +21,22 @@ function ThreeDemo() {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000011); // Dark blue background
+    renderer.setClearColor(0x000000); // Pure black background to eliminate blue hue
     
     // Append to the ref div
     mountRef.current.appendChild(renderer.domElement);
 
     // Create sun instance - now handles its own scene addition
-    const sunInstance = new Sun(scene, 1); // Pass scene, radius = 1
+    const sunInstance = new Sun(scene, 15); // Pass scene, radius = 1
     sunInstance.setPosition(0, 0, 0); // Position sun at origin
     
     // Create earth instance with initial orbital position - now handles its own scene addition
-    const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(15, 0, 0)); // Pass scene, radius = 1, segments = 32, initial position
+    const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0)); // Pass scene, radius = 1, segments = 32, initial position
     
     // Start Earth's orbit around the sun
     earthInstance.startOrbit(); // Orbit around sun with speed 0.01
     
-    const galaxy = new Galaxy(90, 64).mesh;
+    const galaxy = new Galaxy(1000, 64).mesh;
     scene.add(galaxy);
 
     // Add lighting to illuminate the planet
@@ -53,12 +53,12 @@ function ThreeDemo() {
     // Optional: Add corona
     sunInstance.addCorona();
 
-    camera.position.set(0, 0, 2); // Start closer but not too close
+    camera.position.set(0, 0, 50); // Start at a reasonable distance for the new scale
 
     // Initialize camera controller - target the sun at origin
-    const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 0.8, 30); // Min distance 0.8 to see sun clearly
+    const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 20, 500); // Min distance 20 to see sun clearly, max 500 for wide view
     cameraController.enableControls(renderer.domElement);
-    cameraController.setZoomLimits(0.8, 30);
+    cameraController.setZoomLimits(20, 500);
     
     // Set target objects for lock-in functionality
     cameraController.setTargetObjects(sunInstance, earthInstance);
@@ -66,6 +66,31 @@ function ThreeDemo() {
     // Set initial sun direction based on sun position relative to Earth
     const sunDirection = sunInstance.getPosition().clone().sub(earthInstance.getPosition()).normalize();
     earthInstance.updateSunDirection(sunDirection);
+
+    // Initialize camera to Earth position smoothly after all objects are ready
+    const initializeCamera = () => {
+      // Set camera to look at Earth initially without jarring transitions
+      const earthPos = earthInstance.getPosition();
+      const direction = new THREE.Vector3(0, 0, 1).normalize();
+      const cameraDistance = 8;
+      
+      // Position camera relative to Earth
+      camera.position.copy(earthPos).add(direction.multiplyScalar(cameraDistance));
+      camera.lookAt(earthPos);
+      
+      // Update camera controller to match
+      cameraController.target.copy(earthPos);
+      cameraController.spherical.setFromVector3(camera.position.clone().sub(earthPos));
+      cameraController.currentDistance = cameraDistance;
+      
+      // Lock onto Earth smoothly after initial positioning
+      setTimeout(() => {
+        cameraController.lockOntoEarthWithTransition(1000); // 1 second smooth transition
+      }, 100);
+    };
+    
+    // Call initialization after a brief delay to ensure all objects are ready
+    setTimeout(initializeCamera, 50);
 
     // Meteor management
     let currentMeteor = null;
@@ -82,8 +107,8 @@ function ThreeDemo() {
       
       // Create new meteor with random position around the system
       const angle = Math.random() * Math.PI * 2;
-      const distance = 20 + Math.random() * 10; // Distance between 20-30 units
-      const height = (Math.random() - 0.5) * 10; // Some vertical spread
+      const distance = 200 + Math.random() * 150; // Distance between 200-350 units (beyond Earth's orbit)
+      const height = (Math.random() - 0.5) * 100; // Some vertical spread
       
       const meteorPosition = new THREE.Vector3(
         Math.cos(angle) * distance,
@@ -91,10 +116,10 @@ function ThreeDemo() {
         Math.sin(angle) * distance
       );
       
-      // Create meteor with max size of 2
+      // Create meteor with appropriate size for the new scale
       currentMeteor = Meteor.createRandomMeteor(
         scene,
-        0.5, 2.0, // radius between 0.5 and 2.0
+        5, 20, // radius between 5 and 20 (scaled up from 0.5-2.0)
         meteorPosition
       );
       
@@ -135,7 +160,7 @@ function ThreeDemo() {
       earthInstance.updateOrbit(absoluteTime);
 
       // Rotate the Earth and atmosphere using deltaTime
-      earthInstance.rotate(0.01 * deltaTime);
+      earthInstance.rotate(0.5 * deltaTime);
 
       // Update Earth's model matrix for day/night calculations
       earthInstance.updateMatrixWorld();
@@ -149,7 +174,7 @@ function ThreeDemo() {
       
       // Update meteor if it exists
       if (currentMeteor) {
-        currentMeteor.updateOrbit();
+        currentMeteor.updateOrbit(absoluteTime);
         currentMeteor.rotate(0.02); // Faster rotation for meteors
       }
 
