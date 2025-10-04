@@ -47,8 +47,8 @@ function ThreeDemo() {
     scene.add(galaxy);
 
     // Add lighting to illuminate the planet
-    // Only ambient light for the atmosphere and galaxy
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+    // Only ambient light for the atmosphere and galaxy - reduced for better sun contrast
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.1);
     scene.add(ambientLight);
 
     // Remove directional light - Earth uses custom shader lighting

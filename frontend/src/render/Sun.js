@@ -17,7 +17,7 @@ export class Sun {
         this.corona = null;
         
         // Light properties
-        this.lightIntensity = 10.0;
+        this.lightIntensity = 50.0; // Much stronger sun light
         this.lightColor = 0xffffff;
         
         // Create the Sun and lighting
@@ -53,7 +53,7 @@ export class Sun {
     
     createLight() {
         // Create point light for sun illumination
-        this.pointLight = new THREE.PointLight(this.lightColor, this.lightIntensity, 0, 1);
+        this.pointLight = new THREE.PointLight(this.lightColor, this.lightIntensity, 0, 0.5);
         
         // Disable shadow casting for the point light to avoid artifacts
         this.pointLight.castShadow = false;

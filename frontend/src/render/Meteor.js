@@ -34,10 +34,12 @@ export class Meteor {
         
         // Create a rocky/metallic material for the meteor
         const material = new THREE.MeshStandardMaterial({
-            color: 0x8B4513, // Dark brown/rocky color
+            color: 0xDDAA77, // Brighter, more reflective color
             map: meteorTexture,
-            roughness: 0.9,
-            metalness: 0.1,
+            roughness: 0.8, // Much smoother surface for better light reflection
+            metalness: 0.2, // Higher metallic content for better sun reflection
+            emissive: 0x442200, // Warmer, brighter emissive glow
+            emissiveIntensity: 0.15, // Reduced emissive to let sun lighting dominate
         });
 
         const mesh = new THREE.Mesh(geometry, material);
