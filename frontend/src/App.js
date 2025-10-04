@@ -1,4 +1,3 @@
-import React from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ThreeDemo from './ThreeDemo';
