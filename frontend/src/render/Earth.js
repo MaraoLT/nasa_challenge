@@ -223,7 +223,10 @@ export class Earth {
             semiMajorAxis: 150, // Earth's distance from Sun in million km (scaled)
             eccentricity: 0.0,  // Earth's orbital eccentricity
             period: 365.0,        // Earth's orbital period in days
-            inclination: 0         // Earth's orbital inclination (minimal)
+            inclination: 0, // Earth's orbital inclination (minimal)
+            omega: 0,
+            raan: 0,
+            tau: 0,
         });
     }
     
