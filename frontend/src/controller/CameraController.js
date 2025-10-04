@@ -11,8 +11,8 @@ export class CameraController {
         this.currentDistance = Math.max(minDistance, 50); // Start at reasonable distance but respect minDistance
         
         // Rotation settings
-        this.rotationSpeed = 0.005;
-        this.zoomSpeed = 0.1;
+        this.rotationSpeed = 0.01;
+        this.zoomSpeed = 0.5;
         
         // Mouse state
         this.isMouseDown = false;

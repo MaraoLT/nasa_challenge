@@ -41,6 +41,10 @@ export class Meteor {
 
         const mesh = new THREE.Mesh(geometry, material);
         
+        // Ensure meteor doesn't cast shadows that could interfere with galaxy
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+        
         return mesh;
     }
     
