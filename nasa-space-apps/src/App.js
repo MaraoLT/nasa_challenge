@@ -2,6 +2,8 @@ import React from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ThreeDemo from './ThreeDemo';
+import Page1 from './components/page1';
+import BlueprintPage from './components/BlueprintPage';
 
 function Home() {
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -26,6 +28,8 @@ function Home() {
       <div className="content">
         <h1>Welcome to the space experience</h1>
         <Link to="/ThreeDemo" className="cta">Open 3D Model</Link>
+        <Link to="/page1" className="cta">Open slides</Link>
+        <Link to="/blueprint" className="cta">Blueprint page</Link>
       </div>
     </div>
   );
@@ -37,6 +41,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/ThreeDemo" element={<ThreeDemo />} />
+        <Route path="/page1" element={<Page1 />} />
+        <Route path="/blueprint" element={<BlueprintPage />} />
       </Routes>
     </BrowserRouter>
   );
