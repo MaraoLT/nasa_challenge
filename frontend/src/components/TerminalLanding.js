@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"; // hook do React Router
 
 
 export default function TerminalLanding() {
-  const fullText = `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\nClick to follow up!`;
+  const fullText = `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\n\n\nClick to follow up!`;
 
   const [displayedText, setDisplayedText] = useState("");
   const navigate = useNavigate(); // hook para navegar
