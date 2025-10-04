@@ -27,6 +27,7 @@ export default function TerminalLanding() {
       '/resources/galaxy/Galaxy Map.jpg'
     ];
 
+    // Object to hold loaded assets
     const loadedAssets = {};
 
     loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
