@@ -14,9 +14,9 @@ export class AstralObject {
         this.orbit = null;
 
         this.tracePoints = [];
-        this.traceMaxPoints = 100;
+        this.traceMaxPoints = 200;
         this.traceLine = null;
-        this.traceRefreshRate = 20; // Update trace every 20 updates
+        this.traceRefreshRate = 30; // Update trace every 20 updates
         this.updates = 0;
 
         // Create and add trace to scene immediately
@@ -122,8 +122,19 @@ export class AstralObject {
         }
     }
 
+    removeTraceFromScene() {
+        if (this.traceLine && this.scene) {
+            this.scene.remove(this.traceLine);
+        }
+    }
+
     dispose() {
+        // Remove mesh and atmosphere from scene
         this.removeFromScene();
+        // Remove trace line from scene
+        this.removeTraceFromScene();
+
+        // Dispose mesh and atmosphere
         if (this.mesh) {
             this.mesh.geometry.dispose();
             this.mesh.material.dispose();
@@ -132,9 +143,13 @@ export class AstralObject {
             this.atmosphere.geometry.dispose();
             this.atmosphere.material.dispose();
         }
+        // Dispose trace line
         if (this.traceLine) {
             this.traceLine.geometry.dispose();
             this.traceLine.material.dispose();
+            this.traceLine = null;
         }
+        // Clear trace points
+        this.tracePoints = [];
     }
 }

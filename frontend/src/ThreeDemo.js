@@ -89,7 +89,7 @@ function ThreeDemo() {
       animationId = requestAnimationFrame(animate);
 
       // Meteor management functions
-      const createNewMeteor = () => {
+      const createNewRandomMeteor = () => {
         if (currentMeteor) {
           currentMeteor.dispose();
           currentMeteor = null;
@@ -108,7 +108,7 @@ function ThreeDemo() {
 
         currentMeteor = Meteor.createRandomMeteor(
           scene,
-          5, 20,
+          0.02, 0.2,
           meteorPosition,
           preloadedAssets,
           preprocessedObjects
@@ -123,7 +123,7 @@ function ThreeDemo() {
       const handleKeyPress = (event) => {
         switch(event.code) {
           case 'KeyM':
-            createNewMeteor();
+            createNewRandomMeteor();
             break;
         }
       };
@@ -280,7 +280,7 @@ function ThreeDemo() {
 
         currentMeteor = Meteor.createRandomMeteor(
           scene,
-          5, 20,
+          0.02, 0.2,
           meteorPosition,
           preloadedAssets,
           preprocessedObjects
