@@ -3,8 +3,9 @@ import { Orbit } from './Orbit.js';
 import { AstralObject } from './AstralObject.js';
 
 export class Earth extends AstralObject {
-    constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0)) {
-        super(scene, radius, segments, initialPosition);
+    constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0), preloadedAssets = {}, preprocessedObjects = {}) {
+        super(scene, radius, segments, initialPosition, preprocessedObjects);
+        this.preloadedAssets = preloadedAssets;
 
         // Orbit properties
         this.orbitCenter = new THREE.Vector3(0, 0, 0); // Default to sun at origin

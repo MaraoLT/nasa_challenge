@@ -3,8 +3,9 @@ import { Orbit } from './Orbit.js';
 import { AstralObject } from './AstralObject.js';
 
 export class Meteor extends AstralObject {
-    constructor(scene, radius, segments = 32, initialPosition) {
-        super(scene, radius, segments, initialPosition);
+    constructor(scene, radius, segments = 32, initialPosition, preloadedAssets = {}, preprocessedObjects = {}) {
+        super(scene, radius, segments, initialPosition, preprocessedObjects);
+        this.preloadedAssets = preloadedAssets;
 
         this.mesh = this.createMeteorMesh();
         this.setPosition(this.position.x, this.position.y, this.position.z);
