@@ -189,7 +189,7 @@ export default function SpaceBodiesSlides() {
 
   const onPrev = () => {
     if (animating) return;
-    if (index === 0) return exitAnd(() => navigate('/home'));
+  if (index === 0) return exitAnd(() => navigate('/types-of-space-bodies'));
     const prevIdx = Math.max(0, index - 1);
     // Immediately switch active 3D object and overlay text target
     setIndex(prevIdx); // keep rotation tied to the visible object

@@ -6,26 +6,12 @@ import { Meteor } from '../render/Meteor';
 import '../styles/credits.css';
 
 export default function Credits() {
-  const names = [
-    'Name 1',
-    'Name 2',
-    'Name 3',
-    'Name 4',
-    'Name 5',
-    'Name 6',
-  ];
-
   const pages = [
     {
       key: 'thanks',
       title: 'Thank you!',
       body: `Thank you for experiencing our space adventure.\n\nThis project was submitted on NASA Space Apps Challenge 2025, under the challenge Meteor Madness.\n\nIt has come to reality by the skills and dreams of UNICAMP undergraduate students\n Ainaras Marão\n Bruno Jambeiro\n Matheus Veiga\n Rafael Carro\n Nicholas Pucharelli\n Yan Oliveira`,
-    },
-    {
-      key: 'team',
-      title: 'Team',
-      body: names.join('\n'),
-    },
+    }
   ];
 
   const [index, setIndex] = useState(0);

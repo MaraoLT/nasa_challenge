@@ -12,6 +12,7 @@ import MeteorImpactSimulator from './components/MeteorImpactSimulator';
 import Credits from './components/Credits';
 import IntroSlide from './components/IntroSlide';
 import DraggableCards from './components/DraggableCards';
+import TypesOfSpaceBodiesSlide from './components/TypesOfSpaceBodiesSlide';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/warning" element={<WarningScreen />} />
         <Route path="/credits" element={<Credits />} />
         <Route path="/intro" element={<IntroSlide />} />
+  <Route path="/types-of-space-bodies" element={<TypesOfSpaceBodiesSlide />} />
         <Route path="/cards" element={<DraggableCards />} />
         <Route path="/meteor-impact-simulator" element={<MeteorImpactSimulator />}/>
       </Routes>
