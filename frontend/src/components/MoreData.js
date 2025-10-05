@@ -71,7 +71,7 @@ export default function MoreData() {
     setIndex((i) => Math.max(0, i - 1));
   };
   const onNext = () => {
-    if (index === SLIDES.length - 1) return navigate('/mitigation');
+    if (index === SLIDES.length - 1) return navigate('/meteor-impact-simulator?from=more-data');
     setIndex((i) => Math.min(SLIDES.length - 1, i + 1));
   };
 

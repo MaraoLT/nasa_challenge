@@ -143,13 +143,6 @@ function thermicRadiationToRadius(impactEnergy, thermic) {
 }
 
 function getTsunamiEffects(diametroCrateraTransente, waterHeight) {
-  // Altura inicial da onda
   let A0 = Math.min(0.14 * diametroCrateraTransente, waterHeight);
-
-  return {
-    A0: A0, // altura inicial da onda (m)
-    Acoast: Acoast, // altura na praia (m)
-    runup: runup, // altura máxima (m)
-    inundationArea: inundationArea // m²
-  };
+  return A0;
 }
