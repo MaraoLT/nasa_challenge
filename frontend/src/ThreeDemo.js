@@ -193,7 +193,7 @@ function ThreeDemo() {
       const sunInstance = new Sun(scene, 15, preloadedAssets, preprocessedObjects);
       sunInstance.setPosition(0, 0, 0);
 
-      const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
+      const earthInstance = new Earth(scene, 1, 16, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
       earthInstance.startOrbit();
 
       // Add galaxy
@@ -211,9 +211,9 @@ function ThreeDemo() {
       sunInstance.addCorona();
 
       // Initialize camera controller
-      const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 20, 500);
+      const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 80, 500);
       cameraController.enableControls(renderer.domElement);
-      cameraController.setZoomLimits(20, 500);
+      cameraController.setZoomLimits(80, 500);
       cameraController.setTargetObjects(sunInstance, earthInstance);
 
       // Set initial camera position to look at Earth
