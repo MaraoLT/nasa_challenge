@@ -34,7 +34,8 @@
         /* Painel de resultados à direita */
         #results {
             position: absolute;
-            top: 20px; /* um pouco mais para baixo */
+            top: 20px;
+            /* um pouco mais para baixo */
             right: 10px;
             background: rgba(42, 42, 42, 0.9);
             color: white;
@@ -44,13 +45,33 @@
             font-family: Arial, sans-serif;
             max-width: 320px;
             min-width: 260px;
-            display: none; /* aparece somente após a primeira simulação */
+            display: none;
+            /* aparece somente após a primeira simulação */
         }
 
-        #results h3 { margin: 0 0 10px; }
-        #results .row { display: flex; justify-content: space-between; gap: 10px; margin: 6px 0; }
-        #results .label { color: #ddd; font-size: 12px; }
-        #results .value { font-weight: 700; font-size: 13px; background: rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 4px; }
+        #results h3 {
+            margin: 0 0 10px;
+        }
+
+        #results .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 6px 0;
+        }
+
+        #results .label {
+            color: #ddd;
+            font-size: 12px;
+        }
+
+        #results .value {
+            font-weight: 700;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
 
         #controls button {
             background: #ff4444;
@@ -96,7 +117,7 @@
 
         .value-badge {
             display: inline-block;
-            background: rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.12);
             padding: 2px 6px;
             border-radius: 4px;
             margin-left: 6px;
@@ -113,7 +134,7 @@
         .stepper button {
             background: #2b2b2b;
             color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 28px;
             height: 28px;
             border-radius: 4px;
@@ -147,9 +168,99 @@
 <body>
     <div id="cesiumContainer"></div>
 
+    <!-- Elementos de áudio para efeitos sonoros -->
+    <audio id="meteorFallSound" preload="auto">
+        <source src="./sounds/meteor-impact-sound-effect.mp3" type="audio/mp3">
+
+    </audio>
+
+    <!-- Overlay de imagem do meteoro durante o impacto -->
+    <div id="meteorImpactOverlay" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(circle, rgba(255,100,0,0.8) 0%, rgba(255,0,0,0.4) 30%, transparent 70%);
+        pointer-events: none;
+        z-index: 9999;
+        display: none;
+        animation: impactFlash 3s ease-out;
+    ">
+
+        <!-- Efeito de ondas de choque -->
+        <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            border: 3px solid rgba(255,255,255,0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: shockwave 2s ease-out 1s;
+        "></div>
+    </div>
+
+    <style>
+        /* @keyframes impactFlash {
+            0% {
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 0.8;
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 100, 0, 0.6) 40%, transparent 80%);
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        } */
+
+        @keyframes meteorFall {
+            0% {
+                transform: translate(-300vw, -300vh) rotate(45deg) scale(0.2);
+                opacity: 0.3;
+            }
+
+            20% {
+                opacity: 0.8;
+            }
+
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) rotate(45deg) scale(1.8);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(45deg) scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes shockwave {
+            0% {
+                width: 10px;
+                height: 10px;
+                opacity: 1;
+            }
+
+            100% {
+                width: 100vw;
+                height: 100vw;
+                opacity: 0;
+            }
+        }
+    </style>
+
     <div id="controls">
         <h3>Meteor Impact Simulator</h3>
-    <button id="simulateBtn" onclick="simulateImpact()" disabled>Simulate Impact</button>
+        <button id="simulateBtn" onclick="simulateImpact()" disabled>Simulate Impact</button>
         <button onclick="resetSimulation()">Reset</button>
         <div id="impact-info">
             <div class="control">
@@ -192,18 +303,25 @@
     <!-- Painel de resultados à direita -->
     <div id="results" aria-live="polite">
         <h3>Resultados</h3>
-        <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
-        <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
-        <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
+        <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value"
+                id="r-diametroCratera">—</span></div>
+        <div class="row"><span class="label">Profundidade cratera</span><span class="value"
+                id="r-profundidadeCratera">—</span></div>
+        <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span>
+        </div>
         <div class="row"><span class="label">Energia (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
-        <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
-        <div class="row"><span class="label">Fireball (diâmetro)</span><span class="value" id="r-fireball">—</span></div>
+        <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span>
+        </div>
+        <div class="row"><span class="label">Fireball (diâmetro)</span><span class="value" id="r-fireball">—</span>
+        </div>
         <div class="row"><span class="label">Queimaduras leves</span><span class="value" id="r-first">—</span></div>
         <div class="row"><span class="label">Queimaduras 2º grau</span><span class="value" id="r-second">—</span></div>
         <div class="row"><span class="label">Queimaduras 3º grau</span><span class="value" id="r-third">—</span></div>
-        <div class="row"><span class="label">Risco roupas pegarem fogo</span><span class="value" id="r-clothes">—</span></div>
+        <div class="row"><span class="label">Risco roupas pegarem fogo</span><span class="value" id="r-clothes">—</span>
+        </div>
         <div class="row"><span class="label">Estimativa de mortes</span><span class="value" id="r-deaths">—</span></div>
-        <div class="row"><span class="label">Estimativa de feridos</span><span class="value" id="r-feridos">—</span></div>
+        <div class="row"><span class="label">Estimativa de feridos</span><span class="value" id="r-feridos">—</span>
+        </div>
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
@@ -235,10 +353,10 @@
 
         // Materiais e densidades (kg/m³)
         const MATERIALS = [
-            { key: 'ice',    density: 920 },
-            { key: 'stone',  density: 2500 },
+            { key: 'ice', density: 920 },
+            { key: 'stone', density: 2500 },
             { key: 'carbon', density: 3500 },
-            { key: 'iron',   density: 7800 },
+            { key: 'iron', density: 7800 },
         ];
 
         // Estado atual do material
@@ -250,6 +368,101 @@
 
         // Crater
         const craterModelUri = "./crater_with_cone.glb";
+
+        // === FUNÇÕES DE ÁUDIO E EFEITOS VISUAIS ===
+
+        // Função para tocar som de meteoro caindo
+        function playMeteorFallSound() {
+            const audio = document.getElementById('meteorFallSound');
+            try {
+                audio.currentTime = 0; // Reinicia o áudio
+                audio.volume = 0.7; // Volume moderado
+                audio.play().catch(error => {
+                    console.warn('Não foi possível tocar som do meteoro:', error);
+                    // Fallback: criar som sintético com Web Audio API
+                    generateSyntheticMeteorSound();
+                });
+            } catch (error) {
+                console.warn('Erro ao tentar tocar áudio:', error);
+            }
+        }
+
+        // Função para tocar som de explosão
+        function playExplosionSound() {
+            const audio = document.getElementById('explosionSound');
+            try {
+                audio.currentTime = 0;
+                audio.volume = 0.8; // Volume mais alto para explosão
+                audio.play().catch(error => {
+                    console.warn('Não foi possível tocar som da explosão:', error);
+                    // Fallback: criar som sintético
+                    generateSyntheticExplosionSound();
+                });
+            } catch (error) {
+                console.warn('Erro ao tentar tocar áudio de explosão:', error);
+            }
+        }
+
+        // Função para mostrar efeito visual de impacto
+        function showMeteorImpactEffect() {
+            const overlay = document.getElementById('meteorImpactOverlay');
+            overlay.style.display = 'block';
+
+            // Remove o overlay após a animação
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 4000); // Aumentado para 4 segundos para coincidir com as animações
+        }
+
+        // Fallback: gerar som sintético de meteoro usando Web Audio API
+        function generateSyntheticMeteorSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Som de "whoosh" do meteoro
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 3);
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 3);
+            } catch (error) {
+                console.warn('Não foi possível gerar som sintético:', error);
+            }
+        }
+
+        // Fallback: gerar som sintético de explosão
+        function generateSyntheticExplosionSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Som grave de explosão
+                oscillator.frequency.setValueAtTime(80, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(20, audioContext.currentTime + 2);
+
+                gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 2);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 2);
+            } catch (error) {
+                console.warn('Não foi possível gerar som sintético de explosão:', error);
+            }
+        }
+
+        // === FIM DAS FUNÇÕES DE ÁUDIO E EFEITOS ===
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
@@ -278,9 +491,11 @@
                 // Inicia com visão global do globo (sem alvo inicial)
                 viewer.camera.setView({
                     destination: Cesium.Cartesian3.fromDegrees(-79.186, 12.915, 15000000),
-                    orientation: { heading: Cesium.Math.toRadians(0.0),
-                    pitch: Cesium.Math.toRadians(-90.0),
-                    roll: 0.0 }
+                    orientation: {
+                        heading: Cesium.Math.toRadians(0.0),
+                        pitch: Cesium.Math.toRadians(-90.0),
+                        roll: 0.0
+                    }
                 });
 
                 // Adiciona handler de clique no mapa
@@ -340,7 +555,7 @@
                 const materialValue = $('materialValue');
                 const materialDensity = $('materialDensity');
 
-                const fmtMeters = (m) => m >= 1000 ? `${(m/1000).toFixed(1)} km` : `${m} m`;
+                const fmtMeters = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`;
 
                 const syncUI = () => {
                     diameterOut.textContent = fmtMeters(meteorDiameterM);
@@ -421,10 +636,18 @@
             // Mostra o painel de resultados após a primeira simulação
             const resultsPanel = document.getElementById('results');
             if (resultsPanel) resultsPanel.style.display = 'block';
-            
+
             resetSimulation();
+
+            // === EFEITOS SONOROS E VISUAIS DO METEORO ===
+            // Toca som do meteoro caindo e mostra efeito visual
+            playMeteorFallSound();
+            showMeteorImpactEffect();
+
             //createMeteor();
             setTimeout(() => {
+                // Toca som da explosão no momento do impacto
+                playExplosionSound();
                 createExplosion(results.diameterFireball);
                 removeMeteor();
             }, 3000);
@@ -432,13 +655,14 @@
                 const impactPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude);
                 //createRealCrater(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterRotation);
                 // --- CHAMANDO A NOVA FUNÇÃO DA CALOTA COM CORTE ---
-                createCraterWithTerrain(impactPosition, craterMajorRadius,craterDepth);
+                createCraterWithTerrain(impactPosition, craterMajorRadius, craterDepth);
 
                 removeExplosion();
             }, 4000);
             setTimeout(() => {
                 console.log(results);
-                createDestructionZones(results.diameterFireball, results.clothesBurn, results.thirdDegreeBurn, results.secondDegreeBurn);
+                // Chamada corrigida: thirdDegreeBurn, secondDegreeBurn, firstDegreeBurn
+                createDestructionZones(results.thirdDegreeBurn, results.secondDegreeBurn, results.firstDegreeBurn);
             }, 6000);
         }
 
@@ -458,7 +682,7 @@
 
             const fmtMeters = (m) => {
                 if (!isNum(m)) return '—';
-                if (Math.abs(m) >= 1000) return `${(m/1000).toFixed(2)} km`;
+                if (Math.abs(m) >= 1000) return `${(m / 1000).toFixed(2)} km`;
                 return `${m} m`;
             };
             const fmtEnergyJ = (j) => {
@@ -555,7 +779,7 @@
             );
 
             // Escala proporcional ao raio da cratera
-            const craterScale = radius * 25; // Dividido por 100 para tamanho realista
+            const craterScale = radius * 25;
 
             craterModel = viewer.entities.add({
                 position: centeredPosition,
@@ -608,11 +832,71 @@
 
         // --- DEMAIS FUNÇÕES (SEM ALTERAÇÃO) ---
         function createDestroyedGroundTexture() { const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512; const ctx = canvas.getContext('2d'); const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256); gradient.addColorStop(0, '#1a0f0a'); gradient.addColorStop(.5, '#4a2c1a'); gradient.addColorStop(.9, '#8b5a3c'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 512, 512); ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; ctx.lineWidth = 3; for (let i = 0; i < 30; i++) { ctx.beginPath(); ctx.moveTo(256 + Math.random() * 200 - 100, 256 + Math.random() * 200 - 100); ctx.lineTo(256 + Math.random() * 240 - 120, 256 + Math.random() * 240 - 120); ctx.stroke() } return canvas.toDataURL() }
-        function createMeteor() { const startTime = viewer.clock.currentTime; const endTime = Cesium.JulianDate.addSeconds(startTime, 3, new Cesium.JulianDate()); const startPosition = Cesium.Cartesian3.fromDegrees(region.longitude - 1, region.latitude + 1, 15e4); const endPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 0); const positionProperty = new Cesium.SampledPositionProperty(); positionProperty.addSample(startTime, startPosition); positionProperty.addSample(endTime, endPosition); meteorEntity = viewer.entities.add({ name: "Meteoro", position: positionProperty, point: { pixelSize: 35, color: Cesium.Color.ORANGE, outlineColor: Cesium.Color.RED, outlineWidth: 4, scaleByDistance: new Cesium.NearFarScalar(1e3, 2, 1e5, .5) }, path: { show: !0, leadTime: 0, trailTime: 2, width: 10, resolution: 1, material: new Cesium.PolylineGlowMaterialProperty({ glowPower: .5, color: Cesium.Color.ORANGE, taperPower: .7 }) }}); viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 6e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 } }) }
+        function createMeteor() { const startTime = viewer.clock.currentTime; const endTime = Cesium.JulianDate.addSeconds(startTime, 3, new Cesium.JulianDate()); const startPosition = Cesium.Cartesian3.fromDegrees(region.longitude - 1, region.latitude + 1, 15e4); const endPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 0); const positionProperty = new Cesium.SampledPositionProperty(); positionProperty.addSample(startTime, startPosition); positionProperty.addSample(endTime, endPosition); meteorEntity = viewer.entities.add({ name: "Meteoro", position: positionProperty, point: { pixelSize: 35, color: Cesium.Color.ORANGE, outlineColor: Cesium.Color.RED, outlineWidth: 4, scaleByDistance: new Cesium.NearFarScalar(1e3, 2, 1e5, .5) }, path: { show: !0, leadTime: 0, trailTime: 2, width: 10, resolution: 1, material: new Cesium.PolylineGlowMaterialProperty({ glowPower: .5, color: Cesium.Color.ORANGE, taperPower: .7 }) } }); viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 6e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 } }) }
         function removeMeteor() { if (meteorEntity) { viewer.entities.remove(meteorEntity); meteorEntity = null; } }
-        function createExplosion(diameterFireball) { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 1e3), ellipse: { semiMinorAxis: diameterFireball, semiMajorAxis: diameterFireball, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * 0.5 + .5; return Cesium.Color.ORANGE.withAlpha(i * 0.8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED }}) }
+        function createExplosion(diameterFireball) { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 1e3), ellipse: { semiMinorAxis: diameterFireball, semiMajorAxis: diameterFireball, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * 0.5 + .5; return Cesium.Color.ORANGE.withAlpha(i * 0.8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED } }) }
         function removeExplosion() { if (explosionEntity) { viewer.entities.remove(explosionEntity); explosionEntity = null; } }
-        function createDestructionZones(diameterFireball, clothesBurn, thirdDegreeBurn, secondDegreeBurn) { const e = viewer.entities.add({ name: "Destruição Total", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: diameterFireball*1, semiMajorAxis: diameterFireball*1, material: Cesium.Color.RED.withAlpha(.3), outline: !0, outlineColor: Cesium.Color.DARKRED, outlineWidth: 3, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), t = viewer.entities.add({ name: "Destruição Severa", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: clothesBurn*1, semiMajorAxis: clothesBurn*1, material: Cesium.Color.ORANGE.withAlpha(.2), outline: !0, outlineColor: Cesium.Color.DARKORANGE, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), i = viewer.entities.add({ name: "Danos Moderados", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: thirdDegreeBurn*1, semiMajorAxis: thirdDegreeBurn*1, material: Cesium.Color.YELLOW.withAlpha(.15), outline: !0, outlineColor: Cesium.Color.GOLD, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}); impactZones.push(e, t, i); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 12e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 }, duration: 3 }) 
+        function createDestructionZones(thirdDegreeBurnRadius, secondDegreeBurnRadius, firstDegreeBurnRadius) {
+            // Zona Vermelha: Queimaduras de 3º grau
+            const redZone = viewer.entities.add({
+                name: "Queimaduras de 3º Grau",
+                position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
+                ellipse: {
+                    semiMinorAxis: thirdDegreeBurnRadius,
+                    semiMajorAxis: thirdDegreeBurnRadius,
+                    material: Cesium.Color.RED.withAlpha(.35),
+                    outline: true,
+                    outlineColor: Cesium.Color.DARKRED,
+                    outlineWidth: 3,
+                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                }
+            });
+
+            // Zona Laranja: Queimaduras de 2º grau
+            const orangeZone = viewer.entities.add({
+                name: "Queimaduras de 2º Grau",
+                position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
+                ellipse: {
+                    semiMinorAxis: secondDegreeBurnRadius,
+                    semiMajorAxis: secondDegreeBurnRadius,
+                    material: Cesium.Color.ORANGE.withAlpha(.3),
+                    outline: true,
+                    outlineColor: Cesium.Color.DARKORANGE,
+                    outlineWidth: 2,
+                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                }
+            });
+
+            // Zona Amarela: Queimaduras de 1º grau
+            const yellowZone = viewer.entities.add({
+                name: "Queimaduras de 1º Grau",
+                position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
+                ellipse: {
+                    semiMinorAxis: firstDegreeBurnRadius,
+                    semiMajorAxis: firstDegreeBurnRadius,
+                    material: Cesium.Color.YELLOW.withAlpha(.25),
+                    outline: true,
+                    outlineColor: Cesium.Color.GOLD,
+                    outlineWidth: 2,
+                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                }
+            });
+
+            impactZones.push(redZone, orangeZone, yellowZone);
+
+            // Foca a câmera para mostrar a maior zona de destruição
+            const maxRadius = Math.max(firstDegreeBurnRadius, secondDegreeBurnRadius, thirdDegreeBurnRadius);
+            const cameraAltitude = maxRadius * 4; // Ajuste este multiplicador para o zoom desejado
+
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, cameraAltitude),
+                orientation: {
+                    heading: Cesium.Math.toRadians(0),
+                    pitch: Cesium.Math.toRadians(-90),
+                    roll: 0
+                },
+                duration: 3
+            });
         }
 
     </script>
