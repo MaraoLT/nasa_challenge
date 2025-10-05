@@ -122,8 +122,19 @@ export class AstralObject {
         }
     }
 
+    removeTraceFromScene() {
+        if (this.traceLine && this.scene) {
+            this.scene.remove(this.traceLine);
+        }
+    }
+
     dispose() {
+        // Remove mesh and atmosphere from scene
         this.removeFromScene();
+        // Remove trace line from scene
+        this.removeTraceFromScene();
+
+        // Dispose mesh and atmosphere
         if (this.mesh) {
             this.mesh.geometry.dispose();
             this.mesh.material.dispose();
@@ -132,9 +143,13 @@ export class AstralObject {
             this.atmosphere.geometry.dispose();
             this.atmosphere.material.dispose();
         }
+        // Dispose trace line
         if (this.traceLine) {
             this.traceLine.geometry.dispose();
             this.traceLine.material.dispose();
+            this.traceLine = null;
         }
+        // Clear trace points
+        this.tracePoints = [];
     }
 }
