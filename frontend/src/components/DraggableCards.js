@@ -1,5 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 import '../styles/cards.css';
 import '../styles/nav.css';
 
@@ -42,6 +44,22 @@ export default function DraggableCards() {
     });
     return res;
   };
+
+  // Start music when component mounts
+  useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
+    
+    return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+    };
+  }, []);
 
   useEffect(() => {
     const onMove = (e) => {
@@ -162,10 +180,12 @@ export default function DraggableCards() {
             <div className="scanner__glass" ref={glassRef} />
             <div className="scanner__screen">
               {insideCards.length === 0 && (
-                <div className="scanner__hint">Place a card on the glass</div>
+                <div key="hint" className="scanner__content">
+                  <div className="scanner__hint">Place a card on the glass</div>
+                </div>
               )}
               {insideCards.length === 1 && (
-                <div>
+                <div key={`card-${insideCards[0].id}`} className="scanner__content">
                   <div className="scanner__label">Title</div>
                   <div className="scanner__value">{insideCards[0].title}</div>
                   <div className="scanner__label">Description</div>
@@ -173,7 +193,9 @@ export default function DraggableCards() {
                 </div>
               )}
               {insideCards.length > 1 && (
-                <div className="scanner__warning">Too many cards inside!</div>
+                <div key="warning" className="scanner__content">
+                  <div className="scanner__warning">Too many cards inside!</div>
+                </div>
               )}
             </div>
           </div>

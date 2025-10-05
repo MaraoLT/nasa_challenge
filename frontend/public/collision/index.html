@@ -306,6 +306,16 @@
             margin: 10px 0;
             border-radius: 1px;
         }
+
+        /* Bottom-left global actions (Return / Next) */
+        #footer-actions {
+            position: fixed;
+            left: 10px;
+            bottom: 10px;
+            z-index: 1100;
+            display: flex;
+            gap: 8px;
+        }
     </style>
 </head>
 
@@ -315,7 +325,11 @@
     <!-- Elementos de áudio para efeitos sonoros -->
     <audio id="meteorFallSound" preload="auto">
         <source src="./sounds/meteor-impact-sound-effect.mp3" type="audio/mp3">
+    </audio>
 
+    <!-- Background music -->
+    <audio id="backgroundMusic" preload="auto" loop>
+        <source src="../resources/sounds/Eternal Horizon.mp3" type="audio/mp3">
     </audio>
 
     <!-- Overlay de imagem do meteoro durante o impacto -->
@@ -452,10 +466,6 @@
             <div class="divider"></div>
             <div class="section-title">Actions</div>
             <em id="selectHint" style="display:block;margin-bottom:6px;">💡 Click on the map to choose the target!</em>
-            <div class="actions">
-                <button class="btn btn-secondary" onclick="returnHome()">Return</button>
-                <button class="btn btn-secondary" onclick="nextSession()" disabled>Next</button>
-            </div>
         </div>
     </div>
 
@@ -507,6 +517,18 @@
             <div class="row"><span class="label">Estimated injured</span><span class="value" id="r-feridos">—</span>
             </div>
         </div>
+
+        <div class="divider"></div>
+        <div class="section-title">Tsunami</div>
+        <div class="rows" id="tsunami-section" style="display:none;">
+            <div class="row" id="row-tsunami"><span class="label">Initial wave size</span><span class="value" id="r-tsunamiWave">—</span></div>
+        </div>
+    </div>
+
+    <!-- Global footer actions (bottom-left) -->
+    <div id="footer-actions">
+        <button class="btn btn-secondary" onclick="returnHome()">Return</button>
+        <button class="btn btn-secondary" onclick="nextSession()">Next</button>
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
@@ -516,15 +538,107 @@
             if (resultsPanel) resultsPanel.style.display = 'none';
         }
 
-        function returnHome() {
-            window.top.location.href = '/home';
-            window.location.replace('/home');
+        function returnHome(){
+            // Check if we came from a specific page via referrer or URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromParam = urlParams.get('from');
+            
+            // Also check parent window URL if we're in an iframe
+            let parentFromParam = null;
+            try {
+                if (window.parent && window.parent !== window) {
+                    const parentUrlParams = new URLSearchParams(window.parent.location.search);
+                    parentFromParam = parentUrlParams.get('from');
+                }
+            } catch (e) {
+                // Cross-origin iframe access denied, ignore
+            }
+            
+            const referrer = document.referrer;
+            
+            let returnUrl = '/more-data'; // Default fallback
+            
+            console.log('Navigation debug:', {
+                fromParam,
+                parentFromParam,
+                referrer,
+                currentUrl: window.location.href,
+                parentUrl: window.parent?.location?.href
+            });
+            
+            // Priority 1: Check URL parameter (current window)
+            if (fromParam === 'home') {
+                returnUrl = '/home';
+            } else if (fromParam === 'more-data') {
+                returnUrl = '/more-data';
+            }
+            // Priority 2: Check parent window URL parameter (iframe case)
+            else if (parentFromParam === 'home') {
+                returnUrl = '/home';
+            } else if (parentFromParam === 'more-data') {
+                returnUrl = '/more-data';
+            }
+            // Priority 3: Check referrer if no URL parameter
+            else if (referrer.includes('/home')) {
+                returnUrl = '/home';
+            } else if (referrer.includes('/more-data')) {
+                returnUrl = '/more-data';
+            }
+            
+            console.log(`Returning to: ${returnUrl} (from: ${fromParam || parentFromParam || 'referrer'}, referrer: ${referrer})`);
+            
+            // Try to navigate parent window if we're in iframe
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.location.href = returnUrl;
+                } else {
+                    window.location.href = returnUrl;
+                }
+            } catch (e) {
+                // Fallback to current window navigation
+                window.location.href = returnUrl;
+            }
         }
 
-        function nextSession() {
-            /* Decidir ainda para qual página seguir depois da simulação */
-            window.top.location.href = '/terminal-landing';
-            window.location.replace('/terminal-landing');
+        function nextSession(){
+            // Check where we came from to determine next logical page
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromParam = urlParams.get('from');
+            
+            // Also check parent window URL if we're in an iframe
+            let parentFromParam = null;
+            try {
+                if (window.parent && window.parent !== window) {
+                    const parentUrlParams = new URLSearchParams(window.parent.location.search);
+                    parentFromParam = parentUrlParams.get('from');
+                }
+            } catch (e) {
+                // Cross-origin iframe access denied, ignore
+            }
+            
+            const referrer = document.referrer;
+            
+            let nextUrl = '/blueprint'; // Default
+            
+            // If we came from home, go to blueprint
+            // If we came from more-data, go to credits (end of flow)
+            if (fromParam === 'more-data' || parentFromParam === 'more-data' || referrer.includes('/more-data')) {
+                nextUrl = '/credits';
+            }
+            
+            console.log(`Going to next: ${nextUrl} (from: ${fromParam || parentFromParam || 'referrer'})`);
+            
+            // Try to navigate parent window if we're in iframe
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.location.href = nextUrl;
+                } else {
+                    window.location.href = nextUrl;
+                }
+            } catch (e) {
+                // Fallback to current window navigation
+                window.location.href = nextUrl;
+            }
         }
 
         // Token de acesso do Cesium ion
@@ -673,6 +787,19 @@
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
+            // Start background music
+            const backgroundMusic = document.getElementById('backgroundMusic');
+            if (backgroundMusic) {
+                backgroundMusic.volume = 0.3; // Set moderate volume
+                backgroundMusic.play().catch(error => {
+                    console.log('Background music will play after user interaction');
+                    // Auto-play after first user interaction
+                    document.addEventListener('click', () => {
+                        backgroundMusic.play().catch(e => console.warn('Could not play background music:', e));
+                    }, { once: true });
+                });
+            }
+
             try {
                 viewer = new Cesium.Viewer('cesiumContainer', {
                     terrain: Cesium.Terrain.fromWorldTerrain(),
@@ -773,14 +900,22 @@
                             viewer.entities.remove(targetMarker);
                         }
 
+                        // Slightly raise the marker above the ground and draw it on top to avoid partial occlusion
+                        const elevatedPosition = Cesium.Cartesian3.fromDegrees(
+                            longitude,
+                            latitude,
+                            (Number.isFinite(height) ? height : 0) + 10 // 10m above terrain
+                        );
+
                         targetMarker = viewer.entities.add({
-                            position: cartesian,
+                            position: elevatedPosition,
                             point: {
                                 pixelSize: 20,
                                 color: Cesium.Color.RED,
                                 outlineColor: Cesium.Color.WHITE,
                                 outlineWidth: 3,
-                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                                heightReference: Cesium.HeightReference.NONE,
+                                disableDepthTestDistance: Number.POSITIVE_INFINITY
                             }
                         });
 
@@ -838,14 +973,17 @@
                     angleOut.textContent = `${impactAngleDeg}°`;
                 });
 
-                // const currentMaterialIndex = () => MATERIALS.findIndex(m => m.key === meteorMaterial.key);
+                const currentMaterialIndex = () => {
+                    const idx = MATERIALS.findIndex(m => m.key === meteorMaterial.key);
+                    return idx >= 0 ? idx : 0;
+                };
 
-                // const stepMaterial = (dir) => {
-                //     const idx = currentMaterialIndex();
-                //     const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
-                //     meteorMaterial = MATERIALS[nextIdx];
-                //     syncUI();
-                // };
+                const stepMaterial = (dir) => {
+                    const idx = currentMaterialIndex();
+                    const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
+                    meteorMaterial = MATERIALS[nextIdx];
+                    syncUI();
+                };
 
                 materialPrev.addEventListener('click', () => stepMaterial(-1));
                 materialNext.addEventListener('click', () => stepMaterial(1));
@@ -858,7 +996,7 @@
         });
 
         // Função para simular o impacto do meteoro
-        async function simulateImpact() {
+    async function simulateImpact() {
             // Block simulation without selected target
             if (region.longitude == null || region.latitude == null) {
                 alert('Click on the map to choose the target first.');
@@ -873,8 +1011,27 @@
                 lon: region.longitude
             };
 
-            const popDensity = await getPopulationDensity(region.latitude, region.longitude);
-            const results = getMeteorData(parameters.diameter, 'm', parameters.density, parameters.velocity, 'km/s', parameters.angle, -1, popDensity);
+            const popDensityRaw = await getPopulationDensity(region.latitude, region.longitude);
+            // Tsunami detection based on population lookup returning the sentinel value "Tsunami"
+            const isTsunami = (popDensityRaw === 'Tsunami');
+            // Use 0 for population when at sea to avoid NaN and irrelevant casualties math
+            const popDensity = isTsunami ? 0 : popDensityRaw;
+            const results = getMeteorData(parameters.diameter, 'm', parameters.density, parameters.velocity, 'km/s', parameters.angle, /* waterHeight */ -1, popDensity);
+            // Compute initial wave size only if tsunami
+            if (isTsunami) {
+                try {
+                    const wave = getTsunamiEffects(results.diametroCrateraTransiente, Math.abs(results.profundidadeCrateraTrasiente));
+                    results.__tsunamiWave = wave; // meters
+                    results.__isTsunami = true;
+                } catch (e) {
+                    console.warn('Failed to compute tsunami effects:', e);
+                    results.__tsunamiWave = null;
+                    results.__isTsunami = true;
+                }
+            } else {
+                results.__isTsunami = false;
+                results.__tsunamiWave = null;
+            }
             craterMinorRadius = results.diametroCrateraTransiente;
             craterMajorRadius = results.diametroCrateraTransiente;
             craterDepth = results.profundidadeCrateraTrasiente;
@@ -964,6 +1121,18 @@
             setText('r-energiaTNT', `${fmtInt(res.energiaDoImpactoTNT)} t TNT`);
             setText('r-energiaMTNT', `${fmtInt(res.energiaDoImpactoMTNT)} Mt TNT`);
             setText('r-fireball', fmtDistance(res.diameterFireball));
+            // Handle tsunami visualization when applicable (section-level toggle)
+            const tsuSection = document.getElementById('tsunami-section');
+            const rowTsunami = document.getElementById('row-tsunami');
+            if (res.__isTsunami && Number.isFinite(res.__tsunamiWave)) {
+                if (tsuSection) tsuSection.style.display = '';
+                if (rowTsunami) rowTsunami.style.display = 'flex';
+                setText('r-tsunamiWave', fmtDistance(res.__tsunamiWave));
+            } else {
+                if (tsuSection) tsuSection.style.display = 'none';
+                if (rowTsunami) rowTsunami.style.display = 'none';
+                setText('r-tsunamiWave', '—');
+            }
             setText('r-first', fmtDistance(res.firstDegreeBurn));
             setText('r-second', fmtDistance(res.secondDegreeBurn));
             setText('r-third', fmtDistance(res.thirdDegreeBurn));

@@ -1,10 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 
 export default function WarningScreen() {
   const [showContinue, setShowContinue] = useState(false);
   const [blinkOn, setBlinkOn] = useState(false);
   const navigate = useNavigate();
+
+  // Start music when component mounts
+  useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
+    
+    return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+    };
+  }, []);
 
   // Exactly two blinks, 1.5s apart, then show continue
   useEffect(() => {

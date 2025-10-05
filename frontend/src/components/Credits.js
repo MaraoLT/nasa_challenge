@@ -3,9 +3,27 @@ import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { Earth } from '../render/Earth';
 import { Meteor } from '../render/Meteor';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 import '../styles/credits.css';
 
 export default function Credits() {
+  // Start music when component mounts
+  useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
+    
+    return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+    };
+  }, []);
+
   const pages = [
     {
       key: 'thanks',
