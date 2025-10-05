@@ -211,14 +211,8 @@ export class Meteor extends AstralObject {
     
     // Cleanup method
     dispose() {
-        // Remove from scene first
-        this.removeFromScene();
-        
-        // Dispose geometry and materials
-        if (this.mesh) {
-            this.mesh.geometry.dispose();
-            this.mesh.material.dispose();
-        }
+        // Only call super.dispose, do not remove trace again
+        super.dispose();
     }
     
     // Static method to create random meteors with different properties
