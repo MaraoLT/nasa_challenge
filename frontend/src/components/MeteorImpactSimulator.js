@@ -1,9 +1,23 @@
-export default function MeteorImpactSimulator() {
+import { useLocation } from 'react-router-dom';
 
-    console.log("Rendering MeteorImpactSimulator component");
+export default function MeteorImpactSimulator() {
+    const location = useLocation();
+    
+    // Extract the 'from' parameter from the current URL
+    const urlParams = new URLSearchParams(location.search);
+    const fromParam = urlParams.get('from');
+    
+    // Construct the iframe URL with the from parameter
+    let iframeSrc = '/collision/index.html';
+    if (fromParam) {
+        iframeSrc += `?from=${encodeURIComponent(fromParam)}`;
+    }
+
+    console.log("Rendering MeteorImpactSimulator component", { fromParam, iframeSrc });
+    
     return (
     <iframe
-        src="/collision/index.html"
+        src={iframeSrc}
         title="Cesium App"
         style={{
         border: "none",
