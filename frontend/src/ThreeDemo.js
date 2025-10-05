@@ -88,7 +88,10 @@ function ThreeDemo() {
       meteorsListRef.current = meteors; // Update ref for animation loops
 
       // Pass meteors list to camera controller for asteroid locking
-
+      if (meteors.length > 0 && window.currentCameraController) {
+        window.currentCameraController.setMeteorsList(meteors);
+        console.log('Meteors list passed to camera controller:', meteors.length, 'meteors');
+      }
     }
   }, [asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
 
@@ -164,19 +167,16 @@ function ThreeDemo() {
       setCurrentCamera(camera); // Set camera reference for meteor creation
       setSceneReady(true);
 
+      // Store camera controller globally for meteor list access
+      window.currentCameraController = cameraController;
+
       // Attach the renderer to our DOM element
       backgroundScene.attachToDOM(mountRef.current);
 
       // Variables for this component
       let animationId;
-        console.log("first if CameraController");
-        if (meteorsListRef.current.length > 0) {
-            // Find the camera controller and set the meteors list
-            // We need to get the camera controller instance from the scene
-            console.log("Pass list CameraController");
-            cameraController.setMeteorsList(meteorsListRef.current);
-        }
-      // Start the visi     ble animation loop using the background scene's start time
+
+      // Start the visible animation loop using the background scene's start time
       let lastTimestamp = performance.now();
       const animate = (currentTimestamp) => {
         stats.begin();
@@ -297,6 +297,9 @@ function ThreeDemo() {
       cameraController.setZoomLimits(80, 500);
       cameraController.setTargetObjects(sunInstance, earthInstance);
 
+      // Store camera controller globally for meteor list access
+      window.currentCameraController = cameraController;
+
       // Set initial camera position to look at Earth
       const earthPos = earthInstance.getPosition();
       const direction = new THREE.Vector3(0, 0, 1).normalize();
@@ -319,13 +322,7 @@ function ThreeDemo() {
 
       // Variables for this component
       let animationId;
-        console.log("first if CameraController, meteorsListRef.current: ", meteorsListRef.current.length);
-      if (meteorsListRef.current.length > 0) {
-            // Find the camera controller and set the meteors list
-            // We need to get the camera controller instance from the scene
-          console.log("Pass list CameraController");
-          cameraController.setMeteorsList(meteorsListRef.current);
-      }
+
       // Start animation
       const startTimestamp = performance.now();
       let lastTimestamp = startTimestamp;
