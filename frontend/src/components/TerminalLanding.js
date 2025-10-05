@@ -4,8 +4,6 @@ import * as THREE from 'three';
 import { ThreeInitializer } from '../utils/ThreeInitializer';
 import audioContextManager from '../utils/AudioContextManager';
 
-import { getMeteorData } from "../lib/calculator";
-
 export default function TerminalLanding() {
   // Multi-page texts; advance through each, then navigate
   const texts = [
@@ -341,13 +339,12 @@ export default function TerminalLanding() {
     // If still typing, ignore clicks entirely
     if (isTyping) return;
     // Only accept clicks when fully ready
-    if (!canClick || exiting) return;
+    if (!canClick) return;
     // Advance to next page, or navigate when done
     if (page < texts.length - 1) {
       setPage((p) => p + 1);
     } else if (assetsLoaded) {
       // Play a short ease-out before navigating
-      setExiting(true);
       setCanClick(false);
       setTimeout(() => navigate("/star-transition"), 520);
     }
@@ -397,7 +394,7 @@ export default function TerminalLanding() {
     <div style={containerStyle} onClick={handleClick}>
         <style>{styleSheet}</style>
         <div style={textWrapperStyle}>
-          <pre style={textStyle} className={exiting ? 'terminal-exit' : ''}>
+          <pre style={textStyle} className={''}>
             {getDisplayText()}
             <span style={cursorStyle}>|</span>
           </pre>
