@@ -297,6 +297,8 @@
             </div>
 
             <em id="selectHint">💡 Click on the map to choose the target!</em>
+            <button id="simulateBtn" onclick="returnHome()" >Return</button>
+            <button id="simulateBtn" onclick="nextSession()" disabled>Next</button>
         </div>
     </div>
 
@@ -325,6 +327,18 @@
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
+
+        function returnHome(){
+            window.top.location.href = '/home';
+            window.location.replace('/home');
+        }
+
+        function nextSession(){
+            /* Decidir ainda para qual página seguir depois da simulação */
+            window.top.location.href = '/terminal-landing';
+            window.location.replace('/terminal-landing');
+        }
+
         // Token de acesso do Cesium ion
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMGRkYjMwYy1lODg0LTQ3MTktOTBiNi02ZDI0YjRiNTcxNjIiLCJpZCI6MzQ3MjQ2LCJpYXQiOjE3NTk2MDg1NzN9.901R3lkV1aC6zsOj843KhI37YOCw7lOnqS8rHd4nVq8';
 
