@@ -50,8 +50,9 @@ export default function Home() {
         <h1>Welcome to the space experience</h1>
         <Link to="/ThreeDemo" className="cta">Open 3D Model</Link>
         <Link to="/blueprint" className="cta">Open Blueprint</Link>
-  <Link to="/space-bodies" className="cta">Comet × Asteroid × Meteor (3D)</Link>
+        <Link to="/space-bodies" className="cta">Comet × Asteroid × Meteor (3D)</Link>
         <Link to="/more-data" className="cta">More data (counters)</Link>
+        <Link to="/meteor-impact-simulator" className="cta">Meteor Impact Simulator</Link>
       </div>
     </div>
   );
