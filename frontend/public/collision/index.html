@@ -445,6 +445,12 @@
             <div class="row"><span class="label">Estimated deaths</span><span class="value" id="r-deaths">—</span></div>
             <div class="row"><span class="label">Estimated injured</span><span class="value" id="r-feridos">—</span></div>
         </div>
+
+        <div class="divider"></div>
+        <div class="section-title">Tsunami</div>
+        <div class="rows" id="tsunami-section" style="display:none;">
+            <div class="row" id="row-tsunami"><span class="label">Initial wave size</span><span class="value" id="r-tsunamiWave">—</span></div>
+        </div>
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
@@ -774,14 +780,17 @@
                     angleOut.textContent = `${impactAngleDeg}°`;
                 });
 
-                // const currentMaterialIndex = () => MATERIALS.findIndex(m => m.key === meteorMaterial.key);
+                const currentMaterialIndex = () => {
+                    const idx = MATERIALS.findIndex(m => m.key === meteorMaterial.key);
+                    return idx >= 0 ? idx : 0;
+                };
 
-                // const stepMaterial = (dir) => {
-                //     const idx = currentMaterialIndex();
-                //     const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
-                //     meteorMaterial = MATERIALS[nextIdx];
-                //     syncUI();
-                // };
+                const stepMaterial = (dir) => {
+                    const idx = currentMaterialIndex();
+                    const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
+                    meteorMaterial = MATERIALS[nextIdx];
+                    syncUI();
+                };
 
                 materialPrev.addEventListener('click', () => stepMaterial(-1));
                 materialNext.addEventListener('click', () => stepMaterial(1));
@@ -794,7 +803,7 @@
         });
 
         // Função para simular o impacto do meteoro
-        async function simulateImpact() {
+    async function simulateImpact() {
             // Block simulation without selected target
             if (region.longitude == null || region.latitude == null) {
                 alert('Click on the map to choose the target first.');
@@ -809,8 +818,27 @@
                 lon: region.longitude
             };
 
-            const popDensity = await getPopulationDensity(region.latitude, region.longitude);
-            const results = getMeteorData(parameters.diameter, 'm', parameters.density, parameters.velocity, 'km/s', parameters.angle, -1, popDensity);
+            const popDensityRaw = await getPopulationDensity(region.latitude, region.longitude);
+            // Tsunami detection based on population lookup returning the sentinel value "Tsunami"
+            const isTsunami = (popDensityRaw === 'Tsunami');
+            // Use 0 for population when at sea to avoid NaN and irrelevant casualties math
+            const popDensity = isTsunami ? 0 : popDensityRaw;
+            const results = getMeteorData(parameters.diameter, 'm', parameters.density, parameters.velocity, 'km/s', parameters.angle, /* waterHeight */ -1, popDensity);
+            // Compute initial wave size only if tsunami
+            if (isTsunami) {
+                try {
+                    const wave = getTsunamiEffects(results.diametroCrateraTransiente, Math.abs(results.profundidadeCrateraTrasiente));
+                    results.__tsunamiWave = wave; // meters
+                    results.__isTsunami = true;
+                } catch (e) {
+                    console.warn('Failed to compute tsunami effects:', e);
+                    results.__tsunamiWave = null;
+                    results.__isTsunami = true;
+                }
+            } else {
+                results.__isTsunami = false;
+                results.__tsunamiWave = null;
+            }
             craterMinorRadius = results.diametroCrateraTransiente;
             craterMajorRadius = results.diametroCrateraTransiente;
             craterDepth = results.profundidadeCrateraTrasiente;
@@ -900,6 +928,18 @@
             setText('r-energiaTNT', `${fmtInt(res.energiaDoImpactoTNT)} t TNT`);
             setText('r-energiaMTNT', `${fmtInt(res.energiaDoImpactoMTNT)} Mt TNT`);
             setText('r-fireball', fmtDistance(res.diameterFireball));
+            // Handle tsunami visualization when applicable (section-level toggle)
+            const tsuSection = document.getElementById('tsunami-section');
+            const rowTsunami = document.getElementById('row-tsunami');
+            if (res.__isTsunami && Number.isFinite(res.__tsunamiWave)) {
+                if (tsuSection) tsuSection.style.display = '';
+                if (rowTsunami) rowTsunami.style.display = 'flex';
+                setText('r-tsunamiWave', fmtDistance(res.__tsunamiWave));
+            } else {
+                if (tsuSection) tsuSection.style.display = 'none';
+                if (rowTsunami) rowTsunami.style.display = 'none';
+                setText('r-tsunamiWave', '—');
+            }
             setText('r-first', fmtDistance(res.firstDegreeBurn));
             setText('r-second', fmtDistance(res.secondDegreeBurn));
             setText('r-third', fmtDistance(res.thirdDegreeBurn));
