@@ -309,7 +309,7 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
 
       // Create scene, camera, and renderer
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 20000);
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         powerPreference: "high-performance",
@@ -339,11 +339,19 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
       // Add galaxy
       let galaxy;
       if (preprocessedObjects.galaxyGeometry && preprocessedObjects.galaxyMaterial) {
+        console.log('Using preprocessed galaxy geometry and material');
         galaxy = new THREE.Mesh(preprocessedObjects.galaxyGeometry, preprocessedObjects.galaxyMaterial);
       } else {
-        galaxy = new Galaxy(10000, 64, preloadedAssets).mesh;
+        console.log('Creating galaxy from scratch');
+        const galaxyInstance = new Galaxy(10000, 64, preloadedAssets);
+        galaxy = galaxyInstance.mesh;
       }
+      
+      // Ensure galaxy is positioned correctly and visible
+      galaxy.position.set(0, 0, 0);
+      galaxy.renderOrder = -1000;
       scene.add(galaxy);
+      console.log('Galaxy added to scene, position:', galaxy.position, 'scale:', galaxy.scale);
 
       // Add lighting
       const ambientLight = new THREE.AmbientLight(0x404040, 0.1);
@@ -363,10 +371,16 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
 
       camera.position.copy(earthPos).add(direction.multiplyScalar(cameraDistance));
       camera.lookAt(earthPos);
+      
+      // Set camera far plane to ensure galaxy is visible
+      camera.far = 20000;
+      camera.updateProjectionMatrix();
 
       cameraController.target.copy(earthPos);
       cameraController.spherical.setFromVector3(camera.position.clone().sub(earthPos));
       cameraController.currentDistance = cameraDistance;
+      
+      console.log('Camera setup - position:', camera.position, 'far plane:', camera.far);
 
       // Lock onto Earth immediately (no transition needed since we're already positioned correctly)
       setTimeout(() => {

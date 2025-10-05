@@ -71,7 +71,7 @@ export default function MoreData() {
     setIndex((i) => Math.max(0, i - 1));
   };
   const onNext = () => {
-    if (index === SLIDES.length - 1) return navigate('/home');
+    if (index === SLIDES.length - 1) return navigate('/credits');
     setIndex((i) => Math.min(SLIDES.length - 1, i + 1));
   };
 
