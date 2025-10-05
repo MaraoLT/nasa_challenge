@@ -1,50 +1,63 @@
 import * as THREE from 'three';
-import {Orbit} from './Orbit.js';
+import { Orbit } from './Orbit.js';
+import { AstralObject } from './AstralObject.js';
 
-export class Meteor {
-    constructor(scene, radius, segments = 32, initialPosition) {
-        this.scene = scene;
-        this.radius = radius;
-        this.segments = segments;
-        this.position = initialPosition.clone();
-        
-        // Initialize orbit properties
-        this.isOrbiting = false;
-        this.orbit = null;
-        
-        // Create Meteor components
+export class Meteor extends AstralObject {
+    constructor(scene, radius, segments = 32, initialPosition, preloadedAssets = {}, preprocessedObjects = {}) {
+        super(scene, radius, segments, initialPosition, preprocessedObjects);
+        this.preloadedAssets = preloadedAssets;
+
         this.mesh = this.createMeteorMesh();
-        
-        // Set initial position
         this.setPosition(this.position.x, this.position.y, this.position.z);
-        
-        // Add to scene
+
+        // Add to scene (traceLine is already added by parent constructor)
         this.addToScene();
     }
 
     createMeteorMesh() {
-        // Create irregular geoid geometry for asteroid-like shape
-        const geometry = this.createGeoidGeometry(this.radius, this.segments);
-        
-        // Create texture loader
-        const textureLoader = new THREE.TextureLoader();
+        let geometry, material;
 
-        const meteorTexture = textureLoader.load('/resources/meteor/Meteor Map.jpg');
-        
-        // Create a rocky/metallic material for the meteor
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x8B4513, // Dark brown/rocky color
-            map: meteorTexture,
-            roughness: 0.9,
-            metalness: 0.1,
-        });
+        // Use preprocessed objects if available
+        if (this.preprocessedObjects.meteorGeometries && this.preprocessedObjects.meteorMaterials &&
+            this.preprocessedObjects.meteorGeometries.length > 0) {
+            console.log('Using preprocessed meteor objects');
+
+            // Pick a random preprocessed geometry and material
+            const randomIndex = Math.floor(Math.random() * this.preprocessedObjects.meteorGeometries.length);
+            geometry = this.preprocessedObjects.meteorGeometries[randomIndex].clone();
+            material = this.preprocessedObjects.meteorMaterials[randomIndex].clone();
+
+            // Scale geometry to match the desired radius
+            const scaleFactor = this.radius / 0.3; // 0.3 is average radius from preprocessing
+            geometry.scale(scaleFactor, scaleFactor, scaleFactor);
+
+        } else {
+            console.log('Creating meteor objects normally');
+            // Create irregular geoid geometry for asteroid-like shape
+            geometry = this.createGeoidGeometry(this.radius, this.segments);
+
+            // Use preloaded texture if available, otherwise load normally
+            const textureLoader = new THREE.TextureLoader();
+            const meteorTexture = this.preloadedAssets['/resources/meteor/Meteor Map.jpg']
+                || textureLoader.load('/resources/meteor/Meteor Map.jpg');
+
+            // Create a rocky/metallic material for the meteor
+            material = new THREE.MeshStandardMaterial({
+                color: 0xDDAA77, // Brighter, more reflective color
+                map: meteorTexture,
+                roughness: 0.4, // Much smoother surface for better light reflection
+                metalness: 0.6, // Higher metallic content for better sun reflection
+                emissive: 0x442200, // Warmer, brighter emissive glow
+                emissiveIntensity: 0.15, // Reduced emissive to let sun lighting dominate
+            });
+        }
 
         const mesh = new THREE.Mesh(geometry, material);
         
         // Ensure the meteor does not interact with shadows
         mesh.castShadow = false;
         mesh.receiveShadow = false;
-        
+
         return mesh;
     }
     
@@ -114,21 +127,21 @@ export class Meteor {
             this.scene.remove(this.mesh);
         }
     }
-    
+
     // Set position for Meteor
     setPosition(x, y, z) {
         this.position.set(x, y, z);
-        
+
         if (this.mesh) {
             this.mesh.position.copy(this.position);
         }
     }
-    
+
     // Get current position
     getPosition() {
         return this.position.clone();
     }
-    
+
     // Rotate Meteor with random tumbling motion
     rotate(deltaY = 0.01) {
         if (this.mesh) {
@@ -141,40 +154,31 @@ export class Meteor {
     
     // Start orbiting around a center point (usually the sun)
     startOrbit(center = new THREE.Vector3(0, 0, 0), speed = 0.005) {
-        this.isOrbiting = true;
-        
-        // Calculate orbital parameters based on current position and desired speed
         const distance = this.position.distanceTo(center);
-        
-        this.orbit = new Orbit({
-            semiMajorAxis: distance, // Distance from center (sun)
-            eccentricity: 0.1 + Math.random() * 0.3,  // Random eccentricity for variety
-            period: 180.0 + Math.random() * 360.0,    // Random period between 180-540 seconds (longer for larger scale)
-            inclination: (Math.random() - 0.5) * Math.PI / 3, // Random inclination
-            omega: Math.random() * Math.PI * 2,       // Random orientation
-            raan: Math.random() * Math.PI * 2         // Random ascending node
+        super.startOrbit({
+            semiMajorAxis: distance,
+            eccentricity: 0.1 + Math.random() * 0.3,
+            period: 180.0 + Math.random() * 360.0,
+            inclination: (Math.random() - 0.5) * Math.PI / 3,
+            omega: Math.random() * Math.PI * 2,
+            raan: Math.random() * Math.PI * 2
         });
     }
     
     // Stop orbiting
     stopOrbit() {
-        this.isOrbiting = false;
+        super.stopOrbit();
     }
     
     // Update orbit position
     updateOrbit(time) {
         if (!this.isOrbiting || !this.orbit) return;
-        
-        const orbitPosition = this.orbit.walkInTime(time);
-        console.log("Meteor orbit position at time", time, ":", orbitPosition);
-        this.setPosition(orbitPosition[0], orbitPosition[1], orbitPosition[2]);
+        super.updateOrbit(time);
     }
     
     // Set orbit parameters (legacy method for compatibility)
     setOrbitParameters(radius, speed) {
-        // This method is kept for compatibility but now uses Orbit class
         if (this.orbit) {
-            // Recreate orbit with new parameters
             this.orbit = new Orbit({
                 semiMajorAxis: radius,
                 eccentricity: 0.1,
@@ -194,7 +198,6 @@ export class Meteor {
                 orbit: null
             };
         }
-        
         return {
             isOrbiting: this.isOrbiting,
             semiMajorAxis: this.orbit.a,
@@ -219,15 +222,15 @@ export class Meteor {
     }
     
     // Static method to create random meteors with different properties
-    static createRandomMeteor(scene, minRadius = 0.1, maxRadius = 0.5, position) {
+    static createRandomMeteor(scene, minRadius = 0.1, maxRadius = 0.5, position, preloadedAssets = {}, preprocessedObjects = {}) {
         const randomRadius = minRadius + Math.random() * (maxRadius - minRadius);
         const randomSegments = 16 + Math.floor(Math.random() * 16); // 16-32 segments
         
-        return new Meteor(scene, randomRadius, randomSegments, position);
+        return new Meteor(scene, randomRadius, randomSegments, position, preloadedAssets, preprocessedObjects);
     }
     
     // Static method to create a meteor field
-    static createMeteorField(scene, count = 10, centerPosition = new THREE.Vector3(0, 0, 0), fieldRadius = 20) {
+    static createMeteorField(scene, count = 10, centerPosition = new THREE.Vector3(0, 0, 0), fieldRadius = 20, preloadedAssets = {}, preprocessedObjects = {}) {
         const meteors = [];
         
         for (let i = 0; i < count; i++) {
@@ -242,7 +245,7 @@ export class Meteor {
                 centerPosition.z + Math.sin(angle) * distance
             );
             
-            const meteor = Meteor.createRandomMeteor(scene, 0.05, 0.3, position);
+            const meteor = Meteor.createRandomMeteor(scene, 0.05, 0.3, position, preloadedAssets, preprocessedObjects);
             
             // Add random orbit if desired
             if (Math.random() > 0.5) {

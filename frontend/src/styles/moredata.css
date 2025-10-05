@@ -1,0 +1,64 @@
+/* Minimal counters slides */
+
+.md {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 50% 120%, #060a14 0%, #050910 60%, #03060b 100%);
+  color: #eaf2ff;
+  padding: 2rem;
+  display: grid;
+  place-items: center;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+}
+
+.md__stage {
+  position: relative;
+  width: min(900px, 90vw);
+  height: min(520px, 70vh);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  justify-items: center;
+}
+
+.md__title {
+  font-size: clamp(1.2rem, 3.2vw, 1.8rem);
+  font-weight: 700;
+  text-align: center;
+}
+
+.md__value {
+  font-size: clamp(3rem, 9vw, 6rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.md__suffix { font-weight: 600; margin-left: 0.25rem; opacity: 0.9; }
+
+.md__desc { opacity: 0.9; text-align: center; font-size: clamp(1rem, 2.2vw, 1.2rem); }
+
+.md__steps { opacity: 0.7; font-size: 0.95rem; }
+
+/* Subtle pulse when animating */
+.md__value--animating { animation: md-pulse 600ms ease-in-out infinite alternate; }
+@keyframes md-pulse { from { transform: scale(1); } to { transform: scale(1.015); } }
+
+/* Nav */
+.md-nav__btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color: #eaf2ff;
+  font-size: 26px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 5;
+}
+.md-nav__btn.left { left: 16px; }
+.md-nav__btn.right { right: 16px; }
