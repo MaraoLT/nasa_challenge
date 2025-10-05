@@ -29,7 +29,7 @@ export default function App() {
         <Route path="/warning" element={<WarningScreen />} />
         <Route path="/credits" element={<Credits />} />
         <Route path="/intro" element={<IntroSlide />} />
-  <Route path="/types-of-space-bodies" element={<TypesOfSpaceBodiesSlide />} />
+        <Route path="/types-of-space-bodies" element={<TypesOfSpaceBodiesSlide />} />
         <Route path="/cards" element={<DraggableCards />} />
         <Route path="/meteor-impact-simulator" element={<MeteorImpactSimulator />}/>
       </Routes>

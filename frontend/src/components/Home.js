@@ -70,7 +70,7 @@ export default function Home() {
 
                 {/* Trainings row: two buttons side-by-side */}
                 <div className="trainings-row">
-                  <Link to="/meteor-impact-simulator" className="main-action-btn">EARTH IMPACT</Link>
+                  <Link to="/meteor-impact-simulator?from=home" className="main-action-btn">EARTH IMPACT</Link>
                   <Link to="/ThreeDemo" state={{ loadMeteors: false }} className="main-action-btn">EARTH ORBIT</Link>
                 </div>
               </div>

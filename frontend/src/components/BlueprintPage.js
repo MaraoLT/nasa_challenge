@@ -116,7 +116,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
 
   const onPrev = () => {
     if (animating) return;
-    if (index === 0) return navigate('/more-data');
+    if (index === 0) return navigate('/meteor-impact-simulator?from=more-data');
     const prevIdx = Math.max(0, index - 1);
     // Prepare overlay with previous content and slide it in on top
     setOverlayIndex(prevIdx);
