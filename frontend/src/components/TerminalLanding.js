@@ -324,6 +324,14 @@ export default function TerminalLanding() {
       0%, 50%, 100% { opacity: 1; }
       25%, 75% { opacity: 0; }
     }
+
+    .terminal-exit {
+      animation: terminalExit 500ms ease-out both;
+    }
+    @keyframes terminalExit {
+      0%   { opacity: 1; transform: none; filter: none; }
+      100% { opacity: 0; transform: translateY(8px) scale(0.985); filter: blur(1px); }
+    }
   `;
 
   const handleClick = () => {
@@ -333,12 +341,15 @@ export default function TerminalLanding() {
     // If still typing, ignore clicks entirely
     if (isTyping) return;
     // Only accept clicks when fully ready
-    if (!canClick) return;
+    if (!canClick || exiting) return;
     // Advance to next page, or navigate when done
     if (page < texts.length - 1) {
       setPage((p) => p + 1);
     } else if (assetsLoaded) {
-      navigate("/star-transition");
+      // Play a short ease-out before navigating
+      setExiting(true);
+      setCanClick(false);
+      setTimeout(() => navigate("/star-transition"), 520);
     }
     // getMeteorData(1.5, "km", 2500, 100 ,"km/s", 90, -1, 43);
   };
@@ -386,7 +397,7 @@ export default function TerminalLanding() {
     <div style={containerStyle} onClick={handleClick}>
         <style>{styleSheet}</style>
         <div style={textWrapperStyle}>
-          <pre style={textStyle}>
+          <pre style={textStyle} className={exiting ? 'terminal-exit' : ''}>
             {getDisplayText()}
             <span style={cursorStyle}>|</span>
           </pre>

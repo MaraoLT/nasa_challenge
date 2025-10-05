@@ -130,7 +130,7 @@ function getMeteorData(meteorDiameter, meteorUnits, meteorDesity, velocity, velo
 
   let p = {diametroCrateraTransiente : diametroCrateraTransiente,  profundidadeCrateraTrasiente : profundidadeCrateraTrasiente, energiaDoImpacto : energiaDoImpacto, energiaDoImpactoTNT : energiaDoImpactoTNT, energiaDoImpactoMTNT : energiaDoImpactoMTNT, diameterFireball : diameterFireball, clothesBurn : clothesBurn, thirdDegreeBurn : thirdDegreeBurn, secondDegreeBurn : secondDegreeBurn, firstDegreeBurn : firstDegreeBurn, deaths : deaths, feridos : feridos};
 
-  console.log(diametroCrateraTransiente, profundidadeCrateraTrasiente, energiaDoImpacto, energiaDoImpactoTNT, energiaDoImpactoMTNT,diameterFireball, clothesBurn, thirdDegreeBurn, secondDegreeBurn, firstDegreeBurn, deaths, feridos);
+  //console.log(diametroCrateraTransiente, profundidadeCrateraTrasiente, energiaDoImpacto, energiaDoImpactoTNT, energiaDoImpactoMTNT,diameterFireball, clothesBurn, thirdDegreeBurn, secondDegreeBurn, firstDegreeBurn, deaths, feridos);
 
   return p;
 };

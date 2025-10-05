@@ -249,7 +249,7 @@
         const labelBrightness = 1;
 
         // Crater
-        const craterModelUri = "./crater_with_cone.glb";
+        const craterModelUri = "./crater_with_cone_fixed.glb";
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
@@ -551,7 +551,7 @@
             const centeredPosition = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
-                terrainHeight - (depth * 6.7)
+                terrainHeight - (depth * 8.9)
             );
 
             // Escala proporcional ao raio da cratera
@@ -563,7 +563,7 @@
                     uri: craterModelUri,
                     scale: craterScale,
                     minimumPixelSize: 64,
-                    maximumScale: craterScale,
+                    maximumScale: craterScale * 2,
                     color: Cesium.Color.GRAY
                 }
             });
