@@ -157,14 +157,14 @@ function ThreeDemo() {
       cameraController.update();
       
       // Update Earth's orbital position with absolute time
-      earthInstance.updateOrbit(absoluteTime);
+      earthInstance.updateOrbit(absoluteTime, camera, renderer);
 
       // Rotate the Earth and atmosphere using deltaTime
       earthInstance.rotate(0.5 * deltaTime);
 
       // Update Earth's model matrix for day/night calculations
       earthInstance.updateMatrixWorld();
-      
+
       // Update sun direction based on current Earth position
       const sunDirection = sunInstance.getPosition().clone().sub(earthInstance.getPosition()).normalize();
       earthInstance.updateSunDirection(sunDirection);
@@ -174,7 +174,7 @@ function ThreeDemo() {
       
       // Update meteor if it exists
       if (currentMeteor) {
-        currentMeteor.updateOrbit(absoluteTime);
+        currentMeteor.updateOrbit(absoluteTime, camera, renderer);
         currentMeteor.rotate(0.02); // Faster rotation for meteors
       }
 
