@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as THREE from 'three';
 import { ThreeInitializer } from '../utils/ThreeInitializer';
 import audioContextManager from '../utils/AudioContextManager';
+import musicManager from '../utils/MusicManager';
 
 export default function TerminalLanding() {
   // Multi-page texts; advance through each, then navigate
@@ -27,6 +28,18 @@ export default function TerminalLanding() {
   // Initialize audio context manager
   useEffect(() => {
     audioContextManager.init();
+  }, []);
+
+  // Initialize music
+  useEffect(() => {
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will start when user interacts with the page');
+    }
+
+    return () => {
+      musicManager.fadeOut(500);
+    };
   }, []);
 
   // Preload terminal sound effect

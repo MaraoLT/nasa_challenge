@@ -272,7 +272,11 @@
     <!-- Elementos de áudio para efeitos sonoros -->
     <audio id="meteorFallSound" preload="auto">
         <source src="./sounds/meteor-impact-sound-effect.mp3" type="audio/mp3">
+    </audio>
 
+    <!-- Background music -->
+    <audio id="backgroundMusic" preload="auto" loop>
+        <source src="../resources/sounds/Eternal Horizon.mp3" type="audio/mp3">
     </audio>
 
     <!-- Overlay de imagem do meteoro durante o impacto -->
@@ -709,6 +713,19 @@
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
+            // Start background music
+            const backgroundMusic = document.getElementById('backgroundMusic');
+            if (backgroundMusic) {
+                backgroundMusic.volume = 0.3; // Set moderate volume
+                backgroundMusic.play().catch(error => {
+                    console.log('Background music will play after user interaction');
+                    // Auto-play after first user interaction
+                    document.addEventListener('click', () => {
+                        backgroundMusic.play().catch(e => console.warn('Could not play background music:', e));
+                    }, { once: true });
+                });
+            }
+
             try {
                 viewer = new Cesium.Viewer('cesiumContainer', {
                     terrain: Cesium.Terrain.fromWorldTerrain(),

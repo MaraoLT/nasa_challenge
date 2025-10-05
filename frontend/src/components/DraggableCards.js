@@ -1,5 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 import '../styles/cards.css';
 import '../styles/nav.css';
 
@@ -42,6 +44,22 @@ export default function DraggableCards() {
     });
     return res;
   };
+
+  // Start music when component mounts
+  useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
+    
+    return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+    };
+  }, []);
 
   useEffect(() => {
     const onMove = (e) => {

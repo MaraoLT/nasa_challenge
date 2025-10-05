@@ -96,7 +96,7 @@ In this project we used intensively AI tools to help us with code generation, co
 
 * [NEOWISE Project](https://neowise.ipac.caltech.edu/)
 * [ATLAS Project](https://fallingstar.com/home.php)
-* [Solar System Scope Texturees](https://www.solarsystemscope.com/textures/)
+* [Solar System Scope Textures](https://www.solarsystemscope.com/textures/)
 * [Cesium Ion](https://cesium.com/platform/cesium-ion/)
 * [Earth Impact Effects Paper](https://impact.ese.ic.ac.uk/ImpactEarth/ImpactEffects/effects.pdf)
 * [Population Vulnerability Models for Asteroid Impact Risk Assessment](https://www.researchgate.net/publication/313857682_Population_Vulnerability_Models_for_Asteroid_Impact_Risk_Assessment)

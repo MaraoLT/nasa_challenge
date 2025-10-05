@@ -9,10 +9,28 @@ import { Sun } from '../render/Sun';
 import { Meteor } from '../render/Meteor';
 import { ThreeInitializer } from '../utils/ThreeInitializer';
 import { parseOrbitFile } from '../utils/NasaJsonParser.js';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 import '../styles/nav.css';
 
 export default function IntroSlide({ topLeft = 'First, calm down. There\'s no need to worry! For now, at least. Every year, several PHAs (Potentially Hazardous Asteroids) and NEOs (Near-Earth Objects) are detected by state-of-the-art technology.', bottomRight = 'Here on Earth, we like to be overly cautious. An asteroid or comet is considered "near" when it approaches our planet less than 1.3 times the distance from Earth to Sun. Thus, most of them aren\'t really a danger.' }) {
   const backgroundRef = useRef(null);
+
+  // Start music when component mounts
+  useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
+    
+    return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+    };
+  }, []);
 
   useEffect(() => {
     if (!backgroundRef.current) return;
