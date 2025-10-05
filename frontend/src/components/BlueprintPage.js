@@ -3,10 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/blueprint.css';
 import musicManager from '../utils/MusicManager';
 import audioContextManager from '../utils/AudioContextManager';
+import StarField from './StarField';
 
 export default function BlueprintPage({ wallpaperUrl }) {
   const navigate = useNavigate();
   const wallpaper = wallpaperUrl || '/assets/nebula.jpg';
+  const [offset, setOffset] = React.useState({ x: 0, y: 0 });
+
+  const handleMouseMove = React.useCallback((e) => {
+    const { innerWidth: w, innerHeight: h } = window;
+    const x = ((e.clientX / w) - 0.5) * 2;
+    const y = ((e.clientY / h) - 0.5) * 2;
+    setOffset({ x, y });
+  }, []);
 
   // Define 5 subpages for the blueprint walkthrough
   const SUBPAGES = React.useMemo(() => ([
@@ -100,6 +109,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
 
   const dirs = ['left', 'right', 'top', 'bottom'];
   const randomDir = () => dirs[Math.floor(Math.random() * dirs.length)];
+  const translate = (m) => `translate3d(${offset.x * m}px, ${offset.y * m}px, 0)`;
 
   // Exit current overlay and then run an action (e.g., navigate away)
   const exitAnd = (action) => {
@@ -148,35 +158,44 @@ export default function BlueprintPage({ wallpaperUrl }) {
   };
 
   return (
-    <section className="blueprint" style={{ '--bp-wallpaper': `url(${wallpaper})` }}>
-      <button type="button" className="bp-nav__btn left" onClick={onPrev} aria-label="Previous">‹</button>
-      <div className="blueprint__stage">
-        {/* Base paper holds the content revealed after a Next, or the current content during Prev */}
-        <div className="blueprint__paper base">
-          <h1 className="blueprint__title blueprint__title--center">{basePage.title}</h1>
-          <div className={gridClassFor(basePage)}>
-            <div className="blueprint__text">
-              {paragraphsFor(basePage).map((p, i) => (<p key={i}>{p}</p>))}
-            </div>
-            <div className="blueprint__imageWrap">
-              <img className="blueprint__image" src={basePage.imgSrc} alt={basePage.title} />
-            </div>
-          </div>
-        </div>
-        {/* Overlay paper shows the current content and animates in/out */}
-        <div className={`blueprint__paper overlay ${animClass}`}>
-          <h1 className="blueprint__title blueprint__title--center">{overlayPage.title}</h1>
-          <div className={gridClassFor(overlayPage)}>
-            <div className="blueprint__text">
-              {paragraphsFor(overlayPage).map((p, i) => (<p key={i}>{p}</p>))}
-            </div>
-            <div className="blueprint__imageWrap">
-              <img className="blueprint__image" src={overlayPage.imgSrc} alt={overlayPage.title} />
-            </div>
-          </div>
-        </div>
+    <section className="blueprint space-blueprint-container" style={{ '--bp-wallpaper': `url(${wallpaper})` }} onMouseMove={handleMouseMove}>
+      {/* Background layers with parallax */}
+      <div className="background-layer" style={{ transform: translate(1.5) }}>
+        <div className="stars-layer"><StarField count={120} /></div>
+        <div className="dust-layer"></div>
       </div>
-      <button type="button" className="bp-nav__btn right" onClick={onNext} aria-label="Next">›</button>
+      
+      {/* Main content */}
+      <div className="blueprint-content" style={{ transform: translate(0.5) }}>
+        <button type="button" className="bp-nav__btn left" onClick={onPrev} aria-label="Previous">‹</button>
+        <div className="blueprint__stage">
+          {/* Base paper holds the content revealed after a Next, or the current content during Prev */}
+          <div className="blueprint__paper base">
+            <h1 className="blueprint__title blueprint__title--center">{basePage.title}</h1>
+            <div className={gridClassFor(basePage)}>
+              <div className="blueprint__text">
+                {paragraphsFor(basePage).map((p, i) => (<p key={i}>{p}</p>))}
+              </div>
+              <div className="blueprint__imageWrap">
+                <img className="blueprint__image" src={basePage.imgSrc} alt={basePage.title} />
+              </div>
+            </div>
+          </div>
+          {/* Overlay paper shows the current content and animates in/out */}
+          <div className={`blueprint__paper overlay ${animClass}`}>
+            <h1 className="blueprint__title blueprint__title--center">{overlayPage.title}</h1>
+            <div className={gridClassFor(overlayPage)}>
+              <div className="blueprint__text">
+                {paragraphsFor(overlayPage).map((p, i) => (<p key={i}>{p}</p>))}
+              </div>
+              <div className="blueprint__imageWrap">
+                <img className="blueprint__image" src={overlayPage.imgSrc} alt={overlayPage.title} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" className="bp-nav__btn right" onClick={onNext} aria-label="Next">›</button>
+      </div>
     </section>
   );
 }
