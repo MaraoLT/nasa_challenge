@@ -90,17 +90,18 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
         currentCamera // Pass actual camera reference
       );
       setMeteorsList(meteors);
-      meteorsListRef.current = meteors; // Update ref for animation loops
+      meteorsListRef.current = meteors;// Update ref for animation loops
+      if (meteors.length > 0 && window.currentCameraController) {
+           window.currentCameraController.setMeteorsList(meteors);
+           console.log('Meteors list passed to camera controller:', meteors.length, 'meteors');
+      }
     } else if (!loadMeteors) {
       console.log('Meteor loading disabled by loadMeteors flag');
       setMeteorsList([]);
       meteorsListRef.current = [];
 
       // Pass meteors list to camera controller for asteroid locking
-      if (meteors.length > 0 && window.currentCameraController) {
-        window.currentCameraController.setMeteorsList(meteors);
-        console.log('Meteors list passed to camera controller:', meteors.length, 'meteors');
-      }
+
     }
   }, [loadMeteors, asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
 
