@@ -715,14 +715,22 @@
                             viewer.entities.remove(targetMarker);
                         }
 
+                        // Slightly raise the marker above the ground and draw it on top to avoid partial occlusion
+                        const elevatedPosition = Cesium.Cartesian3.fromDegrees(
+                            longitude,
+                            latitude,
+                            (Number.isFinite(height) ? height : 0) + 10 // 10m above terrain
+                        );
+
                         targetMarker = viewer.entities.add({
-                            position: cartesian,
+                            position: elevatedPosition,
                             point: {
                                 pixelSize: 20,
                                 color: Cesium.Color.RED,
                                 outlineColor: Cesium.Color.WHITE,
                                 outlineWidth: 3,
-                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                                heightReference: Cesium.HeightReference.NONE,
+                                disableDepthTestDistance: Number.POSITIVE_INFINITY
                             }
                         });
 
