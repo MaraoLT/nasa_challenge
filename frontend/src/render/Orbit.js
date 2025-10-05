@@ -9,7 +9,7 @@ export class Orbit {
                     raan = 0,
                     period = 120,
                     tau = 0,
-                    numPoints = 80
+                    numPoints = 250
                 }) {
         this.a = semiMajorAxis; // semi-major axis
         this.e = eccentricity; // eccentricity

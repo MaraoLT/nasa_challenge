@@ -22,13 +22,16 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(42, 42, 42, 0.9);
+            background: rgba(30, 30, 30, 0.92);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px 16px 12px;
+            border-radius: 12px;
             z-index: 1000;
             font-family: Arial, sans-serif;
             max-width: 300px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(4px);
         }
 
         /* Painel de resultados à direita */
@@ -36,21 +39,63 @@
             position: absolute;
             top: 10px; /* um pouco mais para baixo */
             right: 10px;
-            background: rgba(42, 42, 42, 0.9);
+            background: rgba(30, 30, 30, 0.92);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px 16px 12px;
+            border-radius: 12px;
             z-index: 1000;
             font-family: Arial, sans-serif;
-            max-width: 320px;
-            min-width: 260px;
+            max-width: 360px;
+            min-width: 280px;
             display: none; /* aparece somente após a primeira simulação */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(4px);
         }
 
-        #results h3 { margin: 0 0 10px; }
-        #results .row { display: flex; justify-content: space-between; gap: 10px; margin: 6px 0; }
-        #results .label { color: #ddd; font-size: 12px; }
-        #results .value { font-weight: 700; font-size: 13px; background: rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 4px; }
+        #results h3 {
+            margin: 0 0 10px;
+        }
+
+        #results .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 6px 0;
+        }
+
+        #results .label {
+            color: #ddd;
+            font-size: 12px;
+        }
+
+        /* Chip de valor (Material-ish) */
+        #results .value {
+            font-weight: 700;
+            font-size: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.12);
+            letter-spacing: 0.2px;
+        }
+
+        /* Seções e divisores (Material-ish) */
+        #results .section-title {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #a0c4ff;
+            opacity: 0.9;
+            margin: 10px 0 6px;
+        }
+        #results .divider {
+            height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            margin: 10px 0;
+            border-radius: 1px;
+        }
+        #results .rows { margin-top: 4px; }
 
         /* Cabeçalho do painel de resultados com botão de unidades */
         #results .header {
@@ -61,35 +106,42 @@
             margin-bottom: 8px;
         }
         #unitToggle {
-            background: #2b2b2b;
+            background: #2b2f3a;
             color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.18);
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
         }
         #unitToggle:hover { filter: brightness(1.15); }
 
-        #controls button {
-            background: #ff4444;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 5px;
+        /* Botões Material-ish */
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 6px; }
+        .btn {
+            appearance: none;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 700;
+            font-size: 13px;
             cursor: pointer;
-            font-weight: bold;
+            color: #fff;
+            background: #2b2f3a;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            transition: transform .04s ease, filter .15s ease;
         }
-
-        #controls button:hover {
-            background: #ff6666;
+        .btn:hover { filter: brightness(1.1); }
+        .btn:active { transform: translateY(1px); }
+        .btn:disabled { opacity: .6; cursor: not-allowed; filter: grayscale(20%); }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff5151, #ff2e2e);
+            border-color: rgba(255,255,255,0.22);
         }
-
-        #controls button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            filter: grayscale(20%);
+        .btn-secondary {
+            background: #2b2f3a;
+            border-color: rgba(255,255,255,0.18);
         }
 
         #impact-info {
@@ -115,11 +167,13 @@
 
         .value-badge {
             display: inline-block;
-            background: rgba(255,255,255,0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+            padding: 4px 8px;
+            border-radius: 999px;
             margin-left: 6px;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
         }
 
         .stepper {
@@ -160,17 +214,129 @@
             gap: 8px;
             justify-content: space-between;
         }
+
+        /* Títulos e divisores compartilhados */
+        #controls .section-title {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #a0c4ff;
+            opacity: 0.9;
+            margin: 10px 0 6px;
+        }
+        #controls .divider {
+            height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            margin: 10px 0;
+            border-radius: 1px;
+        }
     </style>
 </head>
 
 <body>
     <div id="cesiumContainer"></div>
 
+    <!-- Elementos de áudio para efeitos sonoros -->
+    <audio id="meteorFallSound" preload="auto">
+        <source src="./sounds/meteor-impact-sound-effect.mp3" type="audio/mp3">
+
+    </audio>
+
+    <!-- Overlay de imagem do meteoro durante o impacto -->
+    <div id="meteorImpactOverlay" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(circle, rgba(255,100,0,0.8) 0%, rgba(255,0,0,0.4) 30%, transparent 70%);
+        pointer-events: none;
+        z-index: 9999;
+        display: none;
+        animation: impactFlash 3s ease-out;
+    ">
+
+        <!-- Efeito de ondas de choque -->
+        <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            border: 3px solid rgba(255,255,255,0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: shockwave 2s ease-out 1s;
+        "></div>
+    </div>
+
+    <style>
+        /* @keyframes impactFlash {
+            0% {
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 0.8;
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 100, 0, 0.6) 40%, transparent 80%);
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        } */
+
+        @keyframes meteorFall {
+            0% {
+                transform: translate(-300vw, -300vh) rotate(45deg) scale(0.2);
+                opacity: 0.3;
+            }
+
+            20% {
+                opacity: 0.8;
+            }
+
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) rotate(45deg) scale(1.8);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(45deg) scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes shockwave {
+            0% {
+                width: 10px;
+                height: 10px;
+                opacity: 1;
+            }
+
+            100% {
+                width: 100vw;
+                height: 100vw;
+                opacity: 0;
+            }
+        }
+    </style>
+
     <div id="controls">
-        <h3>Meteor Impact Simulator</h3>
-    <button id="simulateBtn" onclick="simulateImpact()" disabled>Simulate Impact</button>
-        <button onclick="resetSimulation()">Reset</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <h3 style="margin:0">Meteor Impact Simulator</h3>
+            <div class="actions">
+                <button id="simulateBtn" class="btn btn-primary" onclick="simulateImpact()" disabled>Simulate Impact</button>
+                <button class="btn btn-secondary" onclick="resetSimulation()">Reset</button>
+            </div>
+        </div>
+
         <div id="impact-info">
+            <div class="section-title">Parâmetros do meteoro</div>
             <div class="control">
                 <label for="diameterRange">Meteor Diameter
                     <span class="value-badge" id="diameterOut">50 m</span>
@@ -192,9 +358,11 @@
                 <input type="range" id="angleRange" min="5" max="90" step="1" value="45">
             </div>
 
+            <div class="divider"></div>
+            <div class="section-title">Material</div>
             <div class="control">
                 <div class="material-inline">
-                    <label style="margin: 0">Material</label>
+                    <label style="margin: 0">Type</label>
                     <div class="stepper" role="group" aria-label="Selecionar material">
                         <button id="materialPrev" type="button" aria-label="Material anterior">&#8249;</button>
                         <span class="stepper-value" id="materialValue">stone</span>
@@ -204,7 +372,13 @@
                 <small class="material-info">Density: <span id="materialDensity">2500</span> kg/m³</small>
             </div>
 
-            <em id="selectHint">💡 Click on the map to choose the target!</em>
+            <div class="divider"></div>
+            <div class="section-title">Ações</div>
+            <em id="selectHint" style="display:block;margin-bottom:6px;">💡 Click on the map to choose the target!</em>
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="returnHome()">Return</button>
+                <button class="btn btn-secondary" onclick="nextSession()" disabled>Next</button>
+            </div>
         </div>
     </div>
 
@@ -214,21 +388,42 @@
             <h3 style="margin: 0">Resultados</h3>
             <button id="unitToggle" title="Alternar visualização: km/m ↔ mi">mi</button>
         </div>
-        <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
-        <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
-        <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
-        <div class="row"><span class="label">Energia (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
-        <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
-        <div class="row"><span class="label">Fireball (diâmetro)</span><span class="value" id="r-fireball">—</span></div>
-        <div class="row"><span class="label">Queimaduras leves</span><span class="value" id="r-first">—</span></div>
-        <div class="row"><span class="label">Queimaduras 2º grau</span><span class="value" id="r-second">—</span></div>
-        <div class="row"><span class="label">Queimaduras 3º grau</span><span class="value" id="r-third">—</span></div>
-        <div class="row"><span class="label">Risco roupas pegarem fogo</span><span class="value" id="r-clothes">—</span></div>
-        <div class="row"><span class="label">Estimativa de mortes</span><span class="value" id="r-deaths">—</span></div>
-        <div class="row"><span class="label">Estimativa de feridos</span><span class="value" id="r-feridos">—</span></div>
+
+        <div class="section-title">Cratera e impacto</div>
+        <div class="rows">
+            <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
+            <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
+            <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
+            <div class="row"><span class="label">Energia (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
+            <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
+            <div class="row"><span class="label">Fireball (diâmetro)</span><span class="value" id="r-fireball">—</span></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">Pessoas</div>
+        <div class="rows">
+            <div class="row"><span class="label">Queimaduras leves</span><span class="value" id="r-first">—</span></div>
+            <div class="row"><span class="label">Queimaduras 2º grau</span><span class="value" id="r-second">—</span></div>
+            <div class="row"><span class="label">Queimaduras 3º grau</span><span class="value" id="r-third">—</span></div>
+            <div class="row"><span class="label">Risco roupas pegarem fogo</span><span class="value" id="r-clothes">—</span></div>
+            <div class="row"><span class="label">Estimativa de mortes</span><span class="value" id="r-deaths">—</span></div>
+            <div class="row"><span class="label">Estimativa de feridos</span><span class="value" id="r-feridos">—</span></div>
+        </div>
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
+
+        function returnHome(){
+            window.top.location.href = '/home';
+            window.location.replace('/home');
+        }
+
+        function nextSession(){
+            /* Decidir ainda para qual página seguir depois da simulação */
+            window.top.location.href = '/terminal-landing';
+            window.location.replace('/terminal-landing');
+        }
+
         // Token de acesso do Cesium ion
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMGRkYjMwYy1lODg0LTQ3MTktOTBiNi02ZDI0YjRiNTcxNjIiLCJpZCI6MzQ3MjQ2LCJpYXQiOjE3NTk2MDg1NzN9.901R3lkV1aC6zsOj843KhI37YOCw7lOnqS8rHd4nVq8';
 
@@ -248,12 +443,12 @@
         let craterCapClippingPlanes; // Para gerenciar os ClippingPlanes da calota
 
         let targetMarker = null; // Marcador do alvo selecionado
-    let craterModel = null; // Modelo 3D da cratera
-    let terrainHeight = 0; // Altura do terreno no alvo (atualizada no clique)
-    // Unidade de exibição (visual apenas): 'metric' (m/km) ou 'imperial' (mi)
-    let displayUnit = 'metric';
-    // Cache do último resultado para re-render quando alternar unidades
-    let lastResults = null;
+        let craterModel = null; // Modelo 3D da cratera
+        let terrainHeight = 0; // Altura do terreno no alvo (atualizada no clique)
+        // Unidade de exibição (visual apenas): 'metric' (m/km) ou 'imperial' (mi)
+        let displayUnit = 'metric';
+        // Cache do último resultado para re-render quando alternar unidades
+        let lastResults = null;
 
         // --- VARIÁVEIS DE CONTROLE DO USUÁRIO (para cálculos posteriores) ---
         let meteorDiameterM = 50;      // 1 m a 1500 m (1.5 km)
@@ -262,10 +457,10 @@
 
         // Materiais e densidades (kg/m³)
         const MATERIALS = [
-            { key: 'ice',    density: 920 },
-            { key: 'stone',  density: 2500 },
+            { key: 'ice', density: 920 },
+            { key: 'stone', density: 2500 },
             { key: 'carbon', density: 3500 },
-            { key: 'iron',   density: 7800 },
+            { key: 'iron', density: 7800 },
         ];
 
         // Estado atual do material
@@ -277,6 +472,101 @@
 
         // Crater
         const craterModelUri = "./crater_with_cone.glb";
+
+        // === FUNÇÕES DE ÁUDIO E EFEITOS VISUAIS ===
+
+        // Função para tocar som de meteoro caindo
+        function playMeteorFallSound() {
+            const audio = document.getElementById('meteorFallSound');
+            try {
+                audio.currentTime = 0; // Reinicia o áudio
+                audio.volume = 0.7; // Volume moderado
+                audio.play().catch(error => {
+                    console.warn('Não foi possível tocar som do meteoro:', error);
+                    // Fallback: criar som sintético com Web Audio API
+                    generateSyntheticMeteorSound();
+                });
+            } catch (error) {
+                console.warn('Erro ao tentar tocar áudio:', error);
+            }
+        }
+
+        // Função para tocar som de explosão
+        function playExplosionSound() {
+            const audio = document.getElementById('explosionSound');
+            try {
+                audio.currentTime = 0;
+                audio.volume = 0.8; // Volume mais alto para explosão
+                audio.play().catch(error => {
+                    console.warn('Não foi possível tocar som da explosão:', error);
+                    // Fallback: criar som sintético
+                    generateSyntheticExplosionSound();
+                });
+            } catch (error) {
+                console.warn('Erro ao tentar tocar áudio de explosão:', error);
+            }
+        }
+
+        // Função para mostrar efeito visual de impacto
+        function showMeteorImpactEffect() {
+            const overlay = document.getElementById('meteorImpactOverlay');
+            overlay.style.display = 'block';
+
+            // Remove o overlay após a animação
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 4000); // Aumentado para 4 segundos para coincidir com as animações
+        }
+
+        // Fallback: gerar som sintético de meteoro usando Web Audio API
+        function generateSyntheticMeteorSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Som de "whoosh" do meteoro
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 3);
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 3);
+            } catch (error) {
+                console.warn('Não foi possível gerar som sintético:', error);
+            }
+        }
+
+        // Fallback: gerar som sintético de explosão
+        function generateSyntheticExplosionSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Som grave de explosão
+                oscillator.frequency.setValueAtTime(80, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(20, audioContext.currentTime + 2);
+
+                gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 2);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 2);
+            } catch (error) {
+                console.warn('Não foi possível gerar som sintético de explosão:', error);
+            }
+        }
+
+        // === FIM DAS FUNÇÕES DE ÁUDIO E EFEITOS ===
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
@@ -344,7 +634,7 @@
                                         d.style.zIndex = 2002;
                                     }
                                 }
-                            } catch {}
+                            } catch { }
                         };
                         // Ajusta ao abrir/fechar
                         navHelp.addEventListener('click', () => setTimeout(adjustPanel, 0));
@@ -497,10 +787,18 @@
             // Mostra o painel de resultados após a primeira simulação
             const resultsPanel = document.getElementById('results');
             if (resultsPanel) resultsPanel.style.display = 'block';
-            
+
             resetSimulation();
+
+            // === EFEITOS SONOROS E VISUAIS DO METEORO ===
+            // Toca som do meteoro caindo e mostra efeito visual
+            playMeteorFallSound();
+            showMeteorImpactEffect();
+
             //createMeteor();
             setTimeout(() => {
+                // Toca som da explosão no momento do impacto
+                playExplosionSound();
                 createExplosion(results.diameterFireball);
                 removeMeteor();
             }, 3000);
@@ -508,13 +806,14 @@
                 const impactPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude);
                 //createRealCrater(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterRotation);
                 // --- CHAMANDO A NOVA FUNÇÃO DA CALOTA COM CORTE ---
-                createCraterWithTerrain(impactPosition, craterMajorRadius,craterDepth);
+                createCraterWithTerrain(impactPosition, craterMajorRadius, craterDepth);
 
                 removeExplosion();
             }, 4000);
             setTimeout(() => {
                 console.log(results);
-                createDestructionZones(results.diameterFireball, results.clothesBurn, results.thirdDegreeBurn, results.secondDegreeBurn);
+                // Chamada corrigida: thirdDegreeBurn, secondDegreeBurn, firstDegreeBurn
+                createDestructionZones(results.thirdDegreeBurn, results.secondDegreeBurn, results.firstDegreeBurn);
             }, 6000);
         }
 
@@ -587,6 +886,35 @@
 
         // Função para criar cratera
         function createCraterWithTerrain(position, radius, depth) {
+            // 1. Busca a altura exata do terreno no momento da criação da cratera
+            const cartographic = Cesium.Cartographic.fromCartesian(position);
+            const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+            const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+
+            // Promisse para obter a altura real do terreno
+            const terrainProvider = viewer.terrainProvider;
+
+            Cesium.sampleTerrainMostDetailed(terrainProvider, [cartographic])
+                .then(function (updatedPositions) {
+                    const actualTerrainHeight = updatedPositions[0].height || 0;
+
+                    console.log(`Altura do terreno obtida: ${actualTerrainHeight.toFixed(2)}m (anterior: ${terrainHeight.toFixed(2)}m)`);
+
+                    // Atualiza a variável global com a altura correta
+                    terrainHeight = actualTerrainHeight;
+
+                    // Agora cria a cratera com a altura correta
+                    createCraterGeometry(position, radius, depth, actualTerrainHeight, longitude, latitude);
+                })
+                .catch(function (error) {
+                    console.warn('Erro ao obter altura do terreno, usando altura aproximada:', error);
+                    // Fallback: usa a altura que temos
+                    createCraterGeometry(position, radius, depth, terrainHeight, longitude, latitude);
+                });
+        }
+
+        // Função auxiliar para criar a geometria da cratera
+        function createCraterGeometry(position, radius, depth, actualHeight, longitude, latitude) {
             // 1. Corta o terreno em formato circular
             const clippingPlanes = [];
             const numSides = 64;
@@ -619,7 +947,8 @@
                 );
             }
 
-            clippingPlanes.push(new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), terrainHeight - (depth)));
+            // Usa a altura correta obtida do terreno
+            clippingPlanes.push(new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), actualHeight - depth));
 
             viewer.scene.globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
                 planes: clippingPlanes,
@@ -629,20 +958,17 @@
                 enabled: true
             });
 
-            // 2. Adiciona o modelo GLB da cratera
+            // 2. Remove modelo anterior se existir
             if (craterModel) {
                 viewer.entities.remove(craterModel);
                 craterModel = null;
             }
 
-            const cartographic = Cesium.Cartographic.fromCartesian(position);
-            const longitude = Cesium.Math.toDegrees(cartographic.longitude);
-            const latitude = Cesium.Math.toDegrees(cartographic.latitude);
-
+            // 3. Posiciona o modelo da cratera com a altura correta
             const centeredPosition = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
-                terrainHeight - (depth * 6.7)
+                actualHeight - (depth * 6.7)
             );
 
             // Escala proporcional ao raio da cratera
@@ -659,7 +985,7 @@
                 }
             });
 
-            console.log(`Cratera carregada em lon:${longitude.toFixed(3)}, lat:${latitude.toFixed(3)}, altura:${terrainHeight.toFixed(2)}m`);
+            console.log(`Cratera criada com altura correta: ${actualHeight.toFixed(2)}m em lon:${longitude.toFixed(3)}, lat:${latitude.toFixed(3)}`);
         }
 
         function resetSimulation() {
@@ -699,11 +1025,71 @@
 
         // --- DEMAIS FUNÇÕES (SEM ALTERAÇÃO) ---
         function createDestroyedGroundTexture() { const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512; const ctx = canvas.getContext('2d'); const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256); gradient.addColorStop(0, '#1a0f0a'); gradient.addColorStop(.5, '#4a2c1a'); gradient.addColorStop(.9, '#8b5a3c'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 512, 512); ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; ctx.lineWidth = 3; for (let i = 0; i < 30; i++) { ctx.beginPath(); ctx.moveTo(256 + Math.random() * 200 - 100, 256 + Math.random() * 200 - 100); ctx.lineTo(256 + Math.random() * 240 - 120, 256 + Math.random() * 240 - 120); ctx.stroke() } return canvas.toDataURL() }
-        function createMeteor() { const startTime = viewer.clock.currentTime; const endTime = Cesium.JulianDate.addSeconds(startTime, 3, new Cesium.JulianDate()); const startPosition = Cesium.Cartesian3.fromDegrees(region.longitude - 1, region.latitude + 1, 15e4); const endPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 0); const positionProperty = new Cesium.SampledPositionProperty(); positionProperty.addSample(startTime, startPosition); positionProperty.addSample(endTime, endPosition); meteorEntity = viewer.entities.add({ name: "Meteoro", position: positionProperty, point: { pixelSize: 35, color: Cesium.Color.ORANGE, outlineColor: Cesium.Color.RED, outlineWidth: 4, scaleByDistance: new Cesium.NearFarScalar(1e3, 2, 1e5, .5) }, path: { show: !0, leadTime: 0, trailTime: 2, width: 10, resolution: 1, material: new Cesium.PolylineGlowMaterialProperty({ glowPower: .5, color: Cesium.Color.ORANGE, taperPower: .7 }) }}); viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 6e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 } }) }
+        function createMeteor() { const startTime = viewer.clock.currentTime; const endTime = Cesium.JulianDate.addSeconds(startTime, 3, new Cesium.JulianDate()); const startPosition = Cesium.Cartesian3.fromDegrees(region.longitude - 1, region.latitude + 1, 15e4); const endPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 0); const positionProperty = new Cesium.SampledPositionProperty(); positionProperty.addSample(startTime, startPosition); positionProperty.addSample(endTime, endPosition); meteorEntity = viewer.entities.add({ name: "Meteoro", position: positionProperty, point: { pixelSize: 35, color: Cesium.Color.ORANGE, outlineColor: Cesium.Color.RED, outlineWidth: 4, scaleByDistance: new Cesium.NearFarScalar(1e3, 2, 1e5, .5) }, path: { show: !0, leadTime: 0, trailTime: 2, width: 10, resolution: 1, material: new Cesium.PolylineGlowMaterialProperty({ glowPower: .5, color: Cesium.Color.ORANGE, taperPower: .7 }) } }); viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 6e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 } }) }
         function removeMeteor() { if (meteorEntity) { viewer.entities.remove(meteorEntity); meteorEntity = null; } }
-        function createExplosion(diameterFireball) { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 1e3), ellipse: { semiMinorAxis: diameterFireball, semiMajorAxis: diameterFireball, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * 0.5 + .5; return Cesium.Color.ORANGE.withAlpha(i * 0.8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED }}) }
+        function createExplosion(diameterFireball) { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 1e3), ellipse: { semiMinorAxis: diameterFireball, semiMajorAxis: diameterFireball, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * 0.5 + .5; return Cesium.Color.ORANGE.withAlpha(i * 0.8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED } }) }
         function removeExplosion() { if (explosionEntity) { viewer.entities.remove(explosionEntity); explosionEntity = null; } }
-        function createDestructionZones(diameterFireball, clothesBurn, thirdDegreeBurn, secondDegreeBurn) { const e = viewer.entities.add({ name: "Destruição Total", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: diameterFireball*1, semiMajorAxis: diameterFireball*1, material: Cesium.Color.RED.withAlpha(.3), outline: !0, outlineColor: Cesium.Color.DARKRED, outlineWidth: 3, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), t = viewer.entities.add({ name: "Destruição Severa", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: clothesBurn*1, semiMajorAxis: clothesBurn*1, material: Cesium.Color.ORANGE.withAlpha(.2), outline: !0, outlineColor: Cesium.Color.DARKORANGE, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), i = viewer.entities.add({ name: "Danos Moderados", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: thirdDegreeBurn*1, semiMajorAxis: thirdDegreeBurn*1, material: Cesium.Color.YELLOW.withAlpha(.15), outline: !0, outlineColor: Cesium.Color.GOLD, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}); impactZones.push(e, t, i); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 12e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 }, duration: 3 }) 
+        function createDestructionZones(thirdDegreeBurnRadius, secondDegreeBurnRadius, firstDegreeBurnRadius) {
+            // Zona Vermelha: Queimaduras de 3º grau
+            const redZone = viewer.entities.add({
+                name: "Queimaduras de 3º Grau",
+                position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
+                ellipse: {
+                    semiMinorAxis: thirdDegreeBurnRadius,
+                    semiMajorAxis: thirdDegreeBurnRadius,
+                    material: Cesium.Color.RED.withAlpha(.35),
+                    outline: true,
+                    outlineColor: Cesium.Color.DARKRED,
+                    outlineWidth: 3,
+                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                }
+            });
+
+            // Zona Laranja: Queimaduras de 2º grau
+            const orangeZone = viewer.entities.add({
+                name: "Queimaduras de 2º Grau",
+                position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
+                ellipse: {
+                    semiMinorAxis: secondDegreeBurnRadius,
+                    semiMajorAxis: secondDegreeBurnRadius,
+                    material: Cesium.Color.ORANGE.withAlpha(.3),
+                    outline: true,
+                    outlineColor: Cesium.Color.DARKORANGE,
+                    outlineWidth: 2,
+                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                }
+            });
+
+            // Zona Amarela: Queimaduras de 1º grau
+            const yellowZone = viewer.entities.add({
+                name: "Queimaduras de 1º Grau",
+                position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
+                ellipse: {
+                    semiMinorAxis: firstDegreeBurnRadius,
+                    semiMajorAxis: firstDegreeBurnRadius,
+                    material: Cesium.Color.YELLOW.withAlpha(.25),
+                    outline: true,
+                    outlineColor: Cesium.Color.GOLD,
+                    outlineWidth: 2,
+                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                }
+            });
+
+            impactZones.push(redZone, orangeZone, yellowZone);
+
+            // Foca a câmera para mostrar a maior zona de destruição
+            const maxRadius = Math.max(firstDegreeBurnRadius, secondDegreeBurnRadius, thirdDegreeBurnRadius);
+            const cameraAltitude = maxRadius * 4; // Ajuste este multiplicador para o zoom desejado
+
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, cameraAltitude),
+                orientation: {
+                    heading: Cesium.Math.toRadians(0),
+                    pitch: Cesium.Math.toRadians(-90),
+                    roll: 0
+                },
+                duration: 3
+            });
         }
 
     </script>

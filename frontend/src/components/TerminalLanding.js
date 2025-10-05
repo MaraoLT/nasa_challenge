@@ -348,7 +348,6 @@ export default function TerminalLanding() {
       setCanClick(false);
       setTimeout(() => navigate("/star-transition"), 520);
     }
-    // getMeteorData(1.5, "km", 2500, 100 ,"km/s", 90, -1, 43);
   };
 
   const getDisplayText = () => {
