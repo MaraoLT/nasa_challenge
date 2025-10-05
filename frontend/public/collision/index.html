@@ -812,7 +812,7 @@
                 playExplosionSound();
                 createExplosion(results.diameterFireball);
                 removeMeteor();
-            }, 3000);
+            }, 500);
             setTimeout(() => {
                 const impactPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude);
                 //createRealCrater(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterRotation);
@@ -820,12 +820,12 @@
                 createCraterWithTerrain(impactPosition, craterMajorRadius, craterDepth);
 
                 removeExplosion();
-            }, 4000);
+            }, 1000);
             setTimeout(() => {
                 console.log(results);
                 // Chamada corrigida: thirdDegreeBurn, secondDegreeBurn, firstDegreeBurn
                 createDestructionZones(results.thirdDegreeBurn, results.secondDegreeBurn, results.firstDegreeBurn);
-            }, 6000);
+            }, 1500);
         }
 
         // Atualiza o painel de resultados à direita
