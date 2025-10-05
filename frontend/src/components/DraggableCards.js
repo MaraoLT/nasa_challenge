@@ -162,10 +162,12 @@ export default function DraggableCards() {
             <div className="scanner__glass" ref={glassRef} />
             <div className="scanner__screen">
               {insideCards.length === 0 && (
-                <div className="scanner__hint">Place a card on the glass</div>
+                <div key="hint" className="scanner__content">
+                  <div className="scanner__hint">Place a card on the glass</div>
+                </div>
               )}
               {insideCards.length === 1 && (
-                <div>
+                <div key={`card-${insideCards[0].id}`} className="scanner__content">
                   <div className="scanner__label">Title</div>
                   <div className="scanner__value">{insideCards[0].title}</div>
                   <div className="scanner__label">Description</div>
@@ -173,7 +175,9 @@ export default function DraggableCards() {
                 </div>
               )}
               {insideCards.length > 1 && (
-                <div className="scanner__warning">Too many cards inside!</div>
+                <div key="warning" className="scanner__content">
+                  <div className="scanner__warning">Too many cards inside!</div>
+                </div>
               )}
             </div>
           </div>
