@@ -153,13 +153,27 @@ function ThreeDemo() {
       mountRef.current.innerHTML = '';
 
       // Take ownership of the background scene
-      const { scene, camera, renderer, sunInstance: sun, earthInstance, galaxy, cameraController, ambientLight, startTimestamp } = backgroundScene;
+      const { scene, camera, renderer, sunInstance: sun, earthInstance, galaxy, meteors, cameraController, ambientLight, startTimestamp } = backgroundScene;
 
       // Set scene and sun for meteor creation
       setCurrentScene(scene);
       setSunInstance(sun);
-      setCurrentCamera(camera); // Set camera reference for meteor creation
+      setCurrentCamera(camera);
       setSceneReady(true);
+
+      // Use pre-created meteors from ThreeInitializer if available
+      if (meteors && meteors.length > 0) {
+        console.log(`Using ${meteors.length} pre-created meteors from background scene`);
+        setMeteorsList(meteors);
+        meteorsListRef.current = meteors;
+      } else {
+        console.log('No meteors in background scene, will create them from loaded orbits');
+        // Get orbits from ThreeInitializer and set them for meteor creation
+        const orbits = ThreeInitializer.getAsteroidOrbits();
+        if (orbits.length > 0) {
+          setAsteroidOrbits(orbits);
+        }
+      }
 
       // Attach the renderer to our DOM element
       backgroundScene.attachToDOM(mountRef.current);
@@ -192,10 +206,16 @@ function ThreeDemo() {
         sun.update();
 
         // Update all meteors from asteroid data
-        meteorsListRef.current.forEach((meteor) => {
-          meteor.updateOrbit(absoluteTime);
-          meteor.rotate(0.01);
-        });
+        if (backgroundScene.updateMeteors) {
+          // Use ThreeInitializer's meteor update method if available
+          backgroundScene.updateMeteors(absoluteTime);
+        } else {
+          // Fallback to manual meteor updates
+          meteorsListRef.current.forEach((meteor) => {
+            meteor.updateOrbit(absoluteTime);
+            meteor.rotate(0.01);
+          });
+        }
 
         renderer.render(scene, camera);
         stats.end();
@@ -208,9 +228,12 @@ function ThreeDemo() {
       const handleKeyPress = (event) => {
         switch(event.code) {
           case 'KeyA':
-            console.log('KeyA) pressed');
-            // Lock onto first asteroid/meteor from the list
-            if (meteorsListRef.current.length > 0) {
+            console.log('KeyA pressed');
+            // Try to use ThreeInitializer's meteor targeting first
+            if (backgroundScene.setMeteorTarget) {
+              backgroundScene.setMeteorTarget(0); // Lock onto first meteor
+            } else if (meteorsListRef.current.length > 0) {
+              // Fallback to manual meteor targeting
               const firstMeteor = meteorsListRef.current[0];
               cameraController.setCurrentMeteor(firstMeteor);
               cameraController.lockMode = 'meteor';
