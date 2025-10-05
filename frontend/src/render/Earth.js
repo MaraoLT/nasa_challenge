@@ -1,30 +1,26 @@
 import * as THREE from 'three';
-import {Orbit} from './Orbit.js';
+import { Orbit } from './Orbit.js';
+import { AstralObject } from './AstralObject.js';
 
-export class Earth {
+export class Earth extends AstralObject {
     constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0), preloadedAssets = {}, preprocessedObjects = {}) {
-        this.scene = scene;
-        this.radius = radius;
-        this.segments = segments;
-        this.position = initialPosition.clone();
+        super(scene, radius, segments, initialPosition, preprocessedObjects);
         this.preloadedAssets = preloadedAssets;
-        this.preprocessedObjects = preprocessedObjects;
-        
+
         // Orbit properties
-        this.isOrbiting = false;
         this.orbitCenter = new THREE.Vector3(0, 0, 0); // Default to sun at origin
         this.orbitRadius = this.position.distanceTo(this.orbitCenter);
         this.orbitSpeed = 0.005; // Default orbit speed
         this.orbitAngle = Math.atan2(this.position.z - this.orbitCenter.z, this.position.x - this.orbitCenter.x);
-        
+
         // Create Earth components
         this.mesh = this.createEarthMesh();
         this.atmosphere = this.createAtmosphere();
-        
+
         // Set initial position
         this.setPosition(this.position.x, this.position.y, this.position.z);
-        
-        // Add to scene
+
+        // Add to scene (traceLine is already added by parent constructor)
         this.addToScene();
     }
 
@@ -39,14 +35,14 @@ export class Earth {
             console.log('Creating earth geometry normally');
             geometry = new THREE.SphereGeometry(this.radius, this.segments, this.segments);
         }
-        
+
         // Use preloaded textures if available, otherwise load normally
         const textureLoader = new THREE.TextureLoader();
-        const earthDayTexture = this.preloadedAssets['/resources/earth/Earth Map.jpg'] 
+        const earthDayTexture = this.preloadedAssets['/resources/earth/Earth Map.jpg']
             || textureLoader.load('/resources/earth/Earth Map.jpg');
-        const earthNightTexture = this.preloadedAssets['/resources/earth/Earth Night Map.jpg'] 
+        const earthNightTexture = this.preloadedAssets['/resources/earth/Earth Night Map.jpg']
             || textureLoader.load('/resources/earth/Earth Night Map.jpg');
-        const bumpTexture = this.preloadedAssets['/resources/earth/Earth Topographic Map.png'] 
+        const bumpTexture = this.preloadedAssets['/resources/earth/Earth Topographic Map.png']
             || textureLoader.load('/resources/earth/Earth Topographic Map.png');
         
         // Configure texture settings for better quality
@@ -129,16 +125,16 @@ export class Earth {
                 }
             `
         });
-        
+
         const mesh = new THREE.Mesh(geometry, material);
-        
+
         // Ensure Earth doesn't cast shadows that could interfere with galaxy
         mesh.castShadow = false;
         mesh.receiveShadow = false;
-        
+
         // Store reference to material for updating sun direction
         mesh.userData.material = material;
-        
+
         return mesh;
     }
 
@@ -155,7 +151,7 @@ export class Earth {
         }
 
         const textureLoader = new THREE.TextureLoader();
-        const atmosphereTexture = this.preloadedAssets['/resources/earth/Earth Clouds.jpg'] 
+        const atmosphereTexture = this.preloadedAssets['/resources/earth/Earth Clouds.jpg']
             || textureLoader.load('/resources/earth/Earth Clouds.jpg');
         
         // Use MeshBasicMaterial so it's not affected by directional lighting
@@ -165,16 +161,16 @@ export class Earth {
             opacity: 0.4,
             color: 0xffffff, // Slight tint for clouds
         });
-        
+
         const atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-        
+
         // Ensure atmosphere doesn't cast shadows
         atmosphereMesh.castShadow = false;
         atmosphereMesh.receiveShadow = false;
-        
+
         return atmosphereMesh;
     }
-    
+
     // Update the sun direction for day/night transition
     updateSunDirection(sunPosition) {
         if (this.mesh && this.mesh.userData.material) {
@@ -183,14 +179,14 @@ export class Earth {
             this.mesh.userData.material.uniforms.sunDirection.value = sunDirection;
         }
     }
-    
+
     // Update the model matrix for world space calculations
     updateModelMatrix() {
         if (this.mesh && this.mesh.userData.material) {
             this.mesh.userData.material.uniforms.modelMatrix.value = this.mesh.matrixWorld;
         }
     }
-    
+
     // Add all Earth components to scene
     addToScene() {
         if (this.mesh) {
@@ -200,7 +196,7 @@ export class Earth {
             this.scene.add(this.atmosphere);
         }
     }
-    
+
     // Remove all Earth components from scene
     removeFromScene() {
         if (this.mesh) {
@@ -210,25 +206,25 @@ export class Earth {
             this.scene.remove(this.atmosphere);
         }
     }
-    
+
     // Set position for Earth and atmosphere
     setPosition(x, y, z) {
         this.position.set(x, y, z);
-        
+
         if (this.mesh) {
             this.mesh.position.copy(this.position);
         }
-        
+
         if (this.atmosphere) {
             this.atmosphere.position.copy(this.position);
         }
     }
-    
+
     // Get current position
     getPosition() {
         return this.position.clone();
     }
-    
+
     // Rotate Earth and atmosphere
     rotate(deltaY = 0.01) {
         if (this.mesh) {
@@ -238,7 +234,7 @@ export class Earth {
             this.atmosphere.rotation.y += deltaY;
         }
     }
-    
+
     // Update Earth's model matrix for day/night calculations
     updateMatrixWorld() {
         if (this.mesh) {
@@ -246,37 +242,37 @@ export class Earth {
             this.updateModelMatrix();
         }
     }
-    
+
     // Start orbiting around a center point (usually the sun)
     startOrbit() {
-        this.isOrbiting = true;
-        this.orbit = new Orbit({
+        super.startOrbit({
             semiMajorAxis: 150, // Earth's distance from Sun in million km (scaled)
             eccentricity: 0.0,  // Earth's orbital eccentricity
             period: 365.0,        // Earth's orbital period in days
-            inclination: 0         // Earth's orbital inclination (minimal)
+            inclination: 0, // Earth's orbital inclination (minimal)
+            omega: 0,
+            raan: 0,
+            tau: 0,
         });
     }
-    
+
     // Stop orbiting
     stopOrbit() {
-        this.isOrbiting = false;
+        super.stopOrbit();
     }
-    
+
     // Update orbit position
     updateOrbit(time) {
         if (!this.isOrbiting) return;
-        const initialPosition = this.orbit.walkInTime(time);
-        console.log("Orbit position at time", time, ":", initialPosition);
-        this.setPosition(initialPosition[1], initialPosition[2], initialPosition[0]);
+        super.updateOrbit(time);
     }
-    
+
     // Set orbit parameters
     setOrbitParameters(radius, speed) {
         this.orbitRadius = radius;
         this.orbitSpeed = speed;
     }
-    
+
     // Get orbit status
     getOrbitStatus() {
         return {
@@ -287,18 +283,18 @@ export class Earth {
             angle: this.orbitAngle
         };
     }
-    
+
     // Cleanup method
     dispose() {
         // Remove from scene first
         this.removeFromScene();
-        
+
         // Dispose geometry and materials
         if (this.mesh) {
             this.mesh.geometry.dispose();
             this.mesh.material.dispose();
         }
-        
+
         if (this.atmosphere) {
             this.atmosphere.geometry.dispose();
             this.atmosphere.material.dispose();

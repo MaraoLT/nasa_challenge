@@ -1,56 +1,46 @@
 import * as THREE from 'three';
-import {Orbit} from './Orbit.js';
+import { Orbit } from './Orbit.js';
+import { AstralObject } from './AstralObject.js';
 
-export class Meteor {
+export class Meteor extends AstralObject {
     constructor(scene, radius, segments = 32, initialPosition, preloadedAssets = {}, preprocessedObjects = {}) {
-        this.scene = scene;
-        this.radius = radius;
-        this.segments = segments;
-        this.position = initialPosition.clone();
+        super(scene, radius, segments, initialPosition, preprocessedObjects);
         this.preloadedAssets = preloadedAssets;
-        this.preprocessedObjects = preprocessedObjects;
-        
-        // Initialize orbit properties
-        this.isOrbiting = false;
-        this.orbit = null;
-        
-        // Create Meteor components
+
         this.mesh = this.createMeteorMesh();
-        
-        // Set initial position
         this.setPosition(this.position.x, this.position.y, this.position.z);
-        
-        // Add to scene
+
+        // Add to scene (traceLine is already added by parent constructor)
         this.addToScene();
     }
 
     createMeteorMesh() {
         let geometry, material;
-        
+
         // Use preprocessed objects if available
-        if (this.preprocessedObjects.meteorGeometries && this.preprocessedObjects.meteorMaterials && 
+        if (this.preprocessedObjects.meteorGeometries && this.preprocessedObjects.meteorMaterials &&
             this.preprocessedObjects.meteorGeometries.length > 0) {
             console.log('Using preprocessed meteor objects');
-            
+
             // Pick a random preprocessed geometry and material
             const randomIndex = Math.floor(Math.random() * this.preprocessedObjects.meteorGeometries.length);
             geometry = this.preprocessedObjects.meteorGeometries[randomIndex].clone();
             material = this.preprocessedObjects.meteorMaterials[randomIndex].clone();
-            
+
             // Scale geometry to match the desired radius
             const scaleFactor = this.radius / 0.3; // 0.3 is average radius from preprocessing
             geometry.scale(scaleFactor, scaleFactor, scaleFactor);
-            
+
         } else {
             console.log('Creating meteor objects normally');
             // Create irregular geoid geometry for asteroid-like shape
             geometry = this.createGeoidGeometry(this.radius, this.segments);
-            
+
             // Use preloaded texture if available, otherwise load normally
             const textureLoader = new THREE.TextureLoader();
-            const meteorTexture = this.preloadedAssets['/resources/meteor/Meteor Map.jpg'] 
+            const meteorTexture = this.preloadedAssets['/resources/meteor/Meteor Map.jpg']
                 || textureLoader.load('/resources/meteor/Meteor Map.jpg');
-            
+
             // Create a rocky/metallic material for the meteor
             material = new THREE.MeshStandardMaterial({
                 color: 0xDDAA77, // Brighter, more reflective color
@@ -67,7 +57,7 @@ export class Meteor {
         // Ensure the meteor does not interact with shadows
         mesh.castShadow = false;
         mesh.receiveShadow = false;
-        
+
         return mesh;
     }
     
@@ -137,21 +127,21 @@ export class Meteor {
             this.scene.remove(this.mesh);
         }
     }
-    
+
     // Set position for Meteor
     setPosition(x, y, z) {
         this.position.set(x, y, z);
-        
+
         if (this.mesh) {
             this.mesh.position.copy(this.position);
         }
     }
-    
+
     // Get current position
     getPosition() {
         return this.position.clone();
     }
-    
+
     // Rotate Meteor with random tumbling motion
     rotate(deltaY = 0.01) {
         if (this.mesh) {
@@ -164,40 +154,31 @@ export class Meteor {
     
     // Start orbiting around a center point (usually the sun)
     startOrbit(center = new THREE.Vector3(0, 0, 0), speed = 0.005) {
-        this.isOrbiting = true;
-        
-        // Calculate orbital parameters based on current position and desired speed
         const distance = this.position.distanceTo(center);
-        
-        this.orbit = new Orbit({
-            semiMajorAxis: distance, // Distance from center (sun)
-            eccentricity: 0.1 + Math.random() * 0.3,  // Random eccentricity for variety
-            period: 180.0 + Math.random() * 360.0,    // Random period between 180-540 seconds (longer for larger scale)
-            inclination: (Math.random() - 0.5) * Math.PI / 3, // Random inclination
-            omega: Math.random() * Math.PI * 2,       // Random orientation
-            raan: Math.random() * Math.PI * 2         // Random ascending node
+        super.startOrbit({
+            semiMajorAxis: distance,
+            eccentricity: 0.1 + Math.random() * 0.3,
+            period: 180.0 + Math.random() * 360.0,
+            inclination: (Math.random() - 0.5) * Math.PI / 3,
+            omega: Math.random() * Math.PI * 2,
+            raan: Math.random() * Math.PI * 2
         });
     }
     
     // Stop orbiting
     stopOrbit() {
-        this.isOrbiting = false;
+        super.stopOrbit();
     }
     
     // Update orbit position
     updateOrbit(time) {
         if (!this.isOrbiting || !this.orbit) return;
-        
-        const orbitPosition = this.orbit.walkInTime(time);
-        console.log("Meteor orbit position at time", time, ":", orbitPosition);
-        this.setPosition(orbitPosition[0], orbitPosition[1], orbitPosition[2]);
+        super.updateOrbit(time);
     }
     
     // Set orbit parameters (legacy method for compatibility)
     setOrbitParameters(radius, speed) {
-        // This method is kept for compatibility but now uses Orbit class
         if (this.orbit) {
-            // Recreate orbit with new parameters
             this.orbit = new Orbit({
                 semiMajorAxis: radius,
                 eccentricity: 0.1,
@@ -217,7 +198,6 @@ export class Meteor {
                 orbit: null
             };
         }
-        
         return {
             isOrbiting: this.isOrbiting,
             semiMajorAxis: this.orbit.a,
