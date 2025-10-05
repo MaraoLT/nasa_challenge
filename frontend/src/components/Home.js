@@ -54,8 +54,9 @@ export default function Home() {
             <Link to="/space-bodies" className="cta">Comet × Asteroid × Meteor (3D)</Link>
             <Link to="/more-data" className="cta">More data (counters)</Link>
             <Link to="/credits" className="cta secondary">Credits</Link>
-             <Link to="/cards" className="cta">Draggable Cards</Link>
+            <Link to="/cards" className="cta">Draggable Cards</Link>
             <Link to="/intro" className="cta">Introduction Slide</Link>
+            <Link to="/meteor-impact-simulator" className="cta">Meteor Impact Simulator</Link>
           </div>
         </div>
       </div>
