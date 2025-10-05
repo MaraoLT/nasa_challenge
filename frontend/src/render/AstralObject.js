@@ -18,7 +18,7 @@ export class AstralObject {
         this.traceLine = null;
         this.traceRefreshRate = 30; // Update trace every 20 updates
         this.updates = 0;
-
+        this.traceColor = 0xffffff;
         // Create and add trace to scene immediately
         this.createTraceLine();
         this.addTraceToScene();
@@ -30,7 +30,7 @@ export class AstralObject {
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setDrawRange(0, 0);
 
-        const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+        const material = new THREE.LineBasicMaterial({ color:this.traceColor, linewidth: 2 });
         this.traceLine = new THREE.Line(geometry, material);
         this.traceLine.frustumCulled = false;
     }

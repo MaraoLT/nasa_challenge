@@ -16,7 +16,7 @@ export class Earth extends AstralObject {
         // Create Earth components
         this.mesh = this.createEarthMesh();
         this.atmosphere = this.createAtmosphere();
-
+        super.traceColor = 0x1f8eed; // Light blue trace for Earth
         // Set initial position
         this.setPosition(this.position.x, this.position.y, this.position.z);
 
