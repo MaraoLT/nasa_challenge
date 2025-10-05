@@ -14,9 +14,9 @@ export class AstralObject {
         this.orbit = null;
 
         this.tracePoints = [];
-        this.traceMaxPoints = 200;
+        this.traceMaxPoints = 600;
         this.traceLine = null;
-        this.traceRefreshRate = 30; // Update trace every 30 updates
+        this.traceRefreshRate = 10; // Update trace every 30 updates
         this.updates = 0;
         this.traceColor = traceColor;
         this.camera = null; // Will be set from scene

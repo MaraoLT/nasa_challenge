@@ -165,7 +165,6 @@ function ThreeDemo() {
       backgroundScene.attachToDOM(mountRef.current);
 
       // Variables for this component
-      let currentMeteor = null;
       let animationId;
 
       // Start the visible animation loop using the background scene's start time
@@ -192,12 +191,6 @@ function ThreeDemo() {
         // Update sun animation
         sun.update();
 
-        // Update meteor if it exists
-        if (currentMeteor) {
-          currentMeteor.updateOrbit(absoluteTime);
-          currentMeteor.rotate(0.02);
-        }
-
         // Update all meteors from asteroid data
         meteorsListRef.current.forEach((meteor) => {
           meteor.updateOrbit(absoluteTime);
@@ -212,43 +205,8 @@ function ThreeDemo() {
       // Start animation immediately
       animationId = requestAnimationFrame(animate);
 
-      // Meteor management functions
-      const createNewRandomMeteor = () => {
-        if (currentMeteor) {
-          currentMeteor.dispose();
-          currentMeteor = null;
-          cameraController.setCurrentMeteor(null);
-        }
-
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 200 + Math.random() * 150;
-        const height = (Math.random() - 0.5) * 100;
-
-        const meteorPosition = new THREE.Vector3(
-          Math.cos(angle) * distance,
-          height,
-          Math.sin(angle) * distance
-        );
-
-        currentMeteor = Meteor.createRandomMeteor(
-          scene,
-          0.02, 0.2,
-          meteorPosition,
-          preloadedAssets,
-          preprocessedObjects
-        );
-
-        currentMeteor.startOrbit(sun.getPosition(), 0.002 + Math.random() * 0.003);
-        cameraController.setCurrentMeteor(currentMeteor);
-
-        console.log('New meteor created!');
-      };
-
       const handleKeyPress = (event) => {
         switch(event.code) {
-          case 'KeyM':
-            createNewRandomMeteor();
-            break;
           case 'KeyA':
             // Lock onto first asteroid/meteor from the list
             if (meteorsListRef.current.length > 0) {
@@ -277,10 +235,6 @@ function ThreeDemo() {
         cameraController.disableControls(renderer.domElement);
         window.removeEventListener('keydown', handleKeyPress);
         window.removeEventListener('resize', handleResize);
-        if (currentMeteor) {
-          currentMeteor.dispose();
-          cameraController.setCurrentMeteor(null);
-        }
         // Remove stats panel from container
         if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
           statsContainerRef.current.removeChild(stats.dom);
@@ -369,7 +323,6 @@ function ThreeDemo() {
       }, 100);
 
       // Variables for this component
-      let currentMeteor = null;
       let animationId;
 
       // Start animation
@@ -399,10 +352,6 @@ function ThreeDemo() {
           meteor.rotate(0.01);
         });
 
-        if (currentMeteor) {
-          currentMeteor.updateOrbit(absoluteTime);
-          currentMeteor.rotate(0.02);
-        }
 
         renderer.render(scene, camera);
         stats.end();
@@ -411,43 +360,8 @@ function ThreeDemo() {
 
       animationId = requestAnimationFrame(animate);
 
-      // Event handlers (same as background scene version)
-      const createNewMeteor = () => {
-        if (currentMeteor) {
-          currentMeteor.dispose();
-          currentMeteor = null;
-          cameraController.setCurrentMeteor(null);
-        }
-
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 200 + Math.random() * 150;
-        const height = (Math.random() - 0.5) * 100;
-
-        const meteorPosition = new THREE.Vector3(
-          Math.cos(angle) * distance,
-          height,
-          Math.sin(angle) * distance
-        );
-
-        currentMeteor = Meteor.createRandomMeteor(
-          scene,
-          0.02, 0.2,
-          meteorPosition,
-          preloadedAssets,
-          preprocessedObjects
-        );
-
-        currentMeteor.startOrbit(sunInstance.getPosition(), 0.002 + Math.random() * 0.003);
-        cameraController.setCurrentMeteor(currentMeteor);
-
-        console.log('New meteor created!');
-      };
-
       const handleKeyPress = (event) => {
         switch(event.code) {
-          case 'KeyM':
-            createNewMeteor();
-            break;
           case 'KeyA':
             // Lock onto first asteroid/meteor from the list
             if (meteorsListRef.current.length > 0) {
@@ -478,10 +392,6 @@ function ThreeDemo() {
         window.removeEventListener('resize', handleResize);
         if (sunInstance) sunInstance.dispose();
         if (earthInstance) earthInstance.dispose();
-        if (currentMeteor) {
-          currentMeteor.dispose();
-          cameraController.setCurrentMeteor(null);
-        }
         renderer.dispose();
         // Remove stats panel from container
         if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
@@ -528,7 +438,7 @@ function ThreeDemo() {
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 0: Lock onto Sun</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 1: Lock onto Earth</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 2: Lock onto Meteor</p>
-        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ M: Create new Meteor</p>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ A: Lock onto first Asteroid</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ ESC: Unlock camera</p>
         <p style={{ margin: '0 0 10px 0', fontSize: '12px' }}>⌨️ ↑↓: Zoom</p>
         <a href="/" style={{
