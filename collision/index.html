@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Impacto de Meteoro - São Paulo</title>
+    <title>Simulador de Impacto de Meteoro</title>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.117/Build/Cesium/Cesium.js"></script>
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.117/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <style>
@@ -51,6 +51,61 @@
             font-size: 12px;
             line-height: 1.4;
         }
+
+        .control {
+            margin: 8px 0 14px;
+        }
+
+        .control label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .control input[type="range"],
+        .control select {
+            width: 100%;
+        }
+
+        .value-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .stepper button {
+            background: #2b2b2b;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stepper-value {
+            min-width: 72px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .material-info {
+            display: block;
+            margin-top: 6px;
+            color: #ddd;
+        }
     </style>
 </head>
 
@@ -62,20 +117,48 @@
         <button onclick="simulateImpact()">Simulate Impact</button>
         <button onclick="resetSimulation()">Reset</button>
         <div id="impact-info">
-            <strong>Location:</strong> São Paulo, Brazil<br>
-            <strong>Diameter:</strong> 50m<br>
-            <strong>Speed:</strong> 20 km/s<br>
-            <strong>Energy:</strong> ~1 Megatons TNT<br>
-            <br>
-            <em>💡 Click on the map to choose the target!</em>
+            <div class="control">
+                <label for="diameterRange">Diâmetro do meteoro
+                    <span class="value-badge" id="diameterOut">50 m</span>
+                </label>
+                <input type="range" id="diameterRange" min="1" max="1500" step="1" value="50">
+            </div>
+
+            <div class="control">
+                <label for="velocityRange">Velocidade
+                    <span class="value-badge" id="velocityOut">20 km/s</span>
+                </label>
+                <input type="range" id="velocityRange" min="11" max="72" step="1" value="20">
+            </div>
+
+            <div class="control">
+                <label for="angleRange">Ângulo de impacto
+                    <span class="value-badge" id="angleOut">45°</span>
+                </label>
+                <input type="range" id="angleRange" min="5" max="90" step="1" value="45">
+            </div>
+
+            <div class="control">
+                <label>Material
+                    <span class="value-badge" id="materialOut">stone</span>
+                </label>
+                <div class="stepper" role="group" aria-label="Selecionar material">
+                    <button id="materialPrev" type="button" aria-label="Material anterior">&#8249;</button>
+                    <span class="stepper-value" id="materialValue">stone</span>
+                    <button id="materialNext" type="button" aria-label="Próximo material">&#8250;</button>
+                </div>
+                <small class="material-info">Densidade: <span id="materialDensity">2500</span> kg/m³</small>
+            </div>
+
+            <em>💡 Clique no mapa para escolher o alvo!</em>
         </div>
     </div>
-
+    <script src="./lib/calculator.js"></script>
     <script>
-        // Token de acesso do Cesium ion
+         // Token de acesso do Cesium ion
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMGRkYjMwYy1lODg0LTQ3MTktOTBiNi02ZDI0YjRiNTcxNjIiLCJpZCI6MzQ3MjQ2LCJpYXQiOjE3NTk2MDg1NzN9.901R3lkV1aC6zsOj843KhI37YOCw7lOnqS8rHd4nVq8'; // <-- COLOQUE SEU TOKEN AQUI
 
-        // --- PARÂMETROS DA CRATERA ELÍPTICA ---
+    // --- PARÂMETROS DA CRATERA ELÍPTICA ---
         let craterMajorRadius = 1500;
         let craterMinorRadius = 1500;
         let craterDepth = 400;
@@ -88,9 +171,27 @@
         let meteorEntity;
         let explosionEntity;
         let impactZones = [];
-        let SAO_PAULO = { longitude: -46.633, latitude: -23.55 }; // Agora pode ser alterado
+        let region = { longitude: null, latitude: null }; // Posição inicial (Brasília, Brasil)
+        let craterCapClippingPlanes; // Para gerenciar os ClippingPlanes da calota
+
         let targetMarker = null; // Marcador do alvo selecionado
         let craterModel = null; // Modelo 3D da cratera
+
+        // --- VARIÁVEIS DE CONTROLE DO USUÁRIO (para cálculos posteriores) ---
+        let meteorDiameterM = 50;      // 1 m a 1500 m (1.5 km)
+        let meteorVelocityKms = 20;    // 1 a 100 km/s
+        let impactAngleDeg = 45;       // 5° a 90°
+
+        // Materiais e densidades (kg/m³)
+        const MATERIALS = [
+            { key: 'ice',    density: 920 },
+            { key: 'stone',  density: 2500 },
+            { key: 'carbon', density: 3500 },
+            { key: 'iron',   density: 7800 },
+        ];
+
+        // Estado atual do material
+        let meteorMaterial = { key: 'stone', density: 2500 };
 
         // Legendas
         const labelAlpha = 0.9; // Transparência das labels
@@ -118,13 +219,13 @@
                 viewer.scene.globe.depthTestAgainstTerrain = true;
 
                 viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude, 80000),
+                    destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 80000),
                     orientation: { heading: Cesium.Math.toRadians(0.0), pitch: Cesium.Math.toRadians(-90.0), roll: 0.0 },
                     duration: 3
                 });
 
                 viewer.entities.add({
-                    position: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude),
+                    position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
                     point: { pixelSize: 15, color: Cesium.Color.CYAN, outlineColor: Cesium.Color.WHITE, outlineWidth: 3, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }
                 });
 
@@ -138,8 +239,8 @@
                         const latitude = Cesium.Math.toDegrees(cartographic.latitude);
 
                         // Atualiza posição do alvo
-                        SAO_PAULO.longitude = longitude;
-                        SAO_PAULO.latitude = latitude;
+                        region.longitude = longitude;
+                        region.latitude = latitude;
 
                         // Remove marcador anterior
                         if (targetMarker) {
@@ -155,17 +256,6 @@
                                 outlineColor: Cesium.Color.WHITE,
                                 outlineWidth: 3,
                                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-                            },
-                            label: {
-                                text: 'ALVO',
-                                font: '14pt Arial',
-                                pixelOffset: new Cesium.Cartesian2(0, -25),
-                                fillColor: Cesium.Color.WHITE,
-                                outlineColor: Cesium.Color.RED,
-                                outlineWidth: 2,
-                                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                                backgroundColor: Cesium.Color.RED.withAlpha(0.7),
-                                backgroundPadding: new Cesium.Cartesian2(5, 5)
                             }
                         });
 
@@ -173,11 +263,93 @@
                     }
                 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+                // --- CONTROLES UI: ligar sliders e seletor ---
+                const $ = (id) => document.getElementById(id);
+                const diameterRange = $('diameterRange');
+                const velocityRange = $('velocityRange');
+                const angleRange = $('angleRange');
+                const materialPrev = $('materialPrev');
+                const materialNext = $('materialNext');
+                const diameterOut = $('diameterOut');
+                const velocityOut = $('velocityOut');
+                const angleOut = $('angleOut');
+                const materialOut = $('materialOut');
+                const materialValue = $('materialValue');
+                const materialDensity = $('materialDensity');
+
+                const fmtMeters = (m) => m >= 1000 ? `${(m/1000).toFixed(1)} km` : `${m} m`;
+
+                const syncUI = () => {
+                    diameterOut.textContent = fmtMeters(meteorDiameterM);
+                    velocityOut.textContent = `${meteorVelocityKms} km/s`;
+                    angleOut.textContent = `${impactAngleDeg}°`;
+                    materialOut.textContent = meteorMaterial.key;
+                    materialValue.textContent = meteorMaterial.key;
+                    materialDensity.textContent = meteorMaterial.density;
+                };
+
+                // Inicializa valores nos inputs a partir das variáveis globais
+                diameterRange.value = meteorDiameterM;
+                velocityRange.value = meteorVelocityKms;
+                angleRange.value = impactAngleDeg;
+                syncUI();
+
+                diameterRange.addEventListener('input', () => {
+                    meteorDiameterM = parseInt(diameterRange.value, 10);
+                    diameterOut.textContent = fmtMeters(meteorDiameterM);
+                });
+
+                velocityRange.addEventListener('input', () => {
+                    meteorVelocityKms = parseInt(velocityRange.value, 10);
+                    velocityOut.textContent = `${meteorVelocityKms} km/s`;
+                });
+
+                angleRange.addEventListener('input', () => {
+                    impactAngleDeg = parseInt(angleRange.value, 10);
+                    angleOut.textContent = `${impactAngleDeg}°`;
+                });
+
+                const currentMaterialIndex = () => MATERIALS.findIndex(m => m.key === meteorMaterial.key);
+
+                const stepMaterial = (dir) => {
+                    const idx = currentMaterialIndex();
+                    const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
+                    meteorMaterial = MATERIALS[nextIdx];
+                    syncUI();
+                };
+
+                materialPrev.addEventListener('click', () => stepMaterial(-1));
+                materialNext.addEventListener('click', () => stepMaterial(1));
+
             } catch (error) { console.error('Erro ao inicializar simulador:', error); }
         });
 
         // Função para simular o impacto do meteoro
-        function simulateImpact() {
+        async function simulateImpact() {
+            // Exemplo: log dos parâmetros selecionados (para debugging e futuros cálculos)
+            console.log('[Parâmetros]', {
+                region : region,
+                diameter_m: meteorDiameterM,
+                velocity_kms: meteorVelocityKms,
+                angle_deg: impactAngleDeg,
+                material: meteorMaterial
+            });
+
+            const parameters = {
+                diameter: meteorDiameterM,
+                velocity: meteorVelocityKms,
+                angle: impactAngleDeg,
+                density: meteorMaterial.density,
+                lat: region.latitude,
+                lon: region.longitude
+            };
+
+            const popDensity = await getPopulationDensity(region.latitude, region.longitude);
+            const results = getMeteorData(parameters.diameter, 'm', parameters.density, parameters.velocity, 'km/s', parameters.angle, -1, popDensity);
+            craterMinorRadius = results.diametroCrateraTransiente;
+            craterMajorRadius = results.diametroCrateraTransiente;
+            craterDepth = results.profundidadeCrateraTrasiente;
+            
             resetSimulation();
             createMeteor();
             setTimeout(() => {
@@ -185,8 +357,11 @@
                 removeMeteor();
             }, 3000);
             setTimeout(() => {
-                const impactPosition = Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude);
-                createCraterWithTerrain(impactPosition, craterMajorRadius, craterDepth);
+                const impactPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude);
+                createRealCrater(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterRotation);
+                // --- CHAMANDO A NOVA FUNÇÃO DA CALOTA COM CORTE ---
+                createCraterCap(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterCapCutoffHeight, craterRotation);
+
                 removeExplosion();
             }, 4000);
             setTimeout(createDestructionZones, 6000);
@@ -297,7 +472,7 @@
             // Não remove o targetMarker para manter o alvo selecionado
 
             viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude, 80000),
+                destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 80000),
                 orientation: { heading: Cesium.Math.toRadians(0.0), pitch: Cesium.Math.toRadians(-90.0), roll: 0.0 },
                 duration: 0
             });
@@ -305,11 +480,11 @@
 
         // --- DEMAIS FUNÇÕES (SEM ALTERAÇÃO) ---
         function createDestroyedGroundTexture() { const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512; const ctx = canvas.getContext('2d'); const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256); gradient.addColorStop(0, '#1a0f0a'); gradient.addColorStop(.5, '#4a2c1a'); gradient.addColorStop(.9, '#8b5a3c'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 512, 512); ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; ctx.lineWidth = 3; for (let i = 0; i < 30; i++) { ctx.beginPath(); ctx.moveTo(256 + Math.random() * 200 - 100, 256 + Math.random() * 200 - 100); ctx.lineTo(256 + Math.random() * 240 - 120, 256 + Math.random() * 240 - 120); ctx.stroke() } return canvas.toDataURL() }
-        function createMeteor() { const startTime = viewer.clock.currentTime; const endTime = Cesium.JulianDate.addSeconds(startTime, 3, new Cesium.JulianDate()); const startPosition = Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude - 1, SAO_PAULO.latitude + 1, 15e4); const endPosition = Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude, 0); const positionProperty = new Cesium.SampledPositionProperty(); positionProperty.addSample(startTime, startPosition); positionProperty.addSample(endTime, endPosition); meteorEntity = viewer.entities.add({ name: "Meteoro", position: positionProperty, point: { pixelSize: 35, color: Cesium.Color.ORANGE, outlineColor: Cesium.Color.RED, outlineWidth: 4, scaleByDistance: new Cesium.NearFarScalar(1e3, 2, 1e5, .5) }, path: { show: !0, leadTime: 0, trailTime: 2, width: 10, resolution: 1, material: new Cesium.PolylineGlowMaterialProperty({ glowPower: .5, color: Cesium.Color.ORANGE, taperPower: .7 }) }, label: { text: "☄️ METEORO", font: "12pt Arial", pixelOffset: new Cesium.Cartesian2(0, -30), fillColor: Cesium.Color.YELLOW, outlineColor: Cesium.Color.RED, outlineWidth: 2, style: Cesium.LabelStyle.FILL_AND_OUTLINE } }); viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude, 6e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 } }) }
+        function createMeteor() { const startTime = viewer.clock.currentTime; const endTime = Cesium.JulianDate.addSeconds(startTime, 3, new Cesium.JulianDate()); const startPosition = Cesium.Cartesian3.fromDegrees(region.longitude - 1, region.latitude + 1, 15e4); const endPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 0); const positionProperty = new Cesium.SampledPositionProperty(); positionProperty.addSample(startTime, startPosition); positionProperty.addSample(endTime, endPosition); meteorEntity = viewer.entities.add({ name: "Meteoro", position: positionProperty, point: { pixelSize: 35, color: Cesium.Color.ORANGE, outlineColor: Cesium.Color.RED, outlineWidth: 4, scaleByDistance: new Cesium.NearFarScalar(1e3, 2, 1e5, .5) }, path: { show: !0, leadTime: 0, trailTime: 2, width: 10, resolution: 1, material: new Cesium.PolylineGlowMaterialProperty({ glowPower: .5, color: Cesium.Color.ORANGE, taperPower: .7 }) }}); viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 6e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 } }) }
         function removeMeteor() { if (meteorEntity) { viewer.entities.remove(meteorEntity); meteorEntity = null; } }
-        function createExplosion() { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude, 1e3), ellipse: { semiMinorAxis: 5e3, semiMajorAxis: 5e3, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * .5 + .5; return Cesium.Color.ORANGE.withAlpha(i * .8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED }, label: { text: "💥 IMPACTO!", font: "16pt Arial", pixelOffset: new Cesium.Cartesian2(0, -20), fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.RED, outlineWidth: 2, style: Cesium.LabelStyle.FILL_AND_OUTLINE } }) }
+        function createExplosion() { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 1e3), ellipse: { semiMinorAxis: 5e3, semiMajorAxis: 5e3, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * .5 + .5; return Cesium.Color.ORANGE.withAlpha(i * .8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED }}) }
         function removeExplosion() { if (explosionEntity) { viewer.entities.remove(explosionEntity); explosionEntity = null; } }
-        function createDestructionZones() { const e = viewer.entities.add({ name: "Destruição Total", position: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude), ellipse: { semiMinorAxis: 5e3, semiMajorAxis: 5e3, material: Cesium.Color.RED.withAlpha(.3), outline: !0, outlineColor: Cesium.Color.DARKRED, outlineWidth: 3, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }, label: { text: "ZONA VERMELHA\nDestruição Total", font: "12pt Arial", pixelOffset: new Cesium.Cartesian2(0, -20), fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.RED, outlineWidth: 2, style: Cesium.LabelStyle.FILL_AND_OUTLINE, backgroundColor: Cesium.Color.RED.withAlpha(.7), backgroundPadding: new Cesium.Cartesian2(5, 5) } }), t = viewer.entities.add({ name: "Destruição Severa", position: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude), ellipse: { semiMinorAxis: 15e3, semiMajorAxis: 15e3, material: Cesium.Color.ORANGE.withAlpha(.2), outline: !0, outlineColor: Cesium.Color.DARKORANGE, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }, label: { text: "ZONA LARANJA\nDestruição Severa", font: "12pt Arial", pixelOffset: new Cesium.Cartesian2(100, 50), fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.ORANGE, outlineWidth: 2, style: Cesium.LabelStyle.FILL_AND_OUTLINE, backgroundColor: Cesium.Color.ORANGE.withAlpha(.7), backgroundPadding: new Cesium.Cartesian2(5, 5) } }), i = viewer.entities.add({ name: "Danos Moderados", position: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude), ellipse: { semiMinorAxis: 3e4, semiMajorAxis: 3e4, material: Cesium.Color.YELLOW.withAlpha(.15), outline: !0, outlineColor: Cesium.Color.GOLD, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }, label: { text: "ZONA AMARELA\nDanos Moderados", font: "12pt Arial", pixelOffset: new Cesium.Cartesian2(-100, 100), fillColor: Cesium.Color.BLACK, outlineColor: Cesium.Color.YELLOW, outlineWidth: 2, style: Cesium.LabelStyle.FILL_AND_OUTLINE, backgroundColor: Cesium.Color.YELLOW.withAlpha(.7), backgroundPadding: new Cesium.Cartesian2(5, 5) } }); impactZones.push(e, t, i); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(SAO_PAULO.longitude, SAO_PAULO.latitude, 12e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 }, duration: 3 }) }
+        function createDestructionZones() { const e = viewer.entities.add({ name: "Destruição Total", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: 5e3, semiMajorAxis: 5e3, material: Cesium.Color.RED.withAlpha(.3), outline: !0, outlineColor: Cesium.Color.DARKRED, outlineWidth: 3, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), t = viewer.entities.add({ name: "Destruição Severa", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: 15e3, semiMajorAxis: 15e3, material: Cesium.Color.ORANGE.withAlpha(.2), outline: !0, outlineColor: Cesium.Color.DARKORANGE, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), i = viewer.entities.add({ name: "Danos Moderados", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: 3e4, semiMajorAxis: 3e4, material: Cesium.Color.YELLOW.withAlpha(.15), outline: !0, outlineColor: Cesium.Color.GOLD, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}); impactZones.push(e, t, i); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 12e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 }, duration: 3 }) }
 
     </script>
 </body>
