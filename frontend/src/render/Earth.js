@@ -4,7 +4,7 @@ import { AstralObject } from './AstralObject.js';
 
 export class Earth extends AstralObject {
     constructor(scene, radius = 50, segments = 64, initialPosition = new THREE.Vector3(15, 0, 0), preloadedAssets = {}, preprocessedObjects = {}) {
-        super(scene, radius, segments, initialPosition, preprocessedObjects);
+        super(scene, radius, segments, initialPosition, preprocessedObjects, 0xF54927); // Light blue trace for Earth
         this.preloadedAssets = preloadedAssets;
 
         // Orbit properties
@@ -16,7 +16,7 @@ export class Earth extends AstralObject {
         // Create Earth components
         this.mesh = this.createEarthMesh();
         this.atmosphere = this.createAtmosphere();
-        super.traceColor = 0x1f8eed; // Light blue trace for Earth
+         // Light blue trace for Earth
         // Set initial position
         this.setPosition(this.position.x, this.position.y, this.position.z);
 

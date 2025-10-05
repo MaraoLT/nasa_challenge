@@ -26,9 +26,10 @@ function ThreeDemo() {
   const [sceneReady, setSceneReady] = useState(false);
   const [currentScene, setCurrentScene] = useState(null);
   const [sunInstance, setSunInstance] = useState(null);
+  const [currentCamera, setCurrentCamera] = useState(null); // Add camera state to store camera reference
 
   // Function to create meteors from asteroid orbits
-  const createMeteorsFromOrbits = (orbits, scene, sun, assets, preprocessed) => {
+  const createMeteorsFromOrbits = (orbits, scene, sun, assets, preprocessed, camera) => {
     if (!orbits.length || !scene || !sun) return [];
 
     console.log(`Creating ${orbits.length} meteors from asteroid orbits`);
@@ -52,6 +53,9 @@ function ThreeDemo() {
           preprocessed
         );
 
+        // Set camera reference for trace fading
+        meteor.setCamera(camera);
+
         // Start the meteor's orbit
         meteor.startOrbit(sun.getPosition(), 0.001 + Math.random() * 0.002);
         meteors.push(meteor);
@@ -70,19 +74,20 @@ function ThreeDemo() {
 
   // Effect to create meteors when we have both orbits and scene ready
   useEffect(() => {
-    if (asteroidOrbits.length > 0 && sceneReady && currentScene && sunInstance) {
+    if (asteroidOrbits.length > 0 && sceneReady && currentScene && sunInstance && currentCamera) {
       console.log('Creating meteors: orbits ready and scene ready');
       const meteors = createMeteorsFromOrbits(
         asteroidOrbits,
         currentScene,
         sunInstance,
         preloadedAssets,
-        preprocessedObjects
+        preprocessedObjects,
+        currentCamera // Pass actual camera reference
       );
       setMeteorsList(meteors);
       meteorsListRef.current = meteors; // Update ref for animation loops
     }
-  }, [asteroidOrbits, sceneReady, currentScene, sunInstance]);
+  }, [asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
 
   useEffect(() => {
     // Load Near-Earth.json using fetch
@@ -153,6 +158,7 @@ function ThreeDemo() {
       // Set scene and sun for meteor creation
       setCurrentScene(scene);
       setSunInstance(sun);
+      setCurrentCamera(camera); // Set camera reference for meteor creation
       setSceneReady(true);
 
       // Attach the renderer to our DOM element
@@ -319,6 +325,7 @@ function ThreeDemo() {
       // Set scene and sun for meteor creation
       setCurrentScene(scene);
       setSunInstance(sunInstance);
+      setCurrentCamera(camera); // Set camera reference for meteor creation
       setSceneReady(true);
 
       // Add galaxy
