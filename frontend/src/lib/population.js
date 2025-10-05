@@ -1,5 +1,3 @@
-import { data } from "react-router-dom";
-
 export async function getPopulationDensity(lat, lng){
     const parser = new DOMParser();
 

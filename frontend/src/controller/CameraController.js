@@ -100,7 +100,26 @@ export class CameraController {
         // Zoom in/out
         const zoomDelta = event.deltaY * this.zoomSpeed * 0.01;
         this.currentDistance += zoomDelta;
-        this.currentDistance = Math.max(this.minDistance, Math.min(this.maxDistance, this.currentDistance));
+        
+        // Determine safe minimum distance based on current position
+        let safeMinDistance = this.minDistance;
+        
+        // If not locked to a target, use global safe minimum based on proximity to objects
+        if (!this.lockedTarget) {
+            // Calculate distance to sun (at origin)
+            const distanceToSun = this.target.length();
+            const sunRadius = 15;
+            
+            // If we're close to the sun, enforce sun's minimum distance
+            if (distanceToSun < sunRadius * 3) {
+                safeMinDistance = Math.max(safeMinDistance, sunRadius * 2.5);
+            }
+            
+            // General safe minimum for free camera
+            safeMinDistance = Math.max(safeMinDistance, 20);
+        }
+        
+        this.currentDistance = Math.max(safeMinDistance, Math.min(this.maxDistance, this.currentDistance));
         
         this.spherical.radius = this.currentDistance;
         this.update();
@@ -137,13 +156,24 @@ export class CameraController {
                 break;
             case 'ArrowUp':
                 // Move closer
-                this.currentDistance = Math.max(this.minDistance, this.currentDistance - 5); // Larger steps for new scale
+                this.currentDistance = Math.max(this.minDistance, this.currentDistance - 5);
+                
+                // Apply same safety check as wheel zoom
+                if (!this.lockedTarget) {
+                    const distanceToSun = this.target.length();
+                    const sunRadius = 15;
+                    if (distanceToSun < sunRadius * 3) {
+                        this.currentDistance = Math.max(this.currentDistance, sunRadius * 2.5);
+                    }
+                    this.currentDistance = Math.max(this.currentDistance, 20);
+                }
+                
                 this.spherical.radius = this.currentDistance;
                 this.update();
                 break;
             case 'ArrowDown':
                 // Move further
-                this.currentDistance = Math.min(this.maxDistance, this.currentDistance + 5); // Larger steps for new scale
+                this.currentDistance = Math.min(this.maxDistance, this.currentDistance + 5);
                 this.spherical.radius = this.currentDistance;
                 this.update();
                 break;
@@ -188,10 +218,11 @@ export class CameraController {
         } else if (this.lockMode === 'earth' && this.earthInstance) {
             targetRadius = 1; // Earth radius from ThreeDemo.js
         } else if (this.lockMode === 'meteor' && this.currentMeteor) {
-            targetRadius = this.currentMeteor.radius || 10; // Meteor radius or default
+            targetRadius = this.currentMeteor.radius || 0.2; // Meteor radius or default
         }
         
-        const newMinDistance = targetRadius * 1.1;
+        // Set minimum distance to be safely outside the object (radius * 2.5)
+        const newMinDistance = targetRadius * 2.5;
         
         // Update minimum distance if it's different
         if (Math.abs(this.minDistance - newMinDistance) > 0.1) {
@@ -255,7 +286,7 @@ export class CameraController {
         
         // Set dynamic minimum distance for sun (radius 15)
         const sunRadius = 15;
-        const targetDistance = sunRadius * 2; // Start at 2x radius for good view
+        const targetDistance = sunRadius * 3; // Start at 3x radius for good view (45 units)
         
         this.transitionToTarget(this.sunInstance, targetDistance, () => {
             this.lockedTarget = this.sunInstance;
@@ -280,7 +311,7 @@ export class CameraController {
         
         // Set dynamic minimum distance for earth (radius 1)
         const earthRadius = 1;
-        const targetDistance = earthRadius * 3; // Start at 3x radius for good view
+        const targetDistance = earthRadius * 5; // Start at 5x radius for good view (5 units)
         
         this.transitionToTarget(this.earthInstance, targetDistance, () => {
             this.lockedTarget = this.earthInstance;
@@ -303,9 +334,9 @@ export class CameraController {
         this.lockedTarget = null;
         this.lockMode = 'none';
         
-        // Set dynamic minimum distance for meteor (variable radius 5-20)
-        const meteorRadius = meteorInstance.radius || 10;
-        const targetDistance = meteorRadius * 2.5; // Start at 2.5x radius for good view
+        // Set dynamic minimum distance for meteor (variable radius ~0.2)
+        const meteorRadius = meteorInstance.radius || 0.2;
+        const targetDistance = meteorRadius * 4; // Start at 4x radius for good view
         
         this.transitionToTarget(meteorInstance, targetDistance, () => {
             this.lockedTarget = meteorInstance;

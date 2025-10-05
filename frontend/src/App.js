@@ -19,7 +19,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<TerminalLanding />} />
         <Route path="/home" element={<Home />} />
-  <Route path="/star-transition" element={<StarTransition />} />
+        <Route path="/star-transition" element={<StarTransition />} />
         <Route path="/ThreeDemo" element={<ThreeDemo />} />
         <Route path="/Page1" element={<Page1 />} />
         <Route path="/blueprint" element={<BlueprintPage />} />

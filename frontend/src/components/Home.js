@@ -1,6 +1,8 @@
 import React from 'react';
 import LPMeteor from './lpmeteor';
 import { Link } from 'react-router-dom';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 
 
 export default function Home() {
@@ -11,6 +13,22 @@ export default function Home() {
     const x = ((e.clientX / w) - 0.5) * 2;
     const y = ((e.clientY / h) - 0.5) * 2;
     setOffset({ x, y });
+  }, []);
+
+  // Start music when component mounts
+  React.useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
+    
+    return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+    };
   }, []);
 
   const translate = (m) => `translate3d(${offset.x * m}px, ${offset.y * m}px, 0)`;
