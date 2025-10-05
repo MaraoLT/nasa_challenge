@@ -108,7 +108,7 @@ function ThreeDemo() {
 
         currentMeteor = Meteor.createRandomMeteor(
           scene,
-          5, 20,
+          0.02, 0.2,
           meteorPosition,
           preloadedAssets,
           preprocessedObjects
@@ -280,7 +280,7 @@ function ThreeDemo() {
 
         currentMeteor = Meteor.createRandomMeteor(
           scene,
-          5, 20,
+          0.02, 0.2,
           meteorPosition,
           preloadedAssets,
           preprocessedObjects
