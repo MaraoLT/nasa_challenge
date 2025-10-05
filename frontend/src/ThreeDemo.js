@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import * as THREE from 'three';
 import { Earth } from './render/Earth';
 import { Galaxy } from './render/Galaxy';
@@ -11,10 +12,14 @@ import musicManager from './utils/MusicManager';
 import audioContextManager from './utils/AudioContextManager';
 import { createOrbitFromJPLData, parseOrbitFile} from './utils/NasaJsonParser.js';
 
-function ThreeDemo() {
+function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
+  const location = useLocation();
   const mountRef = useRef(null);
   const statsContainerRef = useRef(null);
   const meteorsListRef = useRef([]); // Use ref for meteors list to access in animation loops
+
+  // Check for loadMeteors flag from navigation state, fallback to prop, then default true
+  const loadMeteors = location.state?.loadMeteors ?? propLoadMeteors;
 
   // Get preloaded assets and preprocessed objects from global window object
   const preloadedAssets = window.preloadedAssets || {};
@@ -74,7 +79,7 @@ function ThreeDemo() {
 
   // Effect to create meteors when we have both orbits and scene ready
   useEffect(() => {
-    if (asteroidOrbits.length > 0 && sceneReady && currentScene && sunInstance && currentCamera) {
+    if (loadMeteors && asteroidOrbits.length > 0 && sceneReady && currentScene && sunInstance && currentCamera) {
       console.log('Creating meteors: orbits ready and scene ready');
       const meteors = createMeteorsFromOrbits(
         asteroidOrbits,
@@ -86,23 +91,35 @@ function ThreeDemo() {
       );
       setMeteorsList(meteors);
       meteorsListRef.current = meteors; // Update ref for animation loops
+    } else if (!loadMeteors) {
+      console.log('Meteor loading disabled by loadMeteors flag');
+      setMeteorsList([]);
+      meteorsListRef.current = [];
     }
-  }, [asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
+  }, [loadMeteors, asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
 
   useEffect(() => {
-    // Load Near-Earth.json using fetch
-    fetch('/Near-Earth.json')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Loaded Near-Earth.json data:', data.length, 'asteroids');
-        const AsteroidOrbits = parseOrbitFile(data);
-        setAsteroidOrbits(AsteroidOrbits);
-      })
-      .catch(err => {
-        console.error('Failed to load Near-Earth.json:', err);
-        setAsteroidOrbits([]);
-      });
+    // Only load asteroid data if meteors should be loaded
+    if (loadMeteors) {
+      // Load Near-Earth.json using fetch
+      fetch('/Near-Earth.json')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Loaded Near-Earth.json data:', data.length, 'asteroids');
+          const AsteroidOrbits = parseOrbitFile(data);
+          setAsteroidOrbits(AsteroidOrbits);
+        })
+        .catch(err => {
+          console.error('Failed to load Near-Earth.json:', err);
+          setAsteroidOrbits([]);
+        });
+    } else {
+      console.log('Skipping asteroid data loading - meteors disabled');
+      setAsteroidOrbits([]);
+    }
+  }, [loadMeteors]);
 
+  useEffect(() => {
     console.log("ThreeDemo useEffect running...");
     // let data = require('./Near-Earth.json');
     // console.log("data read");
@@ -124,10 +141,15 @@ function ThreeDemo() {
     // Initialize audio context manager
     audioContextManager.init();
 
-    // Start playing the space music - use correct path
-    const playResult = musicManager.playTrack('/resources/sounds/Drifting Through the Void.mp3', true);
-    if (!playResult) {
-      console.log('Music will play after user interaction');
+    // Start playing the space music - use correct path with error handling
+    try {
+      const playResult = musicManager.playTrack('/resources/sounds/Drifting Through the Void.mp3', true);
+      if (!playResult) {
+        console.log('Music will play after user interaction');
+      }
+    } catch (error) {
+      console.warn('Failed to load music:', error.message);
+      // Continue without music
     }
 
     // Check if we have a background scene ready
@@ -161,18 +183,22 @@ function ThreeDemo() {
       setCurrentCamera(camera);
       setSceneReady(true);
 
-      // Use pre-created meteors from ThreeInitializer if available
-      if (meteors && meteors.length > 0) {
+      // Use pre-created meteors from ThreeInitializer if available and meteors are enabled
+      if (loadMeteors && meteors && meteors.length > 0) {
         console.log(`Using ${meteors.length} pre-created meteors from background scene`);
         setMeteorsList(meteors);
         meteorsListRef.current = meteors;
-      } else {
+      } else if (loadMeteors) {
         console.log('No meteors in background scene, will create them from loaded orbits');
         // Get orbits from ThreeInitializer and set them for meteor creation
         const orbits = ThreeInitializer.getAsteroidOrbits();
         if (orbits.length > 0) {
           setAsteroidOrbits(orbits);
         }
+      } else {
+        console.log('Meteors disabled by loadMeteors flag');
+        setMeteorsList([]);
+        meteorsListRef.current = [];
       }
 
       // Attach the renderer to our DOM element
@@ -205,16 +231,18 @@ function ThreeDemo() {
         // Update sun animation
         sun.update();
 
-        // Update all meteors from asteroid data
-        if (backgroundScene.updateMeteors) {
-          // Use ThreeInitializer's meteor update method if available
-          backgroundScene.updateMeteors(absoluteTime);
-        } else {
-          // Fallback to manual meteor updates
-          meteorsListRef.current.forEach((meteor) => {
-            meteor.updateOrbit(absoluteTime);
-            meteor.rotate(0.01);
-          });
+        // Update all meteors from asteroid data (only if meteors are enabled)
+        if (loadMeteors) {
+          if (backgroundScene.updateMeteors) {
+            // Use ThreeInitializer's meteor update method if available
+            backgroundScene.updateMeteors(absoluteTime);
+          } else {
+            // Fallback to manual meteor updates
+            meteorsListRef.current.forEach((meteor) => {
+              meteor.updateOrbit(absoluteTime);
+              meteor.rotate(0.01);
+            });
+          }
         }
 
         renderer.render(scene, camera);
@@ -230,14 +258,16 @@ function ThreeDemo() {
           case 'KeyA':
             console.log('KeyA pressed');
             // Try to use ThreeInitializer's meteor targeting first
-            if (backgroundScene.setMeteorTarget) {
+            if (loadMeteors && backgroundScene.setMeteorTarget) {
               backgroundScene.setMeteorTarget(0); // Lock onto first meteor
-            } else if (meteorsListRef.current.length > 0) {
+            } else if (loadMeteors && meteorsListRef.current.length > 0) {
               // Fallback to manual meteor targeting
               const firstMeteor = meteorsListRef.current[0];
               cameraController.setCurrentMeteor(firstMeteor);
               cameraController.lockMode = 'meteor';
               console.log('Camera locked onto first asteroid');
+            } else if (!loadMeteors) {
+              console.log('Meteor targeting disabled - meteors not loaded');
             }
             break;
         }
@@ -370,11 +400,13 @@ function ThreeDemo() {
 
         sunInstance.update();
 
-        // Update all meteors from asteroid data
-        meteorsListRef.current.forEach((meteor) => {
-          meteor.updateOrbit(absoluteTime);
-          meteor.rotate(0.01);
-        });
+        // Update all meteors from asteroid data (only if meteors are enabled)
+        if (loadMeteors) {
+          meteorsListRef.current.forEach((meteor) => {
+            meteor.updateOrbit(absoluteTime);
+            meteor.rotate(0.01);
+          });
+        }
 
 
         renderer.render(scene, camera);
@@ -387,12 +419,14 @@ function ThreeDemo() {
       const handleKeyPress = (event) => {
         switch(event.code) {
           case 'KeyA':
-            // Lock onto first asteroid/meteor from the list
-            if (meteorsListRef.current.length > 0) {
+            // Lock onto first asteroid/meteor from the list (only if meteors are enabled)
+            if (loadMeteors && meteorsListRef.current.length > 0) {
               const firstMeteor = meteorsListRef.current[0];
               cameraController.setCurrentMeteor(firstMeteor);
               cameraController.lockMode = 'meteor';
               console.log('Camera locked onto first asteroid');
+            } else if (!loadMeteors) {
+              console.log('Meteor targeting disabled - meteors not loaded');
             }
             break;
         }
@@ -454,7 +488,9 @@ function ThreeDemo() {
         borderRadius: '8px',
         fontFamily: 'Arial, sans-serif'
       }}>
-        <h2 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>Earth Explorer</h2>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>
+          Earth Explorer {!loadMeteors && '(Meteors Disabled)'}
+        </h2>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>🖱️ Mouse: Rotate camera</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>🖱️ Scroll: Zoom in/out</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ R: Reset camera</p>
@@ -462,7 +498,11 @@ function ThreeDemo() {
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 0: Lock onto Sun</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 1: Lock onto Earth</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 2: Lock onto Meteor</p>
-        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ A: Lock onto first Asteroid</p>
+        {loadMeteors ? (
+          <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ A: Lock onto first Asteroid</p>
+        ) : (
+          <p style={{ margin: '0 0 5px 0', fontSize: '12px', opacity: 0.5 }}>⌨️ A: Lock onto first Asteroid (disabled)</p>
+        )}
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ ESC: Unlock camera</p>
         <p style={{ margin: '0 0 10px 0', fontSize: '12px' }}>⌨️ ↑↓: Zoom</p>
         <a href="/" style={{

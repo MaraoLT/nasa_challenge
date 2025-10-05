@@ -61,7 +61,7 @@ export default function Home() {
             EARTH IMPACT SIMULATION
           </Link>
           
-          <Link to="/ThreeDemo" className="main-action-btn">
+          <Link to="/ThreeDemo" state={{ loadMeteors: false }} className="main-action-btn">
             EARTH ORBIT SIMULATION
           </Link>
         </div>
