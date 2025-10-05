@@ -2,11 +2,13 @@ import * as THREE from 'three';
 import { Orbit } from './Orbit.js';
 
 export class AstralObject {
-    constructor(scene, radius, segments, initialPosition) {
+    constructor(scene, radius, segments, initialPosition, preprocessedObjects = {}) {
         this.scene = scene;
         this.radius = radius;
         this.segments = segments;
         this.position = initialPosition.clone();
+
+        this.preprocessedObjects = preprocessedObjects;
 
         this.isOrbiting = false;
         this.orbit = null;
