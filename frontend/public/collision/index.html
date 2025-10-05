@@ -34,7 +34,8 @@
         /* Painel de resultados à direita */
         #results {
             position: absolute;
-            top: 20px; /* um pouco mais para baixo */
+            top: 20px;
+            /* um pouco mais para baixo */
             right: 10px;
             background: rgba(42, 42, 42, 0.9);
             color: white;
@@ -48,10 +49,29 @@
             /* aparece somente após a primeira simulação */
         }
 
-        #results h3 { margin: 0 0 10px; }
-        #results .row { display: flex; justify-content: space-between; gap: 10px; margin: 6px 0; }
-        #results .label { color: #ddd; font-size: 12px; }
-        #results .value { font-weight: 700; font-size: 13px; background: rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 4px; }
+        #results h3 {
+            margin: 0 0 10px;
+        }
+
+        #results .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 6px 0;
+        }
+
+        #results .label {
+            color: #ddd;
+            font-size: 12px;
+        }
+
+        #results .value {
+            font-weight: 700;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
 
         #controls button {
             background: #ff4444;
@@ -283,9 +303,12 @@
     <!-- Painel de resultados à direita -->
     <div id="results" aria-live="polite">
         <h3>Resultados</h3>
-        <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
-        <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
-        <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
+        <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value"
+                id="r-diametroCratera">—</span></div>
+        <div class="row"><span class="label">Profundidade cratera</span><span class="value"
+                id="r-profundidadeCratera">—</span></div>
+        <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span>
+        </div>
         <div class="row"><span class="label">Energia (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
         <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span>
         </div>
@@ -321,12 +344,12 @@
         let craterCapClippingPlanes; // Para gerenciar os ClippingPlanes da calota
 
         let targetMarker = null; // Marcador do alvo selecionado
-    let craterModel = null; // Modelo 3D da cratera
-    let terrainHeight = 0; // Altura do terreno no alvo (atualizada no clique)
-    // Unidade de exibição (visual apenas): 'metric' (m/km) ou 'imperial' (mi)
-    let displayUnit = 'metric';
-    // Cache do último resultado para re-render quando alternar unidades
-    let lastResults = null;
+        let craterModel = null; // Modelo 3D da cratera
+        let terrainHeight = 0; // Altura do terreno no alvo (atualizada no clique)
+        // Unidade de exibição (visual apenas): 'metric' (m/km) ou 'imperial' (mi)
+        let displayUnit = 'metric';
+        // Cache do último resultado para re-render quando alternar unidades
+        let lastResults = null;
 
         // --- VARIÁVEIS DE CONTROLE DO USUÁRIO (para cálculos posteriores) ---
         let meteorDiameterM = 50;      // 1 m a 1500 m (1.5 km)
@@ -514,7 +537,7 @@
                                         d.style.zIndex = 2002;
                                     }
                                 }
-                            } catch {}
+                            } catch { }
                         };
                         // Ajusta ao abrir/fechar
                         navHelp.addEventListener('click', () => setTimeout(adjustPanel, 0));
@@ -714,7 +737,7 @@
             };
             const fmtDistance = (m) => {
                 if (!isNum(m)) return '—';
-                if (Math.abs(m) >= 1000) return `${(m/1000).toFixed(2)} km`;
+                if (Math.abs(m) >= 1000) return `${(m / 1000).toFixed(2)} km`;
                 return `${m} m`;
             };
             const fmtEnergyJ = (j) => {
@@ -760,6 +783,35 @@
 
         // Função para criar cratera
         function createCraterWithTerrain(position, radius, depth) {
+            // 1. Busca a altura exata do terreno no momento da criação da cratera
+            const cartographic = Cesium.Cartographic.fromCartesian(position);
+            const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+            const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+
+            // Promisse para obter a altura real do terreno
+            const terrainProvider = viewer.terrainProvider;
+
+            Cesium.sampleTerrainMostDetailed(terrainProvider, [cartographic])
+                .then(function (updatedPositions) {
+                    const actualTerrainHeight = updatedPositions[0].height || 0;
+
+                    console.log(`Altura do terreno obtida: ${actualTerrainHeight.toFixed(2)}m (anterior: ${terrainHeight.toFixed(2)}m)`);
+
+                    // Atualiza a variável global com a altura correta
+                    terrainHeight = actualTerrainHeight;
+
+                    // Agora cria a cratera com a altura correta
+                    createCraterGeometry(position, radius, depth, actualTerrainHeight, longitude, latitude);
+                })
+                .catch(function (error) {
+                    console.warn('Erro ao obter altura do terreno, usando altura aproximada:', error);
+                    // Fallback: usa a altura que temos
+                    createCraterGeometry(position, radius, depth, terrainHeight, longitude, latitude);
+                });
+        }
+
+        // Função auxiliar para criar a geometria da cratera
+        function createCraterGeometry(position, radius, depth, actualHeight, longitude, latitude) {
             // 1. Corta o terreno em formato circular
             const clippingPlanes = [];
             const numSides = 64;
@@ -792,7 +844,8 @@
                 );
             }
 
-            clippingPlanes.push(new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), terrainHeight - (depth)));
+            // Usa a altura correta obtida do terreno
+            clippingPlanes.push(new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), actualHeight - depth));
 
             viewer.scene.globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
                 planes: clippingPlanes,
@@ -802,20 +855,17 @@
                 enabled: true
             });
 
-            // 2. Adiciona o modelo GLB da cratera
+            // 2. Remove modelo anterior se existir
             if (craterModel) {
                 viewer.entities.remove(craterModel);
                 craterModel = null;
             }
 
-            const cartographic = Cesium.Cartographic.fromCartesian(position);
-            const longitude = Cesium.Math.toDegrees(cartographic.longitude);
-            const latitude = Cesium.Math.toDegrees(cartographic.latitude);
-
+            // 3. Posiciona o modelo da cratera com a altura correta
             const centeredPosition = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
-                terrainHeight - (depth * 6.7)
+                actualHeight - (depth * 6.7)
             );
 
             // Escala proporcional ao raio da cratera
@@ -832,7 +882,7 @@
                 }
             });
 
-            console.log(`Cratera carregada em lon:${longitude.toFixed(3)}, lat:${latitude.toFixed(3)}, altura:${terrainHeight.toFixed(2)}m`);
+            console.log(`Cratera criada com altura correta: ${actualHeight.toFixed(2)}m em lon:${longitude.toFixed(3)}, lat:${latitude.toFixed(3)}`);
         }
 
         function resetSimulation() {
