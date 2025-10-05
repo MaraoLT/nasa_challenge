@@ -58,6 +58,8 @@ export default function Home() {
           {/* Scanner-styled console wrapping buttons */}
           <div className="home-console">
               <div className="home-console__screen">
+                {/* Divider before the primary recommendation */}
+                <div className="home-divider"><span>Highly recommended</span></div>
                 {/* Primary action on its own row */}
                 <div className="primary-action">
                   <Link to="/intro" className="main-action-btn">TRAINING COURSE</Link>

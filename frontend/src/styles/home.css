@@ -138,6 +138,11 @@
   font-size: 24px;
 }
 
+/* Add extra space before the Simulations divider (the one after the primary-action) */
+.home-console__screen .primary-action + .home-divider {
+  margin-top: 48px; /* extra spacing before the Simulations label */
+}
+
 /* Trainings row: two buttons */
 .trainings-row {
   display: flex;
