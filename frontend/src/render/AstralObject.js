@@ -92,7 +92,7 @@ export class AstralObject {
         if (!this.isOrbiting || !this.orbit) return;
         const orbitPosition = this.orbit.walkInTime(time);
         this.setPosition(orbitPosition[0], orbitPosition[2], orbitPosition[1]);
-        console.log('Updates:', this.updates);
+        //console.log('Updates:', this.updates);
         if (this.updates === 0) {
             this.updateTrace();
         }
