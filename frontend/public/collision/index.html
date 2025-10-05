@@ -418,9 +418,9 @@
     <!-- Results panel (right) -->
     <div id="results" aria-live="polite" style="margin-top: 2.5%;">
         <div class="header">
-            <h3 style="margin: 0">Resultados</h3>
+            <h3 style="margin: 0">Results</h3>
             <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div> 
-            <button id="unitToggle" title="Alternar visualização: km/m ↔ mi">mi</button>
+            <button id="unitToggle" title="Toggle view: km/m ↔ mi">Miles</button>
             <button id="closeButton" onclick="closeResults()" title="Close results">Close</button>
 
         </div>
@@ -912,7 +912,7 @@
         function toggleUnits() {
             displayUnit = displayUnit === 'metric' ? 'imperial' : 'metric';
             const btn = document.getElementById('unitToggle');
-            if (btn) btn.textContent = displayUnit === 'metric' ? 'mi' : 'km';
+            if (btn) btn.textContent = displayUnit === 'metric' ? 'Miles' : 'Kilometers';
             if (lastResults) updateResultsPanel(lastResults);
         }
 
