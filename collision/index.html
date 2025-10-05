@@ -96,6 +96,9 @@
         const labelAlpha = 0.9; // Transparência das labels
         const labelBrightness = 1; // Brilho das labels
 
+        // Crater
+        const craterModelUri = "./crater_with_cone_fixed.glb"; // Caminho para o modelo GLB da cratera
+
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
             try {
@@ -254,16 +257,16 @@
             const centeredPosition = Cesium.Cartesian3.fromDegrees(
                 longitude,        // Exata longitude do impacto
                 latitude,         // Exata latitude do impacto
-                depth * 1.7      // Afundado 70% da profundidade da cratera
+                - depth * 7     // Afundado 70% da profundidade da cratera
             );
 
             // Escala proporcional ao raio da cratera
-            const craterScale = radius * 2.2; // Dividido por 100 para tamanho realista
+            const craterScale = radius * 25; // Dividido por 100 para tamanho realista
 
             craterModel = viewer.entities.add({
                 position: centeredPosition, // CENTRALIZADO perfeitamente
                 model: {
-                    uri: "./cratera2.glb",
+                    uri: craterModelUri,
                     scale: craterScale,
                     minimumPixelSize: 64,
                     maximumScale: craterScale * 2,
