@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 export default function StarTransition() {
   const canvasRef = useRef(null);
   const rafRef = useRef(0);
+  const audioRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -11,8 +12,23 @@ export default function StarTransition() {
     const ctx = canvas.getContext('2d');
     let width = 0, height = 0, dpr = Math.max(1, window.devicePixelRatio || 1);
 
+    // Initialize warp sound
+    const initAudio = () => {
+      const audio = new Audio('/resources/sounds/Warp Sound.wav');
+      audio.preload = 'auto';
+      audio.volume = 0.7; // Adjust volume as needed
+      audioRef.current = audio;
+      
+      // Play the warp sound with a slight delay to sync with visual
+      setTimeout(() => {
+        audio.play().catch(e => {
+          console.log('Audio play prevented:', e.message);
+        });
+      }, 500); // 500ms delay for better sync with star animation
+    };
+
   const FADE_MS = 2000; // stars render in
-  const ZOOM_MS = 800; // longer zoom to go further before proceeding
+  const ZOOM_MS = 2000; // longer zoom to go further before proceeding
     const TOTAL_MS = FADE_MS + ZOOM_MS;
     const STAR_COUNT = 80;
 
@@ -95,6 +111,10 @@ export default function StarTransition() {
       if (t < TOTAL_MS) {
         rafRef.current = requestAnimationFrame(draw(tsStart));
       } else {
+        // Stop audio before navigating
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
         // Done — navigate to home
         navigate('/home');
       }
@@ -103,6 +123,7 @@ export default function StarTransition() {
     const start = () => {
       resize();
       initStars();
+      initAudio(); // Initialize and play warp sound
       const tsStart = performance.now();
       rafRef.current = requestAnimationFrame(draw(tsStart));
     };
@@ -112,6 +133,11 @@ export default function StarTransition() {
     return () => {
       window.removeEventListener('resize', resize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      // Cleanup audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
     };
   }, [navigate]);
 
