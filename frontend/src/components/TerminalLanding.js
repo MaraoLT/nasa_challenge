@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // hook do React Router
 
+import { getPopulationDensity } from "../lib/population";
+import { getMeteorData } from "../lib/calculator";
 
 export default function TerminalLanding() {
-  const fullText = `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\nClick to follow up!`;
+  const fullText = `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\n\n\n\nClick to follow up!`;
 
   const [displayedText, setDisplayedText] = useState("");
   const navigate = useNavigate(); // hook para navegar
@@ -69,9 +71,13 @@ export default function TerminalLanding() {
     }
   `;
 
-  const handleClick = () => {
-    if(canClick)
-      navigate("/home"); // substitua pelo path desejado
+  const handleClick = async  () => {
+
+    const dataFinal = getMeteorData(10, 'km', 2000, 4, 'km/s', 25, -1);
+    console.log(dataFinal);
+
+    if(canClick);
+      // navigate("/home"); // substitua pelo path desejado
   };
 
   return (
