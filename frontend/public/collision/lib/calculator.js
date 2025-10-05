@@ -142,23 +142,7 @@ function thermicRadiationToRadius(impactEnergy, thermic) {
   return ((K * E)/(2*Math.PI*T))**(0.5);
 }
 
-function getTsunamiEffects(diametroCrateraTransiente, waterHeight, distanceToCoast, beachSlope = 0.01) {
-  // Altura inicial da onda
-  let A0 = Math.min(0.14 * diametroCrateraTransiente, waterHeight);
-
-  // Altura da onda na costa (atenuação 1/r)
-  let Acoast = A0 * (diametroCrateraTransiente / (2 * distanceToCoast));
-
-  // Run-up (altura máxima na praia)
-  let runup = 2 * Acoast * Math.sqrt(beachSlope);
-
-  // Área inundada (estimativa simplificada)
-  let inundationArea = Math.PI * Math.pow(runup * 1000, 2); // m²
-
-  return {
-    A0: A0, // altura inicial da onda (m)
-    Acoast: Acoast, // altura na praia (m)
-    runup: runup, // altura máxima (m)
-    inundationArea: inundationArea // m²
-  };
+function getTsunamiEffects(diametroCrateraTransente, waterHeight) {
+  let A0 = Math.min(0.14 * diametroCrateraTransente, waterHeight);
+  return A0;
 }

@@ -189,7 +189,7 @@ export default function SpaceBodiesSlides() {
 
   const onPrev = () => {
     if (animating) return;
-    if (index === 0) return exitAnd(() => navigate('/home'));
+  if (index === 0) return exitAnd(() => navigate('/types-of-space-bodies'));
     const prevIdx = Math.max(0, index - 1);
     // Immediately switch active 3D object and overlay text target
     setIndex(prevIdx); // keep rotation tied to the visible object
@@ -205,7 +205,7 @@ export default function SpaceBodiesSlides() {
 
   const onNext = () => {
     if (animating) return;
-    if (index === SLIDES.length - 1) return exitAnd(() => navigate('/home'));
+    if (index === SLIDES.length - 1) return exitAnd(() => navigate('/cards'));
     const nextIdx = Math.min(SLIDES.length - 1, index + 1);
     // Immediately switch active 3D object and prepare base text
     setIndex(nextIdx); // keep rotation tied to the visible object

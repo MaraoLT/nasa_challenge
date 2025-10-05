@@ -67,11 +67,11 @@ export default function MoreData() {
   }, []);
 
   const onPrev = () => {
-    if (index === 0) return navigate('/home');
+    if (index === 0) return navigate('/cards');
     setIndex((i) => Math.max(0, i - 1));
   };
   const onNext = () => {
-    if (index === SLIDES.length - 1) return navigate('/home');
+    if (index === SLIDES.length - 1) return navigate('/blueprint');
     setIndex((i) => Math.min(SLIDES.length - 1, i + 1));
   };
 

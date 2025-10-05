@@ -1,0 +1,319 @@
+/* Home page styles extracted from inline JSX */
+
+.space-home-container {
+  width: 100vw;
+  height: 100vh;
+  background: #000000;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Courier new', monospace;
+  color: #ffffff;
+  /* Neon theme variables */
+  --neon-accent: #00eaff;
+  --btn-border: rgba(0, 234, 255, 0.55);
+  --btn-glow: rgba(0, 234, 255, 0.35);
+  --btn-glow-strong: rgba(0, 234, 255, 0.65);
+  --btn-bg: rgba(10, 24, 40, 0.16);
+  --btn-bg-hover: rgba(10, 24, 40, 0.28);
+  --btn-bg-active: rgba(10, 24, 40, 0.38);
+}
+
+.background-layer {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  top: -10%;
+  left: -10%;
+}
+
+.meteors-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+.stars-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  /* stars drawn via canvas */
+}
+
+.dust-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 70% 30%, rgba(255,255,255,0.25), transparent),
+    radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.15), transparent),
+    radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 20% 90%, rgba(255,255,255,0.3), transparent);
+  background-repeat: repeat;
+  background-size: 800px 600px;
+  animation: floating-dust 15s linear infinite;
+  opacity: 0.6;
+}
+
+.main-interface {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* center the package vertically */
+  padding: 2rem;
+  padding-top: 0; /* no offset, keep centered */
+}
+
+.main-title {
+  font-size: clamp(56px, 8vw, 96px); /* bigger */
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  margin: 0 0 2.5rem 0;
+  letter-spacing: 4px;
+  text-align: center;
+  /* Match buttons font */
+  font-family: inherit;
+}
+
+.main-subtitle {
+  margin: -1rem 0 2rem 0; /* tuck closer to title, then space before buttons */
+  color: #c9d6ff;
+  text-align: center;
+  letter-spacing: 2px;
+  opacity: 0.9;
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-family: inherit; /* Match buttons font */
+}
+
+/* Container that gives title and console the same width */
+.home-content {
+  width: 70%;
+  margin: 0 auto;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 12px;
+  background: rgba(12, 16, 22, 0.35);
+  box-shadow: 0 0 24px rgba(0,0,0,0.35), inset 0 0 20px rgba(0,0,0,0.24);
+  padding: 28px 24px 32px; /* more breathing room around contents */
+}
+
+/* Primary action row */
+.primary-action {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+/* Divider with centered label */
+.home-divider {
+  position: relative;
+  text-align: center;
+  margin: 28px 0 36px;
+}
+.home-divider::before,
+.home-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 36%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,210,255,0.6), transparent);
+}
+.home-divider::before { left: 2%; }
+.home-divider::after { right: 2%; }
+.home-divider span {
+  color: #c9d6ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 24px;
+}
+
+/* Add extra space before the Simulations divider (the one after the primary-action) */
+.home-console__screen .primary-action + .home-divider {
+  margin-top: 48px; /* extra spacing before the Simulations label */
+}
+
+/* Trainings row: two buttons */
+.trainings-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+.trainings-row .main-action-btn {
+  width: calc((100% - 1rem) / 2);
+}
+
+/* Scanner-styled console container for Home */
+.home-console {
+  width: 100%;
+  margin: 0 auto 2rem;
+  padding: 0 8px;
+}
+
+.home-console__glass {
+  height: 160px;
+  border: 2px solid rgba(180, 195, 255, 0.35);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(70,110,160,0.15), rgba(30,50,80,0.1));
+  box-shadow: inset 0 0 30px rgba(0, 180, 255, 0.12), 0 0 12px rgba(0, 180, 255, 0.08);
+  margin-bottom: 16px;
+}
+
+.home-console__screen {
+  min-height: 240px;
+  border: none; /* visually remove container border */
+  border-radius: 10px;
+  background: transparent; /* remove button container background */
+  padding: 24px 20px;
+  color: #dff8ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  box-shadow: none; /* remove visual container shadow */
+}
+
+/* Shared button sizing for consistency */
+
+.main-action-btn, .credits-btn {
+  /* glassy, low-opacity background */
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)), var(--btn-bg);
+  border: 1.5px solid var(--btn-border);
+  border-radius: 14px;
+  /* fixed size for all buttons */
+  width: 420px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0; /* height controls vertical size */
+  text-decoration: none;
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  /* neon glow */
+  box-shadow: 0 0 10px var(--btn-glow), 0 0 28px rgba(0, 234, 255, 0.18);
+  transition: transform 180ms cubic-bezier(.2,.8,.2,1),
+              box-shadow 220ms ease,
+              background-color 180ms ease,
+              border-color 180ms ease;
+  will-change: transform, box-shadow;
+}
+
+.main-action-btn:hover, .credits-btn:hover {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)), var(--btn-bg-hover);
+  border-color: rgba(0, 234, 255, 0.8);
+  box-shadow: 0 0 12px var(--btn-glow-strong), 0 0 36px rgba(0, 234, 255, 0.28);
+}
+
+.main-action-btn:active, .credits-btn:active {
+  background: var(--btn-bg-active);
+  transform: scale(1.05);
+  box-shadow: 0 0 18px var(--btn-glow-strong), 0 0 48px rgba(0, 234, 255, 0.35);
+}
+
+.main-action-btn:focus-visible, .credits-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.5), 0 0 0 3px var(--btn-border), 0 0 24px var(--btn-glow-strong);
+}
+
+.main-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%);
+  transition: left 0.5s ease;
+}
+
+.main-action-btn:hover::before, .credits-btn:hover::before {
+  left: 100%;
+}
+
+.credits-btn {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  /* keep same size/style as main buttons via combined selector above */
+  backdrop-filter: blur(10px);
+  /* half width of standard buttons */
+  width: 210px;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes floating-dust {
+  0% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(10px) translateY(-5px); }
+  50% { transform: translateX(-5px) translateY(-10px); }
+  75% { transform: translateX(-10px) translateY(5px); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .home-content {
+    padding: 22px 16px 26px; /* slightly reduced but still more than before */
+  }
+  .main-title {
+    font-size: clamp(36px, 7vw, 48px);
+    letter-spacing: 2px;
+  }
+  
+  .main-action-btn, .credits-btn {
+    width: 320px;
+    height: 56px;
+    font-size: 1.05rem;
+  }
+
+  .primary-action { margin-bottom: 0.5rem; }
+  .trainings-row { flex-direction: column; }
+  .trainings-row .main-action-btn { width: 320px; }
+  
+  .credits-btn {
+    bottom: 1rem;
+    right: 1rem;
+    font-size: 1.05rem; /* match others */
+    width: 160px; /* half of 320 */
+  }
+}
+
+@media (max-width: 480px) {
+  .home-content {
+    padding: 18px 14px 22px; /* compact padding for very small screens */
+  }
+  .main-title {
+    font-size: clamp(28px, 8vw, 36px);
+  }
+  
+  .main-action-btn, .credits-btn {
+    width: 260px;
+    height: 52px;
+    font-size: 1rem;
+  }
+
+  .trainings-row .main-action-btn { width: 260px; }
+
+  .credits-btn {
+    width: 130px; /* half of 260 */
+  }
+}
