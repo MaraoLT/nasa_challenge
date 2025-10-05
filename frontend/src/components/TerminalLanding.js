@@ -338,7 +338,7 @@ export default function TerminalLanding() {
     if (page < texts.length - 1) {
       setPage((p) => p + 1);
     } else if (assetsLoaded) {
-      // navigate("/star-transition");
+      navigate("/star-transition");
     }
     // getMeteorData(1.5, "km", 2500, 100 ,"km/s", 90, -1, 43);
   };
