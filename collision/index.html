@@ -113,9 +113,9 @@
     <div id="cesiumContainer"></div>
 
     <div id="controls">
-        <h3>🌠 Simulador de Impacto de Meteoro</h3>
-        <button onclick="simulateImpact()">🚀 Simular Impacto</button>
-        <button onclick="resetSimulation()">🔄 Resetar</button>
+        <h3>Meteor Impact Simulator</h3>
+        <button onclick="simulateImpact()">Simulate Impact</button>
+        <button onclick="resetSimulation()">Reset</button>
         <div id="impact-info">
             <div class="control">
                 <label for="diameterRange">Diâmetro do meteoro
@@ -169,12 +169,13 @@
         // Variáveis globais
         let viewer;
         let meteorEntity;
-        let craterCapEntity;
         let explosionEntity;
         let impactZones = [];
         let region = { longitude: null, latitude: null }; // Posição inicial (Brasília, Brasil)
         let craterCapClippingPlanes; // Para gerenciar os ClippingPlanes da calota
+
         let targetMarker = null; // Marcador do alvo selecionado
+        let craterModel = null; // Modelo 3D da cratera
 
         // --- VARIÁVEIS DE CONTROLE DO USUÁRIO (para cálculos posteriores) ---
         let meteorDiameterM = 50;      // 1 m a 1500 m (1.5 km)
@@ -194,7 +195,7 @@
 
         // Legendas
         const labelAlpha = 0.9; // Transparência das labels
-        const labelBrightness = 1.2; // Brilho das labels
+        const labelBrightness = 1; // Brilho das labels
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
@@ -360,52 +361,105 @@
                 createRealCrater(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterRotation);
                 // --- CHAMANDO A NOVA FUNÇÃO DA CALOTA COM CORTE ---
                 createCraterCap(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterCapCutoffHeight, craterRotation);
+
                 removeExplosion();
             }, 4000);
             setTimeout(createDestructionZones, 6000);
         }
 
-        // Função para criar a cratera elíptica (sem alterações)
-        function createRealCrater(position, majorRadius, minorRadius, depth, rotation) {
+        // Função para criar cratera: corta terreno e coloca modelo GLB
+        function createCraterWithTerrain(position, radius, depth) {
+            // 1. Corta o terreno em formato circular
             const clippingPlanes = [];
-            const points = [];
             const numSides = 64;
-            const rotAngle = Cesium.Math.toRadians(rotation);
+            const points = [];
+
             for (let i = 0; i < numSides; i++) {
                 const angle = Cesium.Math.TWO_PI * (i / numSides);
-                const x = majorRadius * Math.cos(angle);
-                const y = minorRadius * Math.sin(angle);
-                const rotatedX = x * Math.cos(rotAngle) - y * Math.sin(rotAngle);
-                const rotatedY = x * Math.sin(rotAngle) + y * Math.cos(rotAngle);
-                points.push(new Cesium.Cartesian2(rotatedX, rotatedY));
+                points.push(new Cesium.Cartesian2(
+                    radius * Math.cos(angle),
+                    radius * Math.sin(angle)
+                ));
             }
+
             for (let i = 0; i < numSides; i++) {
-                const nextIndex = (i + 1) % numSides;
-                const midpoint = Cesium.Cartesian2.add(points[i], points[nextIndex], new Cesium.Cartesian2());
-                Cesium.Cartesian2.multiplyByScalar(midpoint, 0.5, midpoint);
-                const normal = Cesium.Cartesian2.subtract(points[nextIndex], points[i], new Cesium.Cartesian2());
-                Cesium.Cartesian2.normalize(normal, normal);
-                const temp = normal.x;
+                const j = (i + 1) % numSides;
+                const mid = Cesium.Cartesian2.multiplyByScalar(
+                    Cesium.Cartesian2.add(points[i], points[j], new Cesium.Cartesian2()),
+                    0.5, new Cesium.Cartesian2()
+                );
+                const normal = Cesium.Cartesian2.normalize(
+                    Cesium.Cartesian2.subtract(points[j], points[i], new Cesium.Cartesian2()),
+                    new Cesium.Cartesian2()
+                );
+                const tmp = normal.x;
                 normal.x = -normal.y;
-                normal.y = temp;
-                clippingPlanes.push(new Cesium.ClippingPlane(new Cesium.Cartesian3(normal.x, normal.y, 0.0), -Cesium.Cartesian2.magnitude(midpoint)));
+                normal.y = tmp;
+
+                clippingPlanes.push(
+                    new Cesium.ClippingPlane(new Cesium.Cartesian3(normal.x, normal.y, 0.0), -Cesium.Cartesian2.magnitude(mid))
+                );
             }
+
+            // Tampa para baixo - define a profundidade do corte
             clippingPlanes.push(new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), depth));
+
+            // Aplica o corte ao terreno
             viewer.scene.globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
                 planes: clippingPlanes,
-                edgeWidth: 1.0,
-                edgeColor: Cesium.Color.WHITE,
+                edgeWidth: 2.0,
+                edgeColor: Cesium.Color.DARKRED,
                 modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(position),
                 enabled: true
             });
+
+            // 3. Adiciona o modelo GLB da cratera CENTRALIZADO no buraco
+            if (craterModel) {
+                viewer.entities.remove(craterModel);
+                craterModel = null;
+            }
+
+            // CORREÇÃO: Usa exatamente as coordenadas do impacto (position) sem deslocamentos
+            // Converte position (Cartesian3) para coordenadas geográficas
+            const cartographic = Cesium.Cartographic.fromCartesian(position);
+            const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+            const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+
+            // Posição centralizada exata do impacto, afundada na cratera
+            const centeredPosition = Cesium.Cartesian3.fromDegrees(
+                longitude,        // Exata longitude do impacto
+                latitude,         // Exata latitude do impacto
+                depth * 1.7      // Afundado 70% da profundidade da cratera
+            );
+
+            // Escala proporcional ao raio da cratera
+            const craterScale = radius * 2.2; // Dividido por 100 para tamanho realista
+
+            craterModel = viewer.entities.add({
+                position: centeredPosition, // CENTRALIZADO perfeitamente
+                model: {
+                    uri: "./cratera2.glb",
+                    scale: craterScale,
+                    minimumPixelSize: 64,
+                    maximumScale: craterScale * 2,
+                    color: Cesium.Color.GRAY // Adiciona cor cinza ao modelo
+                }
+            });
+
+            console.log(`Cratera carregada CENTRALIZADA em lon:${longitude.toFixed(3)}, lat:${latitude.toFixed(3)}, profundidade:${-depth * 0.7}m`);
+
+            return craterModel;
         }
 
         function resetSimulation() {
             if (meteorEntity) viewer.entities.remove(meteorEntity);
             if (explosionEntity) viewer.entities.remove(explosionEntity);
-            if (craterCapEntity) viewer.entities.remove(craterCapEntity);
+            if (craterModel) {
+                viewer.entities.remove(craterModel);
+                craterModel = null;
+            }
 
-            meteorEntity = explosionEntity = craterCapEntity = null;
+            meteorEntity = explosionEntity = null;
 
             impactZones.forEach(zone => viewer.entities.remove(zone));
             impactZones = [];
@@ -414,18 +468,13 @@
                 viewer.scene.globe.clippingPlanes.enabled = false;
                 viewer.scene.globe.clippingPlanes = undefined;
             }
-            // --- REMOVE OS CLIPPING PLANES DA CALOTA ---
-            if (craterCapClippingPlanes) {
-                viewer.scene.removeClippingPlaneCollection(craterCapClippingPlanes);
-                craterCapClippingPlanes = null;
-            }
 
             // Não remove o targetMarker para manter o alvo selecionado
 
             viewer.camera.flyTo({
                 destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 80000),
                 orientation: { heading: Cesium.Math.toRadians(0.0), pitch: Cesium.Math.toRadians(-90.0), roll: 0.0 },
-                duration: 2
+                duration: 0
             });
         }
 

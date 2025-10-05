@@ -55,6 +55,7 @@ function getMeteorData(meteorDiameter, meteorUnits, meteorDesity, velocity, velo
     Velocity Unit km/s or miles/s between 11km/s and 72km/s
     Impact Angle in degress
     WaterHeight if in solo = -1 else the height of water
+    populationDesity 
     */
    /* 
     Returns :
