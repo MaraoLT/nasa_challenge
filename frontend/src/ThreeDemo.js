@@ -90,11 +90,18 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
         currentCamera // Pass actual camera reference
       );
       setMeteorsList(meteors);
-      meteorsListRef.current = meteors; // Update ref for animation loops
+      meteorsListRef.current = meteors;// Update ref for animation loops
+      if (meteors.length > 0 && window.currentCameraController) {
+           window.currentCameraController.setMeteorsList(meteors);
+           console.log('Meteors list passed to camera controller:', meteors.length, 'meteors');
+      }
     } else if (!loadMeteors) {
       console.log('Meteor loading disabled by loadMeteors flag');
       setMeteorsList([]);
       meteorsListRef.current = [];
+
+      // Pass meteors list to camera controller for asteroid locking
+
     }
   }, [loadMeteors, asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
 
@@ -183,6 +190,9 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
       setCurrentCamera(camera);
       setSceneReady(true);
 
+      // Store camera controller globally for meteor list access
+      window.currentCameraController = cameraController;
+
       // Use pre-created meteors from ThreeInitializer if available and meteors are enabled
       if (loadMeteors && meteors && meteors.length > 0) {
         console.log(`Using ${meteors.length} pre-created meteors from background scene`);
@@ -209,7 +219,6 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
 
       // Start the visible animation loop using the background scene's start time
       let lastTimestamp = performance.now();
-
       const animate = (currentTimestamp) => {
         stats.begin();
         const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
@@ -253,27 +262,9 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
       // Start animation immediately
       animationId = requestAnimationFrame(animate);
 
-      const handleKeyPress = (event) => {
-        switch(event.code) {
-          case 'KeyA':
-            console.log('KeyA pressed');
-            // Try to use ThreeInitializer's meteor targeting first
-            if (loadMeteors && backgroundScene.setMeteorTarget) {
-              backgroundScene.setMeteorTarget(0); // Lock onto first meteor
-            } else if (loadMeteors && meteorsListRef.current.length > 0) {
-              // Fallback to manual meteor targeting
-              const firstMeteor = meteorsListRef.current[0];
-              cameraController.setCurrentMeteor(firstMeteor);
-              cameraController.lockMode = 'meteor';
-              console.log('Camera locked onto first asteroid');
-            } else if (!loadMeteors) {
-              console.log('Meteor targeting disabled - meteors not loaded');
-            }
-            break;
-        }
-      };
 
-      window.addEventListener('keydown', handleKeyPress);
+
+
 
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -287,7 +278,6 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
       window.threeCleanup = () => {
         if (animationId) cancelAnimationFrame(animationId);
         cameraController.disableControls(renderer.domElement);
-        window.removeEventListener('keydown', handleKeyPress);
         window.removeEventListener('resize', handleResize);
         // Remove stats panel from container
         if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
@@ -346,7 +336,7 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
         const galaxyInstance = new Galaxy(10000, 64, preloadedAssets);
         galaxy = galaxyInstance.mesh;
       }
-      
+
       // Ensure galaxy is positioned correctly and visible
       galaxy.position.set(0, 0, 0);
       galaxy.renderOrder = -1000;
@@ -364,6 +354,9 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
       cameraController.setZoomLimits(80, 500);
       cameraController.setTargetObjects(sunInstance, earthInstance);
 
+      // Store camera controller globally for meteor list access
+      window.currentCameraController = cameraController;
+
       // Set initial camera position to look at Earth
       const earthPos = earthInstance.getPosition();
       const direction = new THREE.Vector3(0, 0, 1).normalize();
@@ -371,7 +364,7 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
 
       camera.position.copy(earthPos).add(direction.multiplyScalar(cameraDistance));
       camera.lookAt(earthPos);
-      
+
       // Set camera far plane to ensure galaxy is visible
       camera.far = 20000;
       camera.updateProjectionMatrix();
@@ -379,7 +372,7 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
       cameraController.target.copy(earthPos);
       cameraController.spherical.setFromVector3(camera.position.clone().sub(earthPos));
       cameraController.currentDistance = cameraDistance;
-      
+
       console.log('Camera setup - position:', camera.position, 'far plane:', camera.far);
 
       // Lock onto Earth immediately (no transition needed since we're already positioned correctly)
@@ -430,23 +423,9 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
 
       animationId = requestAnimationFrame(animate);
 
-      const handleKeyPress = (event) => {
-        switch(event.code) {
-          case 'KeyA':
-            // Lock onto first asteroid/meteor from the list (only if meteors are enabled)
-            if (loadMeteors && meteorsListRef.current.length > 0) {
-              const firstMeteor = meteorsListRef.current[0];
-              cameraController.setCurrentMeteor(firstMeteor);
-              cameraController.lockMode = 'meteor';
-              console.log('Camera locked onto first asteroid');
-            } else if (!loadMeteors) {
-              console.log('Meteor targeting disabled - meteors not loaded');
-            }
-            break;
-        }
-      };
 
-      window.addEventListener('keydown', handleKeyPress);
+
+
 
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -460,7 +439,6 @@ function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
       window.threeCleanup = () => {
         if (animationId) cancelAnimationFrame(animationId);
         cameraController.disableControls(renderer.domElement);
-        window.removeEventListener('keydown', handleKeyPress);
         window.removeEventListener('resize', handleResize);
         if (sunInstance) sunInstance.dispose();
         if (earthInstance) earthInstance.dispose();

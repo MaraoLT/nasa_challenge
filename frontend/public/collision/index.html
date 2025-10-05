@@ -29,15 +29,16 @@
             z-index: 1000;
             font-family: Arial, sans-serif;
             max-width: 300px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(4px);
         }
 
         /* Painel de resultados à direita */
         #results {
             position: absolute;
-            top: 10px; /* um pouco mais para baixo */
+            top: 10px;
+            /* um pouco mais para baixo */
             right: 10px;
             background: rgba(30, 30, 30, 0.92);
             color: white;
@@ -47,9 +48,10 @@
             font-family: Arial, sans-serif;
             max-width: 360px;
             min-width: 280px;
-            display: none; /* aparece somente após a primeira simulação */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.06);
+            display: none;
+            /* aparece somente após a primeira simulação */
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(4px);
         }
 
@@ -76,10 +78,10 @@
         #results .value {
             font-weight: 700;
             font-size: 12px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.08));
             padding: 4px 8px;
             border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             letter-spacing: 0.2px;
         }
 
@@ -89,17 +91,27 @@
             align-items: center;
             gap: 6px;
         }
+
         #results .label .swatch {
             width: 12px;
             height: 12px;
             border-radius: 3px;
             display: inline-block;
-            border: 1px solid rgba(255,255,255,0.3);
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
         }
-        #results .label .swatch.orange { background: #e0661f; }
-        #results .label .swatch.yellow { background: #f7c72a; }
-        #results .label .swatch.yellow-soft { background: #eada4aa0; }
+
+        #results .label .swatch.orange {
+            background: #e0661f;
+        }
+
+        #results .label .swatch.yellow {
+            background: #f7c72a;
+        }
+
+        #results .label .swatch.yellow-soft {
+            background: #eada4aa0;
+        }
 
         /* Seções e divisores (Material-ish) */
         #results .section-title {
@@ -110,13 +122,17 @@
             opacity: 0.9;
             margin: 10px 0 6px;
         }
+
         #results .divider {
             height: 1px;
-            background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
             margin: 10px 0;
             border-radius: 1px;
         }
-        #results .rows { margin-top: 4px; }
+
+        #results .rows {
+            margin-top: 4px;
+        }
 
         /* Cabeçalho do painel de resultados com botão de unidades */
         #results .header {
@@ -126,35 +142,48 @@
             gap: 8px;
             margin-bottom: 8px;
         }
+
         #unitToggle {
             background: #2b2f3a;
             color: #fff;
-            border: 1px solid rgba(255,255,255,0.18);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
         }
-        #unitToggle:hover { filter: brightness(1.15); }
+
+        #unitToggle:hover {
+            filter: brightness(1.15);
+        }
 
         #closeButton {
             background: #2b2f3a;
             color: #fff;
-            border: 1px solid rgba(255,255,255,0.18);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
         }
-        #closeButton:hover { filter: brightness(1.15); }
+
+        #closeButton:hover {
+            filter: brightness(1.15);
+        }
 
         /* Botões Material-ish */
-        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 6px; }
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0 6px;
+        }
+
         .btn {
             appearance: none;
-            border: 1px solid rgba(255,255,255,0.18);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             border-radius: 10px;
             padding: 10px 14px;
             font-weight: 700;
@@ -162,19 +191,32 @@
             cursor: pointer;
             color: #fff;
             background: #2b2f3a;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
             transition: transform .04s ease, filter .15s ease;
         }
-        .btn:hover { filter: brightness(1.1); }
-        .btn:active { transform: translateY(1px); }
-        .btn:disabled { opacity: .6; cursor: not-allowed; filter: grayscale(20%); }
+
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            filter: grayscale(20%);
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, #ff5151, #ff2e2e);
-            border-color: rgba(255,255,255,0.22);
+            border-color: rgba(255, 255, 255, 0.22);
         }
+
         .btn-secondary {
             background: #2b2f3a;
-            border-color: rgba(255,255,255,0.18);
+            border-color: rgba(255, 255, 255, 0.18);
         }
 
         #impact-info {
@@ -200,13 +242,13 @@
 
         .value-badge {
             display: inline-block;
-            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.08));
             padding: 4px 8px;
             border-radius: 999px;
             margin-left: 6px;
             font-weight: 700;
             font-size: 12px;
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
         .stepper {
@@ -219,7 +261,7 @@
         .stepper button {
             background: #2b2b2b;
             color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 28px;
             height: 28px;
             border-radius: 4px;
@@ -257,9 +299,10 @@
             opacity: 0.9;
             margin: 10px 0 6px;
         }
+
         #controls .divider {
             height: 1px;
-            background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
             margin: 10px 0;
             border-radius: 1px;
         }
@@ -377,7 +420,8 @@
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
             <h3 style="margin:0">Meteor Impact Simulator</h3>
             <div class="actions">
-                <button id="simulateBtn" class="btn btn-primary" onclick="simulateImpact()" disabled>Simulate Impact</button>
+                <button id="simulateBtn" class="btn btn-primary" onclick="simulateImpact()" disabled>Simulate
+                    Impact</button>
                 <button class="btn btn-secondary" onclick="resetSimulation()">Reset</button>
             </div>
         </div>
@@ -429,7 +473,15 @@
     <div id="results" aria-live="polite" style="margin-top: 2.5%;">
         <div class="header">
             <h3 style="margin: 0">Results</h3>
-            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div> 
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
             <button id="unitToggle" title="Toggle view: km/m ↔ mi">Miles</button>
             <button id="closeButton" onclick="closeResults()" title="Close results">Close</button>
 
@@ -437,23 +489,33 @@
 
         <div class="section-title">Crater and impact</div>
         <div class="rows">
-            <div class="row"><span class="label">Crater (transient diameter)</span><span class="value" id="r-diametroCratera">—</span></div>
-            <div class="row"><span class="label">Crater depth</span><span class="value" id="r-profundidadeCratera">—</span></div>
-            <div class="row"><span class="label">Impact energy</span><span class="value" id="r-energiaImpacto">—</span></div>
+            <div class="row"><span class="label">Crater (transient diameter)</span><span class="value"
+                    id="r-diametroCratera">—</span></div>
+            <div class="row"><span class="label">Crater depth</span><span class="value"
+                    id="r-profundidadeCratera">—</span></div>
+            <div class="row"><span class="label">Impact energy</span><span class="value" id="r-energiaImpacto">—</span>
+            </div>
             <div class="row"><span class="label">Energy (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
-            <div class="row"><span class="label">Energy (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
-            <div class="row"><span class="label">Fireball (diameter)</span><span class="value" id="r-fireball">—</span></div>
+            <div class="row"><span class="label">Energy (Megatons)</span><span class="value" id="r-energiaMTNT">—</span>
+            </div>
+            <div class="row"><span class="label">Fireball (diameter)</span><span class="value" id="r-fireball">—</span>
+            </div>
         </div>
 
         <div class="divider"></div>
         <div class="section-title">People</div>
         <div class="rows">
-            <div class="row"><span class="label">Clothes ignition risk <span class="swatch orange" title="Clothes ignition risk"></span></span><span class="value" id="r-clothes">—</span></div>
-            <div class="row"><span class="label">Third-degree burns <span class="swatch yellow" title="Third-degree zone"></span></span><span class="value" id="r-third">—</span></div>
-            <div class="row"><span class="label">Second-degree burns <span class="swatch yellow-soft" title="Second-degree zone"></span></span><span class="value" id="r-second">—</span></div>
-            <div class="row"><span class="label">First-degree burns</span><span class="value" id="r-first">—</span></div>
+            <div class="row"><span class="label">Clothes ignition risk <span class="swatch orange"
+                        title="Clothes ignition risk"></span></span><span class="value" id="r-clothes">—</span></div>
+            <div class="row"><span class="label">Third-degree burns <span class="swatch yellow"
+                        title="Third-degree zone"></span></span><span class="value" id="r-third">—</span></div>
+            <div class="row"><span class="label">Second-degree burns <span class="swatch yellow-soft"
+                        title="Second-degree zone"></span></span><span class="value" id="r-second">—</span></div>
+            <div class="row"><span class="label">First-degree burns</span><span class="value" id="r-first">—</span>
+            </div>
             <div class="row"><span class="label">Estimated deaths</span><span class="value" id="r-deaths">—</span></div>
-            <div class="row"><span class="label">Estimated injured</span><span class="value" id="r-feridos">—</span></div>
+            <div class="row"><span class="label">Estimated injured</span><span class="value" id="r-feridos">—</span>
+            </div>
         </div>
 
         <div class="divider"></div>
@@ -471,7 +533,7 @@
     <script src="./lib/calculator.js"></script>
     <script>
 
-        function closeResults(){
+        function closeResults() {
             const resultsPanel = document.getElementById('results');
             if (resultsPanel) resultsPanel.style.display = 'none';
         }
@@ -588,7 +650,7 @@
         // Token de acesso do Cesium ion
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMGRkYjMwYy1lODg0LTQ3MTktOTBiNi02ZDI0YjRiNTcxNjIiLCJpZCI6MzQ3MjQ2LCJpYXQiOjE3NTk2MDg1NzN9.901R3lkV1aC6zsOj843KhI37YOCw7lOnqS8rHd4nVq8';
 
-    // --- CRATER PARAMETERS ---
+        // --- CRATER PARAMETERS ---
         let craterMajorRadius = 1500;
         let craterMinorRadius = 1500;
         let craterDepth = 400;
@@ -627,16 +689,16 @@
         // Estado atual do material
         let meteorMaterial = { key: 'stone', density: 2500 };
 
-    // Labels
+        // Labels
         const labelAlpha = 0.9;
         const labelBrightness = 1;
 
         // Crater
-    const craterModelUri = "./crater_with_cone.glb";
+        const craterModelUri = "./crater_with_cone.glb";
 
-    // === AUDIO AND VISUAL EFFECTS ===
+        // === AUDIO AND VISUAL EFFECTS ===
 
-    // Play meteor fall sound
+        // Play meteor fall sound
         function playMeteorFallSound() {
             const audio = document.getElementById('meteorFallSound');
             try {
@@ -652,7 +714,7 @@
             }
         }
 
-    // Play explosion sound
+        // Play explosion sound
         function playExplosionSound() {
             const audio = document.getElementById('explosionSound');
             try {
@@ -668,7 +730,7 @@
             }
         }
 
-    // Show visual impact effect
+        // Show visual impact effect
         function showMeteorImpactEffect() {
             const overlay = document.getElementById('meteorImpactOverlay');
             overlay.style.display = 'block';
@@ -679,7 +741,7 @@
             }, 4000); // Aumentado para 4 segundos para coincidir com as animações
         }
 
-    // Fallback: generate synthetic meteor sound using Web Audio API
+        // Fallback: generate synthetic meteor sound using Web Audio API
         function generateSyntheticMeteorSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -703,7 +765,7 @@
             }
         }
 
-    // Fallback: generate synthetic explosion sound
+        // Fallback: generate synthetic explosion sound
         function generateSyntheticExplosionSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -727,7 +789,7 @@
             }
         }
 
-    // === END OF AUDIO AND VISUAL EFFECTS ===
+        // === END OF AUDIO AND VISUAL EFFECTS ===
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
@@ -769,9 +831,11 @@
                 // Inicia com visão global do globo (sem alvo inicial)
                 viewer.camera.setView({
                     destination: Cesium.Cartesian3.fromDegrees(-79.186, 12.915, 15000000),
-                    orientation: { heading: Cesium.Math.toRadians(0.0),
-                    pitch: Cesium.Math.toRadians(-90.0),
-                    roll: 0.0 }
+                    orientation: {
+                        heading: Cesium.Math.toRadians(0.0),
+                        pitch: Cesium.Math.toRadians(-90.0),
+                        roll: 0.0
+                    }
                 });
 
                 // // Move o botão de "Navigation Instructions" para o lado esquerdo, abaixo do painel de controles
@@ -884,7 +948,7 @@
                 const materialValue = $('materialValue');
                 const materialDensity = $('materialDensity');
 
-                const fmtMeters = (m) => m >= 1000 ? `${(m/1000).toFixed(1)} km` : `${m} m`;
+                const fmtMeters = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`;
 
                 const syncUI = () => {
                     diameterOut.textContent = fmtMeters(meteorDiameterM);
@@ -1035,7 +1099,7 @@
                     return `${mi.toFixed(3)} mi`;
                 }
                 // métrico
-                if (Math.abs(m) >= 1000) return `${(m/1000).toFixed(2)} km`;
+                if (Math.abs(m) >= 1000) return `${(m / 1000).toFixed(2)} km`;
                 return `${m} m`;
             };
             const fmtEnergyJ = (j) => {
@@ -1093,25 +1157,58 @@
 
         // Função para criar cratera
         function createCraterWithTerrain(position, radius, depth) {
-            // 1. Busca a altura exata do terreno no momento da criação da cratera
+            // 1. Busca a altura exata do terreno em múltiplos pontos para calcular média
             const cartographic = Cesium.Cartographic.fromCartesian(position);
             const longitude = Cesium.Math.toDegrees(cartographic.longitude);
             const latitude = Cesium.Math.toDegrees(cartographic.latitude);
 
-            // Promisse para obter a altura real do terreno
+            // Converte raio de metros para graus aproximadamente
+            const radiusInDegrees = radius / 111000; // Aproximação: 1 grau ≈ 111km
+
+            // Pontos para amostragem: centro + 4 pontos nas bordas (N, S, E, W)
+            const samplePoints = [
+                // Ponto central
+                Cesium.Cartographic.fromDegrees(longitude, latitude),
+                // Norte (latitude + raio)
+                Cesium.Cartographic.fromDegrees(longitude, latitude + radiusInDegrees),
+                // Sul (latitude - raio)
+                Cesium.Cartographic.fromDegrees(longitude, latitude - radiusInDegrees),
+                // Leste (longitude + raio)
+                Cesium.Cartographic.fromDegrees(longitude + radiusInDegrees, latitude),
+                // Oeste (longitude - raio)
+                Cesium.Cartographic.fromDegrees(longitude - radiusInDegrees, latitude)
+            ];
+
+            // Promisse para obter a altura real do terreno em todos os pontos
             const terrainProvider = viewer.terrainProvider;
 
-            Cesium.sampleTerrainMostDetailed(terrainProvider, [cartographic])
+            Cesium.sampleTerrainMostDetailed(terrainProvider, samplePoints)
                 .then(function (updatedPositions) {
-                    const actualTerrainHeight = updatedPositions[0].height || 0;
+                    // Calcula a altura máxima dos pontos amostrados
+                    let maxHeight = -Infinity;
+                    let validPoints = 0;
+                    let allHeights = [];
 
-                    console.log(`Altura do terreno obtida: ${actualTerrainHeight.toFixed(2)}m (anterior: ${terrainHeight.toFixed(2)}m)`);
+                    updatedPositions.forEach((point, index) => {
+                        if (point.height !== undefined && !isNaN(point.height)) {
+                            maxHeight = Math.max(maxHeight, point.height);
+                            allHeights.push(point.height);
+                            validPoints++;
+                            console.log(`Ponto ${index} (${index === 0 ? 'centro' : ['norte', 'sul', 'leste', 'oeste'][index - 1]}): ${point.height.toFixed(2)}m`);
+                        }
+                    });
 
-                    // Atualiza a variável global com a altura correta
-                    terrainHeight = actualTerrainHeight;
+                    const maxTerrainHeight = validPoints > 0 ? maxHeight : terrainHeight;
 
-                    // Agora cria a cratera com a altura correta
-                    createCraterGeometry(position, radius, depth, actualTerrainHeight, longitude, latitude);
+                    console.log(`Altura máxima encontrada: ${maxTerrainHeight.toFixed(2)}m (pontos válidos: ${validPoints}/5)`);
+                    console.log(`Todas as alturas: [${allHeights.map(h => h.toFixed(1)).join(', ')}]`);
+                    console.log(`Altura anterior: ${terrainHeight.toFixed(2)}m`);
+
+                    // Atualiza a variável global com a altura máxima
+                    terrainHeight = maxTerrainHeight;
+
+                    // Agora cria a cratera com a altura máxima correta
+                    createCraterGeometry(position, radius, depth, maxTerrainHeight, longitude, latitude);
                 })
                 .catch(function (error) {
                     console.warn('Erro ao obter altura do terreno, usando altura aproximada:', error);
@@ -1179,7 +1276,7 @@
             );
 
             // Escala proporcional ao raio da cratera
-            const craterScale = radius * 25; // Dividido por 100 para tamanho realista
+            const craterScale = radius * 25;
 
             craterModel = viewer.entities.add({
                 position: centeredPosition,
@@ -1188,11 +1285,11 @@
                     scale: craterScale,
                     minimumPixelSize: 64,
                     maximumScale: craterScale,
-                    color: Cesium.Color.GRAY
+                    color: Cesium.Color.BROWN // Mudado para marrom
                 }
             });
 
-            console.log(`Cratera criada com altura correta: ${actualHeight.toFixed(2)}m em lon:${longitude.toFixed(3)}, lat:${latitude.toFixed(3)}`);
+            console.log(`Cratera criada com altura máxima: ${actualHeight.toFixed(2)}m em lon:${longitude.toFixed(3)}, lat:${latitude.toFixed(3)}`);
         }
 
         function resetSimulation() {
