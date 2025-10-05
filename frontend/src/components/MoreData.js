@@ -9,10 +9,10 @@ export default function MoreData() {
 
   // Define your numeric slides here
   const SLIDES = React.useMemo(() => ([
-    { title: 'Near‑Earth Objects Tracked', value: 39123, suffix: '', desc: 'Desc here.' },
+    { title: 'Near‑Earth Objects Tracked', value: 39123, suffix: '', desc: 'And many more that are too small to track.' },
     { title: 'Asteroids bigger than 1 kilometer', value: 873, suffix: '', desc: 'And 50 more are estimated to be found.' },
     { title: 'Asteroids bigger than 140 meters', value: 11343, suffix: '', desc: 'And 14000 more are estimated to be found.' },
-    { title: 'Tons of dust and sand-sized particles that bombard Earth daily', value: 100, suffix: '', desc: 'Desc here.' },
+    { title: 'Tons of dust and sand-sized particles that bombard Earth daily', value: 100, suffix: '', desc: 'Most of them burn up in the atmosphere.' },
     { title: 'Known near-Earth asteroids passed closer to Earth than the Moon', value: 12, suffix: '', desc: '9.Aug.25 - 8.Sep.25' },
     { title: 'Known near-Earth asteroids passed closer to Earth than the Moon', value: 176, suffix: '', desc: '9.Sep.24 - 8.Sep.25' },
   ]), []);
