@@ -358,9 +358,9 @@
             }, 3000);
             setTimeout(() => {
                 const impactPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude);
-                createRealCrater(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterRotation);
+                //createRealCrater(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterRotation);
                 // --- CHAMANDO A NOVA FUNÇÃO DA CALOTA COM CORTE ---
-                createCraterCap(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterCapCutoffHeight, craterRotation);
+                createCraterWithTerrain(impactPosition, craterMajorRadius,craterDepth);
 
                 removeExplosion();
             }, 4000);
