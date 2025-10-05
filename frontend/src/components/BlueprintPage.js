@@ -34,7 +34,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
         'The laser ablation technique uses light as a weapon of precision. Spacecraft focus powerful beams or reflected sunlight onto the asteroid’s surface, vaporizing small amounts of rock and creating jets that nudge it away from danger.',
         'No explosions, no collisions — just focused energy and smart engineering. It’s planetary defense for the patient and precise, where science burns brighter than brute force.'
       ],
-      imgSrc: '/assets/laser-ablation.png',
+      imgSrc: '/assets/laser_ablation.png',
       switch: false,
     },
     {
@@ -43,7 +43,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
         'The ion beam shepherd pushes without touching. A spacecraft fires streams of charged particles toward the asteroid, giving it a steady, gentle shove while counter-thrusting to stay in place.',
         'It’s slow but efficient, turning advanced propulsion technology into a long-term defense tool. This method suits defenders who thrive on balance — mastering delicate control to reshape the motion of worlds.'
       ],
-      imgSrc: '/assets/logo192.png',
+      imgSrc: '/assets/ion_shepherd.png',
       switch: true,
     },
     {
