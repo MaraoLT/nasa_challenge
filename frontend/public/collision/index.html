@@ -117,6 +117,18 @@
         }
         #unitToggle:hover { filter: brightness(1.15); }
 
+        #closeButton {
+            background: #2b2f3a;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+        }
+        #closeButton:hover { filter: brightness(1.15); }
+
         /* Botões Material-ish */
         .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 6px; }
         .btn {
@@ -383,10 +395,13 @@
     </div>
 
     <!-- Painel de resultados à direita -->
-    <div id="results" aria-live="polite">
+    <div id="results" aria-live="polite" style="margin-top: 2.5%;">
         <div class="header">
             <h3 style="margin: 0">Resultados</h3>
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
             <button id="unitToggle" title="Alternar visualização: km/m ↔ mi">mi</button>
+            <button id="closeButton" onclick="closeResults()" title="Close results">Close</button>
+
         </div>
 
         <div class="section-title">Cratera e impacto</div>
@@ -412,6 +427,11 @@
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
+
+        function closeResults(){
+            const resultsPanel = document.getElementById('results');
+            if (resultsPanel) resultsPanel.style.display = 'none';
+        }
 
         function returnHome(){
             window.top.location.href = '/home';
@@ -600,50 +620,50 @@
                     roll: 0.0 }
                 });
 
-                // Move o botão de "Navigation Instructions" para o lado esquerdo, abaixo do painel de controles
-                (function moveNavigationHelpToLeft() {
-                    try {
-                        const navHelp = viewer?.navigationHelpButton?.container;
-                        if (!navHelp) return;
-                        const controlsEl = document.getElementById('controls');
-                        let topPx = 10;
-                        if (controlsEl) {
-                            const rect = controlsEl.getBoundingClientRect();
-                            topPx = Math.round(rect.top + rect.height + 10);
-                        }
-                        navHelp.style.position = 'fixed';
-                        navHelp.style.left = '10px';
-                        navHelp.style.right = 'auto';
-                        navHelp.style.top = `${topPx}px`;
-                        navHelp.style.zIndex = 2001;
-                        navHelp.style.overflow = 'visible';
-                        // leva o elemento para o body para posicionamento fixo consistente
-                        document.body.appendChild(navHelp);
+                // // Move o botão de "Navigation Instructions" para o lado esquerdo, abaixo do painel de controles
+                // (function moveNavigationHelpToLeft() {
+                //     try {
+                //         const navHelp = viewer?.navigationHelpButton?.container;
+                //         if (!navHelp) return;
+                //         const controlsEl = document.getElementById('controls');
+                //         let topPx = 10;
+                //         if (controlsEl) {
+                //             const rect = controlsEl.getBoundingClientRect();
+                //             topPx = Math.round(rect.top + rect.height + 10);
+                //         }
+                //         navHelp.style.position = 'fixed';
+                //         navHelp.style.left = '10px';
+                //         navHelp.style.right = 'auto';
+                //         navHelp.style.top = `${topPx}px`;
+                //         navHelp.style.zIndex = 2001;
+                //         navHelp.style.overflow = 'visible';
+                //         // leva o elemento para o body para posicionamento fixo consistente
+                //         document.body.appendChild(navHelp);
 
-                        // Garante que o painel de instruções abra para a direita quando o botão estiver à esquerda
-                        const adjustPanel = () => {
-                            try {
-                                const divs = navHelp.querySelectorAll('div');
-                                for (const d of divs) {
-                                    const cs = window.getComputedStyle(d);
-                                    // Heurística: o painel costuma ser absoluto e ancorado por right
-                                    if (cs.position === 'absolute' && (cs.right !== 'auto' || d.style.right)) {
-                                        d.style.right = 'auto';
-                                        d.style.left = '40px';
-                                        d.style.maxWidth = '280px';
-                                        d.style.zIndex = 2002;
-                                    }
-                                }
-                            } catch { }
-                        };
-                        // Ajusta ao abrir/fechar
-                        navHelp.addEventListener('click', () => setTimeout(adjustPanel, 0));
-                        // Ajuste inicial preventivo
-                        setTimeout(adjustPanel, 0);
-                    } catch (e) {
-                        console.warn('Não foi possível mover o botão de instruções de navegação:', e);
-                    }
-                })();
+                //         // Garante que o painel de instruções abra para a direita quando o botão estiver à esquerda
+                //         const adjustPanel = () => {
+                //             try {
+                //                 const divs = navHelp.querySelectorAll('div');
+                //                 for (const d of divs) {
+                //                     const cs = window.getComputedStyle(d);
+                //                     // Heurística: o painel costuma ser absoluto e ancorado por right
+                //                     if (cs.position === 'absolute' && (cs.right !== 'auto' || d.style.right)) {
+                //                         d.style.right = 'auto';
+                //                         d.style.left = '40px';
+                //                         d.style.maxWidth = '280px';
+                //                         d.style.zIndex = 2002;
+                //                     }
+                //                 }
+                //             } catch { }
+                //         };
+                //         // Ajusta ao abrir/fechar
+                //         navHelp.addEventListener('click', () => setTimeout(adjustPanel, 0));
+                //         // Ajuste inicial preventivo
+                //         setTimeout(adjustPanel, 0);
+                //     } catch (e) {
+                //         console.warn('Não foi possível mover o botão de instruções de navegação:', e);
+                //     }
+                // })();
 
                 // Adiciona handler de clique no mapa
                 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
