@@ -9,7 +9,7 @@ async function getPopulationDensity(lat, lng){
     if (!rcResp.ok) return "This";
     const rcJson = await rcResp.json();
     const countryCode = rcJson.countryCode;
-    if (!countryCode) return "Aqui";
+    if (!countryCode) return "Tsunami";
 
     // World Bank API for population density (EN.POP.DNST)
     // Request JSON and get the most recent non-null value
@@ -114,7 +114,7 @@ function getMeteorData(meteorDiameter, meteorUnits, meteorDesity, velocity, velo
 
   let energiaDoImpacto = 1/12*Math.PI * meteorDesity * (meteorDiameter**3) * (velocity**2);
   let energiaDoImpactoTNT = parseInt(energiaDoImpacto / 4.184e9);
-  let energiaDoImpactoMTNT = parseInt(energiaDoImpactoTNT / 10e6);
+  let energiaDoImpactoMTNT = energiaDoImpactoTNT / 10e5;
   let diameterFireball = parseInt(0.002 * (energiaDoImpacto**(1/3)));
 
   let clothesBurn = parseInt(thermicRadiationToRadius(energiaDoImpacto/10000000, 1));
@@ -140,4 +140,25 @@ function thermicRadiationToRadius(impactEnergy, thermic) {
   let T = thermic; // in J/m2
   let K = 3 * 10**-3;
   return ((K * E)/(2*Math.PI*T))**(0.5);
+}
+
+function getTsunamiEffects(diametroCrateraTransiente, waterHeight, distanceToCoast, beachSlope = 0.01) {
+  // Altura inicial da onda
+  let A0 = Math.min(0.14 * diametroCrateraTransiente, waterHeight);
+
+  // Altura da onda na costa (atenuação 1/r)
+  let Acoast = A0 * (diametroCrateraTransiente / (2 * distanceToCoast));
+
+  // Run-up (altura máxima na praia)
+  let runup = 2 * Acoast * Math.sqrt(beachSlope);
+
+  // Área inundada (estimativa simplificada)
+  let inundationArea = Math.PI * Math.pow(runup * 1000, 2); // m²
+
+  return {
+    A0: A0, // altura inicial da onda (m)
+    Acoast: Acoast, // altura na praia (m)
+    runup: runup, // altura máxima (m)
+    inundationArea: inundationArea // m²
+  };
 }
