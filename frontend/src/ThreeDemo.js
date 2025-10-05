@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import * as THREE from 'three';
 import { Earth } from './render/Earth';
 import { Galaxy } from './render/Galaxy';
@@ -11,10 +12,14 @@ import musicManager from './utils/MusicManager';
 import audioContextManager from './utils/AudioContextManager';
 import { createOrbitFromJPLData, parseOrbitFile} from './utils/NasaJsonParser.js';
 
-function ThreeDemo() {
+function ThreeDemo({ loadMeteors: propLoadMeteors = true }) {
+  const location = useLocation();
   const mountRef = useRef(null);
   const statsContainerRef = useRef(null);
   const meteorsListRef = useRef([]); // Use ref for meteors list to access in animation loops
+
+  // Check for loadMeteors flag from navigation state, fallback to prop, then default true
+  const loadMeteors = location.state?.loadMeteors ?? propLoadMeteors;
 
   // Get preloaded assets and preprocessed objects from global window object
   const preloadedAssets = window.preloadedAssets || {};
@@ -74,7 +79,7 @@ function ThreeDemo() {
 
   // Effect to create meteors when we have both orbits and scene ready
   useEffect(() => {
-    if (asteroidOrbits.length > 0 && sceneReady && currentScene && sunInstance && currentCamera) {
+    if (loadMeteors && asteroidOrbits.length > 0 && sceneReady && currentScene && sunInstance && currentCamera) {
       console.log('Creating meteors: orbits ready and scene ready');
       const meteors = createMeteorsFromOrbits(
         asteroidOrbits,
@@ -86,6 +91,10 @@ function ThreeDemo() {
       );
       setMeteorsList(meteors);
       meteorsListRef.current = meteors; // Update ref for animation loops
+    } else if (!loadMeteors) {
+      console.log('Meteor loading disabled by loadMeteors flag');
+      setMeteorsList([]);
+      meteorsListRef.current = [];
 
       // Pass meteors list to camera controller for asteroid locking
       if (meteors.length > 0 && window.currentCameraController) {
@@ -93,22 +102,30 @@ function ThreeDemo() {
         console.log('Meteors list passed to camera controller:', meteors.length, 'meteors');
       }
     }
-  }, [asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
+  }, [loadMeteors, asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
 
   useEffect(() => {
-    // Load Near-Earth.json using fetch
-    fetch('/Near-Earth.json')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Loaded Near-Earth.json data:', data.length, 'asteroids');
-        const AsteroidOrbits = parseOrbitFile(data);
-        setAsteroidOrbits(AsteroidOrbits);
-      })
-      .catch(err => {
-        console.error('Failed to load Near-Earth.json:', err);
-        setAsteroidOrbits([]);
-      });
+    // Only load asteroid data if meteors should be loaded
+    if (loadMeteors) {
+      // Load Near-Earth.json using fetch
+      fetch('/Near-Earth.json')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Loaded Near-Earth.json data:', data.length, 'asteroids');
+          const AsteroidOrbits = parseOrbitFile(data);
+          setAsteroidOrbits(AsteroidOrbits);
+        })
+        .catch(err => {
+          console.error('Failed to load Near-Earth.json:', err);
+          setAsteroidOrbits([]);
+        });
+    } else {
+      console.log('Skipping asteroid data loading - meteors disabled');
+      setAsteroidOrbits([]);
+    }
+  }, [loadMeteors]);
 
+  useEffect(() => {
     console.log("ThreeDemo useEffect running...");
     // let data = require('./Near-Earth.json');
     // console.log("data read");
@@ -130,10 +147,15 @@ function ThreeDemo() {
     // Initialize audio context manager
     audioContextManager.init();
 
-    // Start playing the space music - use correct path
-    const playResult = musicManager.playTrack('/resources/sounds/Drifting Through the Void.mp3', true);
-    if (!playResult) {
-      console.log('Music will play after user interaction');
+    // Start playing the space music - use correct path with error handling
+    try {
+      const playResult = musicManager.playTrack('/resources/sounds/Drifting Through the Void.mp3', true);
+      if (!playResult) {
+        console.log('Music will play after user interaction');
+      }
+    } catch (error) {
+      console.warn('Failed to load music:', error.message);
+      // Continue without music
     }
 
     // Check if we have a background scene ready
@@ -159,16 +181,34 @@ function ThreeDemo() {
       mountRef.current.innerHTML = '';
 
       // Take ownership of the background scene
-      const { scene, camera, renderer, sunInstance: sun, earthInstance, galaxy, cameraController, ambientLight, startTimestamp } = backgroundScene;
+      const { scene, camera, renderer, sunInstance: sun, earthInstance, galaxy, meteors, cameraController, ambientLight, startTimestamp } = backgroundScene;
 
       // Set scene and sun for meteor creation
       setCurrentScene(scene);
       setSunInstance(sun);
-      setCurrentCamera(camera); // Set camera reference for meteor creation
+      setCurrentCamera(camera);
       setSceneReady(true);
 
       // Store camera controller globally for meteor list access
       window.currentCameraController = cameraController;
+
+      // Use pre-created meteors from ThreeInitializer if available and meteors are enabled
+      if (loadMeteors && meteors && meteors.length > 0) {
+        console.log(`Using ${meteors.length} pre-created meteors from background scene`);
+        setMeteorsList(meteors);
+        meteorsListRef.current = meteors;
+      } else if (loadMeteors) {
+        console.log('No meteors in background scene, will create them from loaded orbits');
+        // Get orbits from ThreeInitializer and set them for meteor creation
+        const orbits = ThreeInitializer.getAsteroidOrbits();
+        if (orbits.length > 0) {
+          setAsteroidOrbits(orbits);
+        }
+      } else {
+        console.log('Meteors disabled by loadMeteors flag');
+        setMeteorsList([]);
+        meteorsListRef.current = [];
+      }
 
       // Attach the renderer to our DOM element
       backgroundScene.attachToDOM(mountRef.current);
@@ -199,11 +239,19 @@ function ThreeDemo() {
         // Update sun animation
         sun.update();
 
-        // Update all meteors from asteroid data
-        meteorsListRef.current.forEach((meteor) => {
-          meteor.updateOrbit(absoluteTime);
-          meteor.rotate(0.01);
-        });
+        // Update all meteors from asteroid data (only if meteors are enabled)
+        if (loadMeteors) {
+          if (backgroundScene.updateMeteors) {
+            // Use ThreeInitializer's meteor update method if available
+            backgroundScene.updateMeteors(absoluteTime);
+          } else {
+            // Fallback to manual meteor updates
+            meteorsListRef.current.forEach((meteor) => {
+              meteor.updateOrbit(absoluteTime);
+              meteor.rotate(0.01);
+            });
+          }
+        }
 
         renderer.render(scene, camera);
         stats.end();
@@ -250,7 +298,7 @@ function ThreeDemo() {
 
       // Create scene, camera, and renderer
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 20000);
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         powerPreference: "high-performance",
@@ -280,11 +328,19 @@ function ThreeDemo() {
       // Add galaxy
       let galaxy;
       if (preprocessedObjects.galaxyGeometry && preprocessedObjects.galaxyMaterial) {
+        console.log('Using preprocessed galaxy geometry and material');
         galaxy = new THREE.Mesh(preprocessedObjects.galaxyGeometry, preprocessedObjects.galaxyMaterial);
       } else {
-        galaxy = new Galaxy(10000, 64, preloadedAssets).mesh;
+        console.log('Creating galaxy from scratch');
+        const galaxyInstance = new Galaxy(10000, 64, preloadedAssets);
+        galaxy = galaxyInstance.mesh;
       }
+
+      // Ensure galaxy is positioned correctly and visible
+      galaxy.position.set(0, 0, 0);
+      galaxy.renderOrder = -1000;
       scene.add(galaxy);
+      console.log('Galaxy added to scene, position:', galaxy.position, 'scale:', galaxy.scale);
 
       // Add lighting
       const ambientLight = new THREE.AmbientLight(0x404040, 0.1);
@@ -308,9 +364,15 @@ function ThreeDemo() {
       camera.position.copy(earthPos).add(direction.multiplyScalar(cameraDistance));
       camera.lookAt(earthPos);
 
+      // Set camera far plane to ensure galaxy is visible
+      camera.far = 20000;
+      camera.updateProjectionMatrix();
+
       cameraController.target.copy(earthPos);
       cameraController.spherical.setFromVector3(camera.position.clone().sub(earthPos));
       cameraController.currentDistance = cameraDistance;
+
+      console.log('Camera setup - position:', camera.position, 'far plane:', camera.far);
 
       // Lock onto Earth immediately (no transition needed since we're already positioned correctly)
       setTimeout(() => {
@@ -344,11 +406,13 @@ function ThreeDemo() {
 
         sunInstance.update();
 
-        // Update all meteors from asteroid data
-        meteorsListRef.current.forEach((meteor) => {
-          meteor.updateOrbit(absoluteTime);
-          meteor.rotate(0.01);
-        });
+        // Update all meteors from asteroid data (only if meteors are enabled)
+        if (loadMeteors) {
+          meteorsListRef.current.forEach((meteor) => {
+            meteor.updateOrbit(absoluteTime);
+            meteor.rotate(0.01);
+          });
+        }
 
 
         renderer.render(scene, camera);
@@ -415,7 +479,9 @@ function ThreeDemo() {
         borderRadius: '8px',
         fontFamily: 'Arial, sans-serif'
       }}>
-        <h2 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>Earth Explorer</h2>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>
+          Earth Explorer {!loadMeteors && '(Meteors Disabled)'}
+        </h2>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>🖱️ Mouse: Rotate camera</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>🖱️ Scroll: Zoom in/out</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ R: Reset camera</p>
@@ -423,7 +489,11 @@ function ThreeDemo() {
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 0: Lock onto Sun</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 1: Lock onto Earth</p>
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ 2: Lock onto Meteor</p>
-        <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ A: Lock onto first Asteroid</p>
+        {loadMeteors ? (
+          <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ A: Lock onto first Asteroid</p>
+        ) : (
+          <p style={{ margin: '0 0 5px 0', fontSize: '12px', opacity: 0.5 }}>⌨️ A: Lock onto first Asteroid (disabled)</p>
+        )}
         <p style={{ margin: '0 0 5px 0', fontSize: '12px' }}>⌨️ ESC: Unlock camera</p>
         <p style={{ margin: '0 0 10px 0', fontSize: '12px' }}>⌨️ ↑↓: Zoom</p>
         <a href="/" style={{

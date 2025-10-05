@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Impacto de Meteoro</title>
+    <title>Meteor Impact Simulator</title>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.117/Build/Cesium/Cesium.js"></script>
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.117/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <style>
@@ -22,13 +22,16 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(42, 42, 42, 0.9);
+            background: rgba(30, 30, 30, 0.92);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px 16px 12px;
+            border-radius: 12px;
             z-index: 1000;
             font-family: Arial, sans-serif;
             max-width: 300px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(4px);
         }
 
         /* Painel de resultados à direita */
@@ -36,15 +39,18 @@
             position: absolute;
             top: 10px; /* um pouco mais para baixo */
             right: 10px;
-            background: rgba(42, 42, 42, 0.9);
+            background: rgba(30, 30, 30, 0.92);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px 16px 12px;
+            border-radius: 12px;
             z-index: 1000;
             font-family: Arial, sans-serif;
-            max-width: 320px;
-            min-width: 260px;
+            max-width: 360px;
+            min-width: 280px;
             display: none; /* aparece somente após a primeira simulação */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(4px);
         }
 
         #results h3 {
@@ -61,15 +67,56 @@
         #results .label {
             color: #ddd;
             font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
+        /* Chip de valor (Material-ish) */
         #results .value {
             font-weight: 700;
-            font-size: 13px;
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
+            font-size: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.12);
+            letter-spacing: 0.2px;
         }
+
+        /* Legend swatches inline com os rótulos */
+        #results .label .legend {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #results .label .swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+        }
+        #results .label .swatch.orange { background: #e0661f; }
+        #results .label .swatch.yellow { background: #f7c72a; }
+        #results .label .swatch.yellow-soft { background: #eada4aa0; }
+
+        /* Seções e divisores (Material-ish) */
+        #results .section-title {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #a0c4ff;
+            opacity: 0.9;
+            margin: 10px 0 6px;
+        }
+        #results .divider {
+            height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            margin: 10px 0;
+            border-radius: 1px;
+        }
+        #results .rows { margin-top: 4px; }
 
         /* Cabeçalho do painel de resultados com botão de unidades */
         #results .header {
@@ -80,35 +127,54 @@
             margin-bottom: 8px;
         }
         #unitToggle {
-            background: #2b2b2b;
+            background: #2b2f3a;
             color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.18);
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
         }
         #unitToggle:hover { filter: brightness(1.15); }
 
-        #controls button {
-            background: #ff4444;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 5px;
+        #closeButton {
+            background: #2b2f3a;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 4px 8px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
         }
+        #closeButton:hover { filter: brightness(1.15); }
 
-        #controls button:hover {
-            background: #ff6666;
+        /* Botões Material-ish */
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 6px; }
+        .btn {
+            appearance: none;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            color: #fff;
+            background: #2b2f3a;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            transition: transform .04s ease, filter .15s ease;
         }
-
-        #controls button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            filter: grayscale(20%);
+        .btn:hover { filter: brightness(1.1); }
+        .btn:active { transform: translateY(1px); }
+        .btn:disabled { opacity: .6; cursor: not-allowed; filter: grayscale(20%); }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff5151, #ff2e2e);
+            border-color: rgba(255,255,255,0.22);
+        }
+        .btn-secondary {
+            background: #2b2f3a;
+            border-color: rgba(255,255,255,0.18);
         }
 
         #impact-info {
@@ -134,11 +200,13 @@
 
         .value-badge {
             display: inline-block;
-            background: rgba(255,255,255,0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+            padding: 4px 8px;
+            border-radius: 999px;
             margin-left: 6px;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
         }
 
         .stepper {
@@ -178,6 +246,22 @@
             align-items: center;
             gap: 8px;
             justify-content: space-between;
+        }
+
+        /* Títulos e divisores compartilhados */
+        #controls .section-title {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #a0c4ff;
+            opacity: 0.9;
+            margin: 10px 0 6px;
+        }
+        #controls .divider {
+            height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            margin: 10px 0;
+            border-radius: 1px;
         }
     </style>
 </head>
@@ -276,10 +360,16 @@
     </style>
 
     <div id="controls">
-        <h3>Meteor Impact Simulator</h3>
-        <button id="simulateBtn" onclick="simulateImpact()" disabled>Simulate Impact</button>
-        <button onclick="resetSimulation()">Reset</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <h3 style="margin:0">Meteor Impact Simulator</h3>
+            <div class="actions">
+                <button id="simulateBtn" class="btn btn-primary" onclick="simulateImpact()" disabled>Simulate Impact</button>
+                <button class="btn btn-secondary" onclick="resetSimulation()">Reset</button>
+            </div>
+        </div>
+
         <div id="impact-info">
+            <div class="section-title">Meteor parameters</div>
             <div class="control">
                 <label for="diameterRange">Meteor Diameter
                     <span class="value-badge" id="diameterOut">50 m</span>
@@ -301,45 +391,68 @@
                 <input type="range" id="angleRange" min="5" max="90" step="1" value="45">
             </div>
 
+            <div class="divider"></div>
+            <div class="section-title">Material</div>
             <div class="control">
                 <div class="material-inline">
-                    <label style="margin: 0">Material</label>
-                    <div class="stepper" role="group" aria-label="Selecionar material">
-                        <button id="materialPrev" type="button" aria-label="Material anterior">&#8249;</button>
+                    <label style="margin: 0">Type</label>
+                    <div class="stepper" role="group" aria-label="Select material">
+                        <button id="materialPrev" type="button" aria-label="Previous material">&#8249;</button>
                         <span class="stepper-value" id="materialValue">stone</span>
-                        <button id="materialNext" type="button" aria-label="Próximo material">&#8250;</button>
+                        <button id="materialNext" type="button" aria-label="Next material">&#8250;</button>
                     </div>
                 </div>
                 <small class="material-info">Density: <span id="materialDensity">2500</span> kg/m³</small>
             </div>
 
-            <em id="selectHint">💡 Click on the map to choose the target!</em>
-            <button id="simulateBtn" onclick="returnHome()" >Return</button>
-            <button id="simulateBtn" onclick="nextSession()" disabled>Next</button>
+            <div class="divider"></div>
+            <div class="section-title">Actions</div>
+            <em id="selectHint" style="display:block;margin-bottom:6px;">💡 Click on the map to choose the target!</em>
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="returnHome()">Return</button>
+                <button class="btn btn-secondary" onclick="nextSession()" disabled>Next</button>
+            </div>
         </div>
     </div>
 
-    <!-- Painel de resultados à direita -->
-    <div id="results" aria-live="polite">
+    <!-- Results panel (right) -->
+    <div id="results" aria-live="polite" style="margin-top: 2.5%;">
         <div class="header">
-            <h3 style="margin: 0">Resultados</h3>
-            <button id="unitToggle" title="Alternar visualização: km/m ↔ mi">mi</button>
+            <h3 style="margin: 0">Results</h3>
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div> 
+            <button id="unitToggle" title="Toggle view: km/m ↔ mi">Miles</button>
+            <button id="closeButton" onclick="closeResults()" title="Close results">Close</button>
+
         </div>
-        <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
-        <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
-        <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
-        <div class="row"><span class="label">Energia (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
-        <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
-        <div class="row"><span class="label">Fireball (diâmetro)</span><span class="value" id="r-fireball">—</span></div>
-        <div class="row"><span class="label">Queimaduras leves</span><span class="value" id="r-first">—</span></div>
-        <div class="row"><span class="label">Queimaduras 2º grau</span><span class="value" id="r-second">—</span></div>
-        <div class="row"><span class="label">Queimaduras 3º grau</span><span class="value" id="r-third">—</span></div>
-        <div class="row"><span class="label">Risco roupas pegarem fogo</span><span class="value" id="r-clothes">—</span></div>
-        <div class="row"><span class="label">Estimativa de mortes</span><span class="value" id="r-deaths">—</span></div>
-        <div class="row"><span class="label">Estimativa de feridos</span><span class="value" id="r-feridos">—</span></div>
+
+        <div class="section-title">Crater and impact</div>
+        <div class="rows">
+            <div class="row"><span class="label">Crater (transient diameter)</span><span class="value" id="r-diametroCratera">—</span></div>
+            <div class="row"><span class="label">Crater depth</span><span class="value" id="r-profundidadeCratera">—</span></div>
+            <div class="row"><span class="label">Impact energy</span><span class="value" id="r-energiaImpacto">—</span></div>
+            <div class="row"><span class="label">Energy (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
+            <div class="row"><span class="label">Energy (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
+            <div class="row"><span class="label">Fireball (diameter)</span><span class="value" id="r-fireball">—</span></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">People</div>
+        <div class="rows">
+            <div class="row"><span class="label">Clothes ignition risk <span class="swatch orange" title="Clothes ignition risk"></span></span><span class="value" id="r-clothes">—</span></div>
+            <div class="row"><span class="label">Third-degree burns <span class="swatch yellow" title="Third-degree zone"></span></span><span class="value" id="r-third">—</span></div>
+            <div class="row"><span class="label">Second-degree burns <span class="swatch yellow-soft" title="Second-degree zone"></span></span><span class="value" id="r-second">—</span></div>
+            <div class="row"><span class="label">First-degree burns</span><span class="value" id="r-first">—</span></div>
+            <div class="row"><span class="label">Estimated deaths</span><span class="value" id="r-deaths">—</span></div>
+            <div class="row"><span class="label">Estimated injured</span><span class="value" id="r-feridos">—</span></div>
+        </div>
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
+
+        function closeResults(){
+            const resultsPanel = document.getElementById('results');
+            if (resultsPanel) resultsPanel.style.display = 'none';
+        }
 
         function returnHome(){
             window.top.location.href = '/home';
@@ -355,7 +468,7 @@
         // Token de acesso do Cesium ion
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMGRkYjMwYy1lODg0LTQ3MTktOTBiNi02ZDI0YjRiNTcxNjIiLCJpZCI6MzQ3MjQ2LCJpYXQiOjE3NTk2MDg1NzN9.901R3lkV1aC6zsOj843KhI37YOCw7lOnqS8rHd4nVq8';
 
-        // --- PARÂMETROS DA CRATERA ---
+    // --- CRATER PARAMETERS ---
         let craterMajorRadius = 1500;
         let craterMinorRadius = 1500;
         let craterDepth = 400;
@@ -394,48 +507,48 @@
         // Estado atual do material
         let meteorMaterial = { key: 'stone', density: 2500 };
 
-        // Legendas
+    // Labels
         const labelAlpha = 0.9;
         const labelBrightness = 1;
 
         // Crater
-        const craterModelUri = "./crater_with_cone.glb";
+    const craterModelUri = "./crater_with_cone.glb";
 
-        // === FUNÇÕES DE ÁUDIO E EFEITOS VISUAIS ===
+    // === AUDIO AND VISUAL EFFECTS ===
 
-        // Função para tocar som de meteoro caindo
+    // Play meteor fall sound
         function playMeteorFallSound() {
             const audio = document.getElementById('meteorFallSound');
             try {
                 audio.currentTime = 0; // Reinicia o áudio
                 audio.volume = 0.7; // Volume moderado
                 audio.play().catch(error => {
-                    console.warn('Não foi possível tocar som do meteoro:', error);
+                    console.warn('Could not play meteor sound:', error);
                     // Fallback: criar som sintético com Web Audio API
                     generateSyntheticMeteorSound();
                 });
             } catch (error) {
-                console.warn('Erro ao tentar tocar áudio:', error);
+                console.warn('Error trying to play audio:', error);
             }
         }
 
-        // Função para tocar som de explosão
+    // Play explosion sound
         function playExplosionSound() {
             const audio = document.getElementById('explosionSound');
             try {
                 audio.currentTime = 0;
                 audio.volume = 0.8; // Volume mais alto para explosão
                 audio.play().catch(error => {
-                    console.warn('Não foi possível tocar som da explosão:', error);
+                    console.warn('Could not play explosion sound:', error);
                     // Fallback: criar som sintético
                     generateSyntheticExplosionSound();
                 });
             } catch (error) {
-                console.warn('Erro ao tentar tocar áudio de explosão:', error);
+                console.warn('Error trying to play explosion audio:', error);
             }
         }
 
-        // Função para mostrar efeito visual de impacto
+    // Show visual impact effect
         function showMeteorImpactEffect() {
             const overlay = document.getElementById('meteorImpactOverlay');
             overlay.style.display = 'block';
@@ -446,7 +559,7 @@
             }, 4000); // Aumentado para 4 segundos para coincidir com as animações
         }
 
-        // Fallback: gerar som sintético de meteoro usando Web Audio API
+    // Fallback: generate synthetic meteor sound using Web Audio API
         function generateSyntheticMeteorSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -456,7 +569,7 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
 
-                // Som de "whoosh" do meteoro
+                // Meteor whoosh sound
                 oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
                 oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 3);
 
@@ -470,7 +583,7 @@
             }
         }
 
-        // Fallback: gerar som sintético de explosão
+    // Fallback: generate synthetic explosion sound
         function generateSyntheticExplosionSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -480,7 +593,7 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
 
-                // Som grave de explosão
+                // Low explosion boom
                 oscillator.frequency.setValueAtTime(80, audioContext.currentTime);
                 oscillator.frequency.exponentialRampToValueAtTime(20, audioContext.currentTime + 2);
 
@@ -494,7 +607,7 @@
             }
         }
 
-        // === FIM DAS FUNÇÕES DE ÁUDIO E EFEITOS ===
+    // === END OF AUDIO AND VISUAL EFFECTS ===
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
@@ -528,52 +641,52 @@
                     roll: 0.0 }
                 });
 
-                // Move o botão de "Navigation Instructions" para o lado esquerdo, abaixo do painel de controles
-                (function moveNavigationHelpToLeft() {
-                    try {
-                        const navHelp = viewer?.navigationHelpButton?.container;
-                        if (!navHelp) return;
-                        const controlsEl = document.getElementById('controls');
-                        let topPx = 10;
-                        if (controlsEl) {
-                            const rect = controlsEl.getBoundingClientRect();
-                            topPx = Math.round(rect.top + rect.height + 10);
-                        }
-                        navHelp.style.position = 'fixed';
-                        navHelp.style.left = '10px';
-                        navHelp.style.right = 'auto';
-                        navHelp.style.top = `${topPx}px`;
-                        navHelp.style.zIndex = 2001;
-                        navHelp.style.overflow = 'visible';
-                        // leva o elemento para o body para posicionamento fixo consistente
-                        document.body.appendChild(navHelp);
+                // // Move o botão de "Navigation Instructions" para o lado esquerdo, abaixo do painel de controles
+                // (function moveNavigationHelpToLeft() {
+                //     try {
+                //         const navHelp = viewer?.navigationHelpButton?.container;
+                //         if (!navHelp) return;
+                //         const controlsEl = document.getElementById('controls');
+                //         let topPx = 10;
+                //         if (controlsEl) {
+                //             const rect = controlsEl.getBoundingClientRect();
+                //             topPx = Math.round(rect.top + rect.height + 10);
+                //         }
+                //         navHelp.style.position = 'fixed';
+                //         navHelp.style.left = '10px';
+                //         navHelp.style.right = 'auto';
+                //         navHelp.style.top = `${topPx}px`;
+                //         navHelp.style.zIndex = 2001;
+                //         navHelp.style.overflow = 'visible';
+                //         // leva o elemento para o body para posicionamento fixo consistente
+                //         document.body.appendChild(navHelp);
 
-                        // Garante que o painel de instruções abra para a direita quando o botão estiver à esquerda
-                        const adjustPanel = () => {
-                            try {
-                                const divs = navHelp.querySelectorAll('div');
-                                for (const d of divs) {
-                                    const cs = window.getComputedStyle(d);
-                                    // Heurística: o painel costuma ser absoluto e ancorado por right
-                                    if (cs.position === 'absolute' && (cs.right !== 'auto' || d.style.right)) {
-                                        d.style.right = 'auto';
-                                        d.style.left = '40px';
-                                        d.style.maxWidth = '280px';
-                                        d.style.zIndex = 2002;
-                                    }
-                                }
-                            } catch { }
-                        };
-                        // Ajusta ao abrir/fechar
-                        navHelp.addEventListener('click', () => setTimeout(adjustPanel, 0));
-                        // Ajuste inicial preventivo
-                        setTimeout(adjustPanel, 0);
-                    } catch (e) {
-                        console.warn('Não foi possível mover o botão de instruções de navegação:', e);
-                    }
-                })();
+                //         // Garante que o painel de instruções abra para a direita quando o botão estiver à esquerda
+                //         const adjustPanel = () => {
+                //             try {
+                //                 const divs = navHelp.querySelectorAll('div');
+                //                 for (const d of divs) {
+                //                     const cs = window.getComputedStyle(d);
+                //                     // Heurística: o painel costuma ser absoluto e ancorado por right
+                //                     if (cs.position === 'absolute' && (cs.right !== 'auto' || d.style.right)) {
+                //                         d.style.right = 'auto';
+                //                         d.style.left = '40px';
+                //                         d.style.maxWidth = '280px';
+                //                         d.style.zIndex = 2002;
+                //                     }
+                //                 }
+                //             } catch { }
+                //         };
+                //         // Ajusta ao abrir/fechar
+                //         navHelp.addEventListener('click', () => setTimeout(adjustPanel, 0));
+                //         // Ajuste inicial preventivo
+                //         setTimeout(adjustPanel, 0);
+                //     } catch (e) {
+                //         console.warn('Não foi possível mover o botão de instruções de navegação:', e);
+                //     }
+                // })();
 
-                // Adiciona handler de clique no mapa
+                // Add map click handler
                 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
                 handler.setInputAction(function (movement) {
                     const cartesian = viewer.scene.pickPosition(movement.position);
@@ -586,7 +699,7 @@
 
                         terrainHeight = height;
 
-                        console.log(`Alvo definido em: Lon ${longitude.toFixed(3)}, Lat ${latitude.toFixed(3)}, Altura: ${height.toFixed(2)} metros`);
+                        // console.log(`Target set at: Lon ${longitude.toFixed(3)}, Lat ${latitude.toFixed(3)}, Elevation: ${height.toFixed(2)} m`);
 
                         // Atualiza posição do alvo
                         region.longitude = longitude;
@@ -607,13 +720,13 @@
                             }
                         });
 
-                        // Habilita simulação e esconde dica após selecionar alvo
+                        // Enable simulation and hide hint after selecting target
                         const btn = document.getElementById('simulateBtn');
                         if (btn) btn.disabled = false;
                         const hint = document.getElementById('selectHint');
                         if (hint) hint.style.display = 'none';
 
-                        console.log('Alvo definido em:', longitude.toFixed(3), latitude.toFixed(3));
+                        // console.log('Target:', longitude.toFixed(3), latitude.toFixed(3));
                     }
                 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -661,14 +774,14 @@
                     angleOut.textContent = `${impactAngleDeg}°`;
                 });
 
-                const currentMaterialIndex = () => MATERIALS.findIndex(m => m.key === meteorMaterial.key);
+                // const currentMaterialIndex = () => MATERIALS.findIndex(m => m.key === meteorMaterial.key);
 
-                const stepMaterial = (dir) => {
-                    const idx = currentMaterialIndex();
-                    const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
-                    meteorMaterial = MATERIALS[nextIdx];
-                    syncUI();
-                };
+                // const stepMaterial = (dir) => {
+                //     const idx = currentMaterialIndex();
+                //     const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
+                //     meteorMaterial = MATERIALS[nextIdx];
+                //     syncUI();
+                // };
 
                 materialPrev.addEventListener('click', () => stepMaterial(-1));
                 materialNext.addEventListener('click', () => stepMaterial(1));
@@ -682,20 +795,11 @@
 
         // Função para simular o impacto do meteoro
         async function simulateImpact() {
-            // Bloqueia simulação sem alvo selecionado
+            // Block simulation without selected target
             if (region.longitude == null || region.latitude == null) {
-                alert('Clique no mapa para escolher o alvo primeiro.');
+                alert('Click on the map to choose the target first.');
                 return;
             }
-            // Exemplo: log dos parâmetros selecionados (para debugging e futuros cálculos)
-            //console.log('[Parâmetros]', {
-            //    region : region,
-            //    diameter_m: meteorDiameterM,
-            //    velocity_kms: meteorVelocityKms,
-            //    angle_deg: impactAngleDeg,
-            //    material: meteorMaterial
-            //});
-
             const parameters = {
                 diameter: meteorDiameterM,
                 velocity: meteorVelocityKms,
@@ -712,24 +816,24 @@
             craterDepth = results.profundidadeCrateraTrasiente;
             // Atualiza painel de resultados
             updateResultsPanel(results);
-            // Mostra o painel de resultados após a primeira simulação
+            // Show the results panel after the first simulation
             const resultsPanel = document.getElementById('results');
             if (resultsPanel) resultsPanel.style.display = 'block';
 
             resetSimulation();
 
-            // === EFEITOS SONOROS E VISUAIS DO METEORO ===
-            // Toca som do meteoro caindo e mostra efeito visual
+            // === METEOR SFX/VFX ===
+            // Play meteor fall sound and show visual effect
             playMeteorFallSound();
             showMeteorImpactEffect();
 
             //createMeteor();
             setTimeout(() => {
-                // Toca som da explosão no momento do impacto
+                // Play explosion sound at impact time
                 playExplosionSound();
                 createExplosion(results.diameterFireball);
                 removeMeteor();
-            }, 3000);
+            }, 500);
             setTimeout(() => {
                 const impactPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude);
                 //createRealCrater(impactPosition, craterMajorRadius, craterMinorRadius, craterDepth, craterRotation);
@@ -737,12 +841,12 @@
                 createCraterWithTerrain(impactPosition, craterMajorRadius, craterDepth);
 
                 removeExplosion();
-            }, 4000);
+            }, 1000);
             setTimeout(() => {
                 console.log(results);
-                // Chamada corrigida: thirdDegreeBurn, secondDegreeBurn, firstDegreeBurn
+                // Corrected call order: thirdDegreeBurn, secondDegreeBurn, firstDegreeBurn
                 createDestructionZones(results.thirdDegreeBurn, results.secondDegreeBurn, results.firstDegreeBurn);
-            }, 6000);
+            }, 1500);
         }
 
         // Atualiza o painel de resultados à direita
@@ -808,7 +912,7 @@
         function toggleUnits() {
             displayUnit = displayUnit === 'metric' ? 'imperial' : 'metric';
             const btn = document.getElementById('unitToggle');
-            if (btn) btn.textContent = displayUnit === 'metric' ? 'mi' : 'km';
+            if (btn) btn.textContent = displayUnit === 'metric' ? 'Miles' : 'Kilometers';
             if (lastResults) updateResultsPanel(lastResults);
         }
 
@@ -958,9 +1062,9 @@
         function createExplosion(diameterFireball) { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 1e3), ellipse: { semiMinorAxis: diameterFireball, semiMajorAxis: diameterFireball, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * 0.5 + .5; return Cesium.Color.ORANGE.withAlpha(i * 0.8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED } }) }
         function removeExplosion() { if (explosionEntity) { viewer.entities.remove(explosionEntity); explosionEntity = null; } }
         function createDestructionZones(thirdDegreeBurnRadius, secondDegreeBurnRadius, firstDegreeBurnRadius) {
-            // Zona Vermelha: Queimaduras de 3º grau
+            // Red zone: third-degree burns
             const redZone = viewer.entities.add({
-                name: "Queimaduras de 3º Grau",
+                name: "Third-degree burns",
                 position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
                 ellipse: {
                     semiMinorAxis: thirdDegreeBurnRadius,
@@ -973,9 +1077,9 @@
                 }
             });
 
-            // Zona Laranja: Queimaduras de 2º grau
+            // Orange zone: second-degree burns
             const orangeZone = viewer.entities.add({
-                name: "Queimaduras de 2º Grau",
+                name: "Second-degree burns",
                 position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
                 ellipse: {
                     semiMinorAxis: secondDegreeBurnRadius,
@@ -988,9 +1092,9 @@
                 }
             });
 
-            // Zona Amarela: Queimaduras de 1º grau
+            // Yellow zone: first-degree burns
             const yellowZone = viewer.entities.add({
-                name: "Queimaduras de 1º Grau",
+                name: "First-degree burns",
                 position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
                 ellipse: {
                     semiMinorAxis: firstDegreeBurnRadius,
@@ -1005,7 +1109,7 @@
 
             impactZones.push(redZone, orangeZone, yellowZone);
 
-            // Foca a câmera para mostrar a maior zona de destruição
+            // Focus the camera to show the largest destruction zone
             const maxRadius = Math.max(firstDegreeBurnRadius, secondDegreeBurnRadius, thirdDegreeBurnRadius);
             const cameraAltitude = maxRadius * 4; // Ajuste este multiplicador para o zoom desejado
 
