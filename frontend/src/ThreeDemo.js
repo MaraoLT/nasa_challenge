@@ -6,11 +6,13 @@ import { CameraController } from './controller/CameraController';
 import { Sun } from './render/Sun';
 import { Meteor } from './render/Meteor';
 import { ThreeInitializer } from './utils/ThreeInitializer';
+import Stats from 'stats.js';
 import musicManager from './utils/MusicManager';
 import audioContextManager from './utils/AudioContextManager';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
+  const statsContainerRef = useRef(null);
 
   // Get preloaded assets and preprocessed objects from global window object
   const preloadedAssets = window.preloadedAssets || {};
@@ -18,6 +20,13 @@ function ThreeDemo() {
   const assetsPreloaded = sessionStorage.getItem('assetsPreloaded') === 'true';
 
   useEffect(() => {
+    // Stats initialization
+    const stats = new Stats();
+    stats.showPanel(0);
+    if (statsContainerRef.current) {
+      statsContainerRef.current.appendChild(stats.dom);
+    }
+
     if (!mountRef.current) return;
 
     console.log('ThreeDemo starting...');
@@ -67,6 +76,7 @@ function ThreeDemo() {
       let lastTimestamp = performance.now();
 
       const animate = (currentTimestamp) => {
+        stats.begin();
         const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
         lastTimestamp = currentTimestamp;
         const absoluteTime = (currentTimestamp - startTimestamp) / 1000;
@@ -93,6 +103,7 @@ function ThreeDemo() {
         }
 
         renderer.render(scene, camera);
+        stats.end();
         animationId = requestAnimationFrame(animate);
       };
 
@@ -158,6 +169,10 @@ function ThreeDemo() {
         if (currentMeteor) {
           currentMeteor.dispose();
           cameraController.setCurrentMeteor(null);
+        }
+        // Remove stats panel from container
+        if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
+          statsContainerRef.current.removeChild(stats.dom);
         }
         // Don't dispose of background scene objects here - they're managed by ThreeInitializer
         if (mountRef.current) mountRef.current.innerHTML = '';
@@ -245,6 +260,7 @@ function ThreeDemo() {
       let lastTimestamp = startTimestamp;
 
       const animate = (currentTimestamp) => {
+        stats.begin();
         const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
         lastTimestamp = currentTimestamp;
         const absoluteTime = (currentTimestamp - startTimestamp) / 1000;
@@ -266,6 +282,7 @@ function ThreeDemo() {
         }
 
         renderer.render(scene, camera);
+        stats.end();
         animationId = requestAnimationFrame(animate);
       };
 
@@ -334,6 +351,10 @@ function ThreeDemo() {
           cameraController.setCurrentMeteor(null);
         }
         renderer.dispose();
+        // Remove stats panel from container
+        if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
+          statsContainerRef.current.removeChild(stats.dom);
+        }
         if (mountRef.current) mountRef.current.innerHTML = '';
       };
     }
@@ -342,10 +363,14 @@ function ThreeDemo() {
     return () => {
       // Stop music when leaving ThreeDemo
       musicManager.fadeOut(500);
-      
+
       if (window.threeCleanup) {
         window.threeCleanup();
         window.threeCleanup = null;
+      }
+      // Remove stats panel from container (fallback cleanup)
+      if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
+        statsContainerRef.current.removeChild(stats.dom);
       }
     };
   }, []);
@@ -384,6 +409,7 @@ function ThreeDemo() {
         }}>← Back to Home</a>
       </div>
       <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
+      <div ref={statsContainerRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 200 }} />
     </div>
   );
 }
