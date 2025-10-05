@@ -2,6 +2,7 @@ import React from 'react';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
 import { Meteor } from '../render/Meteor';
+import { Comet } from '../render/Comet';
 import '../styles/spacebodies.css';
 
 export default function SpaceBodiesSlides() {
@@ -83,23 +84,22 @@ export default function SpaceBodiesSlides() {
     dir.position.set(2, 2, 2);
     scene.add(dir);
 
-    // Create three Meteor instances with different sizes
-    const createAt = (r) => new Meteor(scene, r, 32, new THREE.Vector3(0, 0, 0), {}, {});
-    const asteroid = createAt(0.75);
-    const comet = createAt(0.55);
-    const meteor = createAt(0.25);
+    // Create instances with different classes for proper representation
+    const asteroid = new Meteor(scene, 0.75, 32, new THREE.Vector3(0, 0, 0), {}, {});
+    const comet = new Comet(scene, 0.25, 32, new THREE.Vector3(0, 0, 0), {}, {});
+    const meteor = new Meteor(scene, 0.25, 32, new THREE.Vector3(0, 0, 0), {}, {});
 
-    // Add a simple "tail" to the comet for visual distinction
-    const tailGeom = new THREE.ConeGeometry(0.12, 0.9, 16);
-    const tailMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.6 });
-    const tail = new THREE.Mesh(tailGeom, tailMat);
-    tail.rotation.z = Math.PI; // point left
-    tail.position.x = -0.6;
-    comet.mesh.add(tail);
+    // Set sun position for proper comet tail direction (pointing left for presentation)
+    comet.setSunPosition(new THREE.Vector3(2, 0, 0)); // Sun to the right, tail points left
 
     meteorsRef.current = [asteroid, comet, meteor];
-    // Set visibility
-    meteorsRef.current.forEach((m, i) => { if (m.mesh) m.mesh.visible = (i === index); });
+    // Set initial visibility for all components
+    meteorsRef.current.forEach((m, i) => { 
+      if (m.mesh) m.mesh.visible = (i === index);
+      // Handle comet components
+      if (m.tail) m.tail.visible = (i === index);
+      if (m.coma) m.coma.visible = (i === index);
+    });
 
     const resize = () => {
       const w = mount.clientWidth;
@@ -114,8 +114,22 @@ export default function SpaceBodiesSlides() {
 
     const animate = () => {
       rafRef.current = requestAnimationFrame(animate);
-      // Rotate the active meteor
-      meteorsRef.current.forEach((m, i) => { if (i === index) m.rotate(0.01); });
+      // Rotate only the active object - get current index from state
+      const currentIndex = meteorsRef.current.findIndex((m, i) => {
+        return m.mesh && m.mesh.visible;
+      });
+      
+      meteorsRef.current.forEach((m, i) => { 
+        if (m.mesh && m.mesh.visible) { // Check if this object is currently visible
+          if (i === 1) { // Comet (index 1) - rotate primarily on Y-axis
+            m.mesh.rotation.y += 0.015; // Primary rotation on Y-axis
+            m.mesh.rotation.x += 0.002; // Minimal wobble on X
+            m.mesh.rotation.z += 0.001; // Minimal wobble on Z
+          } else {
+            m.rotate(0.01); // Normal rotation for asteroid and meteor
+          }
+        }
+      });
       renderer.render(scene, camera);
     };
     animate();
@@ -135,7 +149,19 @@ export default function SpaceBodiesSlides() {
 
   // Switch visible object when index changes
   React.useEffect(() => {
-    meteorsRef.current.forEach((m, i) => { if (m.mesh) m.mesh.visible = (i === index); });
+    meteorsRef.current.forEach((m, i) => { 
+      // Show/hide main mesh
+      if (m.mesh) {
+        m.mesh.visible = (i === index);
+      }
+      // Show/hide comet components (tail and coma)
+      if (m.tail) {
+        m.tail.visible = (i === index);
+      }
+      if (m.coma) {
+        m.coma.visible = (i === index);
+      }
+    });
   }, [index]);
 
   const exitAnd = (action) => {
