@@ -1,25 +1,6 @@
 import * as THREE from 'three';
 import { Orbit } from './Orbit.js';
 
-function getAstralSVGOverlay() {
-    let svgOverlay = document.getElementById('astral-svg-overlay');
-    if (!svgOverlay) {
-        svgOverlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svgOverlay.setAttribute('id', 'astral-svg-overlay');
-        svgOverlay.style.position = 'absolute';
-        svgOverlay.style.top = '0';
-        svgOverlay.style.left = '0';
-        svgOverlay.style.width = '100%';
-        svgOverlay.style.height = '100%';
-        svgOverlay.style.pointerEvents = 'none';
-        svgOverlay.style.zIndex = '999';
-        svgOverlay.setAttribute('width', '100%');
-        svgOverlay.setAttribute('height', '100%');
-        document.body.appendChild(svgOverlay);
-    }
-    return svgOverlay;
-}
-
 export class AstralObject {
     constructor(scene, radius, segments, initialPosition) {
         this.scene = scene;
@@ -32,19 +13,20 @@ export class AstralObject {
 
         this.tracePoints = [];
         this.traceMaxPoints = 100;
-        this.svgPath = null;
-        this.traceRefreshRate = 20;
+        this.traceLine = null;
+        this.traceRefreshRate = 2;
         this.updates = 0;
-        this.createSVGTrace();
     }
 
-    createSVGTrace() {
-        const svgOverlay = getAstralSVGOverlay();
-        this.svgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        this.svgPath.setAttribute('stroke', 'white');
-        this.svgPath.setAttribute('stroke-width', '1.5');
-        this.svgPath.setAttribute('fill', 'none');
-        svgOverlay.appendChild(this.svgPath);
+    createTraceLine() {
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(this.traceMaxPoints * 3);
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setDrawRange(0, 0);
+
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+        this.traceLine = new THREE.Line(geometry, material);
+        this.traceLine.frustumCulled = false;
     }
 
     setPosition(x, y, z) {
@@ -64,28 +46,13 @@ export class AstralObject {
     startOrbit(orbitParams) {
         this.isOrbiting = true;
         this.orbit = new Orbit(orbitParams);
+        if (!this.traceLine) {
+            this.createTraceLine();
+        }
     }
 
     stopOrbit() {
         this.isOrbiting = false;
-    }
-
-    updateSVGTrace(camera, renderer) {
-        if (!this.svgPath || this.tracePoints.length === 0 || !camera || !renderer) return;
-
-        const width = renderer.domElement.clientWidth;
-        const height = renderer.domElement.clientHeight;
-
-        const pathData = this.tracePoints.map(point => {
-            const vector = point.clone().project(camera);
-            const x = (vector.x * 0.5 + 0.5) * width;
-            const y = (-vector.y * 0.5 + 0.5) * height;
-            return `${x},${y}`;
-        });
-
-        if (pathData.length > 0) {
-            this.svgPath.setAttribute('d', `M ${pathData.join(' L ')}`);
-        }
     }
 
     updateTrace() {
@@ -94,9 +61,20 @@ export class AstralObject {
         if (this.tracePoints.length > this.traceMaxPoints) {
             this.tracePoints.shift();
         }
+        if (this.traceLine) {
+            const positions = this.traceLine.geometry.attributes.position.array;
+            for (let i = 0; i < this.tracePoints.length; i++) {
+                const p = this.tracePoints[i];
+                positions[i * 3] = p.x;
+                positions[i * 3 + 1] = p.y;
+                positions[i * 3 + 2] = p.z;
+            }
+            this.traceLine.geometry.setDrawRange(0, this.tracePoints.length);
+            this.traceLine.geometry.attributes.position.needsUpdate = true;
+        }
     }
 
-    updateOrbit(time, camera, renderer) {
+    updateOrbit(time) {
         this.updates++;
         if (this.updates >= this.traceRefreshRate) {
             this.updates = 0;
@@ -106,7 +84,30 @@ export class AstralObject {
         this.setPosition(orbitPosition[0], orbitPosition[2], orbitPosition[1]);
         if (this.updates === 0) {
             this.updateTrace();
-            this.updateSVGTrace(camera, renderer);
+        }
+    }
+
+    addToScene() {
+        if (this.mesh) {
+            this.scene.add(this.mesh);
+        }
+        if (this.atmosphere) {
+            this.scene.add(this.atmosphere);
+        }
+        if (this.traceLine) {
+            this.scene.add(this.traceLine);
+        }
+    }
+
+    removeFromScene() {
+        if (this.mesh) {
+            this.scene.remove(this.mesh);
+        }
+        if (this.atmosphere) {
+            this.scene.remove(this.atmosphere);
+        }
+        if (this.traceLine) {
+            this.scene.remove(this.traceLine);
         }
     }
 
@@ -120,12 +121,9 @@ export class AstralObject {
             this.atmosphere.geometry.dispose();
             this.atmosphere.material.dispose();
         }
-        if (this.svgPath) {
-            this.svgPath.remove();
+        if (this.traceLine) {
+            this.traceLine.geometry.dispose();
+            this.traceLine.material.dispose();
         }
     }
-
-    // Placeholder for add/remove to scene, to be implemented in subclasses
-    addToScene() {}
-    removeFromScene() {}
 }

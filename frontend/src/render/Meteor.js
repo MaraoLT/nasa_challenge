@@ -168,9 +168,9 @@ export class Meteor extends AstralObject {
     }
     
     // Update orbit position
-    updateOrbit(time, camera, renderer) {
+    updateOrbit(time) {
         if (!this.isOrbiting || !this.orbit) return;
-        super.updateOrbit(time, camera, renderer);
+        super.updateOrbit(time);
     }
     
     // Set orbit parameters (legacy method for compatibility)
