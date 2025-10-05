@@ -464,47 +464,103 @@
             // Check if we came from a specific page via referrer or URL parameter
             const urlParams = new URLSearchParams(window.location.search);
             const fromParam = urlParams.get('from');
+            
+            // Also check parent window URL if we're in an iframe
+            let parentFromParam = null;
+            try {
+                if (window.parent && window.parent !== window) {
+                    const parentUrlParams = new URLSearchParams(window.parent.location.search);
+                    parentFromParam = parentUrlParams.get('from');
+                }
+            } catch (e) {
+                // Cross-origin iframe access denied, ignore
+            }
+            
             const referrer = document.referrer;
             
             let returnUrl = '/more-data'; // Default fallback
             
-            // Priority 1: Check URL parameter
+            console.log('Navigation debug:', {
+                fromParam,
+                parentFromParam,
+                referrer,
+                currentUrl: window.location.href,
+                parentUrl: window.parent?.location?.href
+            });
+            
+            // Priority 1: Check URL parameter (current window)
             if (fromParam === 'home') {
                 returnUrl = '/home';
             } else if (fromParam === 'more-data') {
                 returnUrl = '/more-data';
             }
-            // Priority 2: Check referrer if no URL parameter
+            // Priority 2: Check parent window URL parameter (iframe case)
+            else if (parentFromParam === 'home') {
+                returnUrl = '/home';
+            } else if (parentFromParam === 'more-data') {
+                returnUrl = '/more-data';
+            }
+            // Priority 3: Check referrer if no URL parameter
             else if (referrer.includes('/home')) {
                 returnUrl = '/home';
             } else if (referrer.includes('/more-data')) {
                 returnUrl = '/more-data';
             }
             
-            console.log(`Returning to: ${returnUrl} (from: ${fromParam || 'referrer'}, referrer: ${referrer})`);
+            console.log(`Returning to: ${returnUrl} (from: ${fromParam || parentFromParam || 'referrer'}, referrer: ${referrer})`);
             
-            window.top.location.href = returnUrl;
-            window.location.replace(returnUrl);
+            // Try to navigate parent window if we're in iframe
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.location.href = returnUrl;
+                } else {
+                    window.location.href = returnUrl;
+                }
+            } catch (e) {
+                // Fallback to current window navigation
+                window.location.href = returnUrl;
+            }
         }
 
         function nextSession(){
             // Check where we came from to determine next logical page
             const urlParams = new URLSearchParams(window.location.search);
             const fromParam = urlParams.get('from');
+            
+            // Also check parent window URL if we're in an iframe
+            let parentFromParam = null;
+            try {
+                if (window.parent && window.parent !== window) {
+                    const parentUrlParams = new URLSearchParams(window.parent.location.search);
+                    parentFromParam = parentUrlParams.get('from');
+                }
+            } catch (e) {
+                // Cross-origin iframe access denied, ignore
+            }
+            
             const referrer = document.referrer;
             
             let nextUrl = '/blueprint'; // Default
             
             // If we came from home, go to blueprint
             // If we came from more-data, go to credits (end of flow)
-            if (fromParam === 'more-data' || referrer.includes('/more-data')) {
+            if (fromParam === 'more-data' || parentFromParam === 'more-data' || referrer.includes('/more-data')) {
                 nextUrl = '/credits';
             }
             
-            console.log(`Going to next: ${nextUrl} (from: ${fromParam || 'referrer'})`);
+            console.log(`Going to next: ${nextUrl} (from: ${fromParam || parentFromParam || 'referrer'})`);
             
-            window.top.location.href = nextUrl;
-            window.location.replace(nextUrl);
+            // Try to navigate parent window if we're in iframe
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.location.href = nextUrl;
+                } else {
+                    window.location.href = nextUrl;
+                }
+            } catch (e) {
+                // Fallback to current window navigation
+                window.location.href = nextUrl;
+            }
         }
 
         // Token de acesso do Cesium ion
