@@ -34,7 +34,7 @@
         /* Painel de resultados à direita */
         #results {
             position: absolute;
-            top: 10px; /* um pouco mais para baixo */
+            top: 20px; /* um pouco mais para baixo */
             right: 10px;
             background: rgba(42, 42, 42, 0.9);
             color: white;
@@ -51,25 +51,6 @@
         #results .row { display: flex; justify-content: space-between; gap: 10px; margin: 6px 0; }
         #results .label { color: #ddd; font-size: 12px; }
         #results .value { font-weight: 700; font-size: 13px; background: rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 4px; }
-
-        /* Cabeçalho do painel de resultados com botão de unidades */
-        #results .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        #unitToggle {
-            background: #2b2b2b;
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        #unitToggle:hover { filter: brightness(1.15); }
 
         #controls button {
             background: #ff4444;
@@ -210,10 +191,7 @@
 
     <!-- Painel de resultados à direita -->
     <div id="results" aria-live="polite">
-        <div class="header">
-            <h3 style="margin: 0">Resultados</h3>
-            <button id="unitToggle" title="Alternar visualização: km/m ↔ mi">mi</button>
-        </div>
+        <h3>Resultados</h3>
         <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
         <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
         <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
@@ -248,12 +226,7 @@
         let craterCapClippingPlanes; // Para gerenciar os ClippingPlanes da calota
 
         let targetMarker = null; // Marcador do alvo selecionado
-    let craterModel = null; // Modelo 3D da cratera
-    let terrainHeight = 0; // Altura do terreno no alvo (atualizada no clique)
-    // Unidade de exibição (visual apenas): 'metric' (m/km) ou 'imperial' (mi)
-    let displayUnit = 'metric';
-    // Cache do último resultado para re-render quando alternar unidades
-    let lastResults = null;
+        let craterModel = null; // Modelo 3D da cratera
 
         // --- VARIÁVEIS DE CONTROLE DO USUÁRIO (para cálculos posteriores) ---
         let meteorDiameterM = 50;      // 1 m a 1500 m (1.5 km)
@@ -276,7 +249,7 @@
         const labelBrightness = 1;
 
         // Crater
-        const craterModelUri = "./crater_with_cone.glb";
+        const craterModelUri = "./crater_with_cone_fixed.glb";
 
         // Aguarda o DOM estar pronto
         document.addEventListener('DOMContentLoaded', async function () {
@@ -309,51 +282,6 @@
                     pitch: Cesium.Math.toRadians(-90.0),
                     roll: 0.0 }
                 });
-
-                // Move o botão de "Navigation Instructions" para o lado esquerdo, abaixo do painel de controles
-                (function moveNavigationHelpToLeft() {
-                    try {
-                        const navHelp = viewer?.navigationHelpButton?.container;
-                        if (!navHelp) return;
-                        const controlsEl = document.getElementById('controls');
-                        let topPx = 10;
-                        if (controlsEl) {
-                            const rect = controlsEl.getBoundingClientRect();
-                            topPx = Math.round(rect.top + rect.height + 10);
-                        }
-                        navHelp.style.position = 'fixed';
-                        navHelp.style.left = '10px';
-                        navHelp.style.right = 'auto';
-                        navHelp.style.top = `${topPx}px`;
-                        navHelp.style.zIndex = 2001;
-                        navHelp.style.overflow = 'visible';
-                        // leva o elemento para o body para posicionamento fixo consistente
-                        document.body.appendChild(navHelp);
-
-                        // Garante que o painel de instruções abra para a direita quando o botão estiver à esquerda
-                        const adjustPanel = () => {
-                            try {
-                                const divs = navHelp.querySelectorAll('div');
-                                for (const d of divs) {
-                                    const cs = window.getComputedStyle(d);
-                                    // Heurística: o painel costuma ser absoluto e ancorado por right
-                                    if (cs.position === 'absolute' && (cs.right !== 'auto' || d.style.right)) {
-                                        d.style.right = 'auto';
-                                        d.style.left = '40px';
-                                        d.style.maxWidth = '280px';
-                                        d.style.zIndex = 2002;
-                                    }
-                                }
-                            } catch {}
-                        };
-                        // Ajusta ao abrir/fechar
-                        navHelp.addEventListener('click', () => setTimeout(adjustPanel, 0));
-                        // Ajuste inicial preventivo
-                        setTimeout(adjustPanel, 0);
-                    } catch (e) {
-                        console.warn('Não foi possível mover o botão de instruções de navegação:', e);
-                    }
-                })();
 
                 // Adiciona handler de clique no mapa
                 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -455,10 +383,6 @@
                 materialPrev.addEventListener('click', () => stepMaterial(-1));
                 materialNext.addEventListener('click', () => stepMaterial(1));
 
-                // Liga o botão de alternância de unidades do painel de resultados
-                const unitToggleBtn = document.getElementById('unitToggle');
-                if (unitToggleBtn) unitToggleBtn.addEventListener('click', toggleUnits);
-
             } catch (error) { console.error('Erro ao inicializar simulador:', error); }
         });
 
@@ -520,8 +444,6 @@
 
         // Atualiza o painel de resultados à direita
         function updateResultsPanel(res) {
-            // guarda último resultado para alternância de unidades
-            lastResults = res;
             const isNum = (v) => Number.isFinite(v);
             const byId = (id) => document.getElementById(id);
             const setText = (id, text) => {
@@ -533,14 +455,9 @@
                 }
                 el.textContent = text;
             };
-            const fmtDistance = (m) => {
+
+            const fmtMeters = (m) => {
                 if (!isNum(m)) return '—';
-                if (displayUnit === 'imperial') {
-                    const mi = m / 1609.344; // metros -> milhas
-                    if (Math.abs(mi) >= 1) return `${mi.toFixed(2)} mi`;
-                    return `${mi.toFixed(3)} mi`;
-                }
-                // métrico
                 if (Math.abs(m) >= 1000) return `${(m/1000).toFixed(2)} km`;
                 return `${m} m`;
             };
@@ -563,26 +480,18 @@
                 return n.toLocaleString('pt-BR');
             };
 
-            setText('r-diametroCratera', fmtDistance(res.diametroCrateraTransiente));
-            setText('r-profundidadeCratera', fmtDistance(res.profundidadeCrateraTrasiente));
+            setText('r-diametroCratera', fmtMeters(res.diametroCrateraTransiente));
+            setText('r-profundidadeCratera', fmtMeters(res.profundidadeCrateraTrasiente));
             setText('r-energiaImpacto', fmtEnergyJ(res.energiaDoImpacto));
             setText('r-energiaTNT', `${fmtInt(res.energiaDoImpactoTNT)} t TNT`);
             setText('r-energiaMTNT', `${fmtInt(res.energiaDoImpactoMTNT)} Mt TNT`);
-            setText('r-fireball', fmtDistance(res.diameterFireball));
-            setText('r-first', fmtDistance(res.firstDegreeBurn));
-            setText('r-second', fmtDistance(res.secondDegreeBurn));
-            setText('r-third', fmtDistance(res.thirdDegreeBurn));
-            setText('r-clothes', fmtDistance(res.clothesBurn));
+            setText('r-fireball', fmtMeters(res.diameterFireball));
+            setText('r-first', fmtMeters(res.firstDegreeBurn));
+            setText('r-second', fmtMeters(res.secondDegreeBurn));
+            setText('r-third', fmtMeters(res.thirdDegreeBurn));
+            setText('r-clothes', fmtMeters(res.clothesBurn));
             setText('r-deaths', fmtInt(res.deaths));
             setText('r-feridos', fmtInt(res.feridos));
-        }
-
-        // Alternância visual de unidades (não altera nenhum cálculo)
-        function toggleUnits() {
-            displayUnit = displayUnit === 'metric' ? 'imperial' : 'metric';
-            const btn = document.getElementById('unitToggle');
-            if (btn) btn.textContent = displayUnit === 'metric' ? 'mi' : 'km';
-            if (lastResults) updateResultsPanel(lastResults);
         }
 
         // Função para criar cratera
@@ -642,7 +551,7 @@
             const centeredPosition = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
-                terrainHeight - (depth * 6.7)
+                terrainHeight - (depth * 8.9)
             );
 
             // Escala proporcional ao raio da cratera
@@ -654,7 +563,7 @@
                     uri: craterModelUri,
                     scale: craterScale,
                     minimumPixelSize: 64,
-                    maximumScale: craterScale,
+                    maximumScale: craterScale * 2,
                     color: Cesium.Color.GRAY
                 }
             });

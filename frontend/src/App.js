@@ -9,6 +9,10 @@ import BlueprintPage from './components/BlueprintPage';
 import SpaceBodiesSlides from './components/SpaceBodiesSlides';
 import MoreData from './components/MoreData';
 import WarningScreen from './components/WarningScreen';
+import MeteorImpactSimulator from './components/MeteorImpactSimulator';
+import Credits from './components/Credits';
+import IntroSlide from './components/IntroSlide';
+import DraggableCards from './components/DraggableCards';
 
 export default function App() {
   return (
@@ -21,8 +25,12 @@ export default function App() {
         <Route path="/Page1" element={<Page1 />} />
         <Route path="/blueprint" element={<BlueprintPage />} />
         <Route path="/space-bodies" element={<SpaceBodiesSlides />} />
-  <Route path="/more-data" element={<MoreData />} />
-    <Route path="/warning" element={<WarningScreen />} />
+        <Route path="/more-data" element={<MoreData />} />
+        <Route path="/warning" element={<WarningScreen />} />
+        <Route path="/credits" element={<Credits />} />
+        <Route path="/intro" element={<IntroSlide />} />
+        <Route path="/cards" element={<DraggableCards />} />
+        <Route path="/meteor-impact-simulator" element={<MeteorImpactSimulator />}/>
       </Routes>
     </BrowserRouter>
   );

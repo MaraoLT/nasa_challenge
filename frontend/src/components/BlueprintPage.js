@@ -132,7 +132,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
   };
   const onNext = () => {
     if (animating) return;
-    if (index === SUBPAGES.length - 1) return navigate('/ThreeDemo');
+    if (index === SUBPAGES.length - 1) return navigate('/home');
     const nextIdx = Math.min(SUBPAGES.length - 1, index + 1);
     // Prepare base with next content and slide current out to reveal it
     setBaseIndex(nextIdx);

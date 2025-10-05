@@ -259,6 +259,7 @@ export class CameraController {
     
     // Set current meteor for locking (called when meteor is created/destroyed)
     setCurrentMeteor(meteorInstance) {
+        console.log('Current meteor set:', meteorInstance);
         this.currentMeteor = meteorInstance;
     }
     

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Earth } from './render/Earth';
 import { Galaxy } from './render/Galaxy';
@@ -9,18 +9,103 @@ import { ThreeInitializer } from './utils/ThreeInitializer';
 import Stats from 'stats.js';
 import musicManager from './utils/MusicManager';
 import audioContextManager from './utils/AudioContextManager';
+import { createOrbitFromJPLData, parseOrbitFile} from './utils/NasaJsonParser.js';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
   const statsContainerRef = useRef(null);
+  const meteorsListRef = useRef([]); // Use ref for meteors list to access in animation loops
 
   // Get preloaded assets and preprocessed objects from global window object
   const preloadedAssets = window.preloadedAssets || {};
   const preprocessedObjects = window.preprocessedObjects || {};
   const assetsPreloaded = sessionStorage.getItem('assetsPreloaded') === 'true';
 
+  const [meteorsList, setMeteorsList] = useState([]);
+  const [asteroidOrbits, setAsteroidOrbits] = useState([]);
+  const [sceneReady, setSceneReady] = useState(false);
+  const [currentScene, setCurrentScene] = useState(null);
+  const [sunInstance, setSunInstance] = useState(null);
+
+  // Function to create meteors from asteroid orbits
+  const createMeteorsFromOrbits = (orbits, scene, sun, assets, preprocessed) => {
+    if (!orbits.length || !scene || !sun) return [];
+
+    console.log(`Creating ${orbits.length} meteors from asteroid orbits`);
+    const meteors = [];
+
+    orbits.forEach((orbitParams, index) => {
+      try {
+        // Calculate initial position based on orbit parameters
+        const position = new THREE.Vector3(
+          orbitParams.semiMajorAxis * Math.cos(orbitParams.omega),
+          0,
+          orbitParams.semiMajorAxis * Math.sin(orbitParams.omega)
+        );
+
+        const meteor = new Meteor(
+          scene,
+          0.05 + Math.random() * 0.1, // Random size between 0.05 and 0.15
+          32,
+          position,
+          assets,
+          preprocessed
+        );
+
+        // Start the meteor's orbit
+        meteor.startOrbit(sun.getPosition(), 0.001 + Math.random() * 0.002);
+        meteors.push(meteor);
+
+        if (index < 5) { // Log first 5 for debugging
+          console.log(`Created meteor ${index + 1}: ${orbitParams.name}`);
+        }
+      } catch (error) {
+        console.error(`Failed to create meteor ${index + 1}:`, error);
+      }
+    });
+
+    console.log(`Successfully created ${meteors.length} meteors`);
+    return meteors;
+  };
+
+  // Effect to create meteors when we have both orbits and scene ready
   useEffect(() => {
-    // Stats initialization
+    if (asteroidOrbits.length > 0 && sceneReady && currentScene && sunInstance) {
+      console.log('Creating meteors: orbits ready and scene ready');
+      const meteors = createMeteorsFromOrbits(
+        asteroidOrbits,
+        currentScene,
+        sunInstance,
+        preloadedAssets,
+        preprocessedObjects
+      );
+      setMeteorsList(meteors);
+      meteorsListRef.current = meteors; // Update ref for animation loops
+    }
+  }, [asteroidOrbits, sceneReady, currentScene, sunInstance]);
+
+  useEffect(() => {
+    // Load Near-Earth.json using fetch
+    fetch('/Near-Earth.json')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Loaded Near-Earth.json data:', data.length, 'asteroids');
+        const AsteroidOrbits = parseOrbitFile(data);
+        setAsteroidOrbits(AsteroidOrbits);
+      })
+      .catch(err => {
+        console.error('Failed to load Near-Earth.json:', err);
+        setAsteroidOrbits([]);
+      });
+
+    console.log("ThreeDemo useEffect running...");
+    // let data = require('./Near-Earth.json');
+    // console.log("data read");
+    // let AsteroidOrbits = parseOrbitFile(data);
+    // AsteroidOrbits is an array of orbit parameter objects
+    // let meteorsList = [];
+
+
     const stats = new Stats();
     stats.showPanel(0);
     if (statsContainerRef.current) {
@@ -63,7 +148,12 @@ function ThreeDemo() {
       mountRef.current.innerHTML = '';
 
       // Take ownership of the background scene
-      const { scene, camera, renderer, sunInstance, earthInstance, galaxy, cameraController, ambientLight, startTimestamp } = backgroundScene;
+      const { scene, camera, renderer, sunInstance: sun, earthInstance, galaxy, cameraController, ambientLight, startTimestamp } = backgroundScene;
+
+      // Set scene and sun for meteor creation
+      setCurrentScene(scene);
+      setSunInstance(sun);
+      setSceneReady(true);
 
       // Attach the renderer to our DOM element
       backgroundScene.attachToDOM(mountRef.current);
@@ -90,17 +180,23 @@ function ThreeDemo() {
         earthInstance.updateMatrixWorld();
 
         // Update sun direction based on current Earth position
-        const sunDirection = sunInstance.getPosition().clone().sub(earthInstance.getPosition()).normalize();
+        const sunDirection = sun.getPosition().clone().sub(earthInstance.getPosition()).normalize();
         earthInstance.updateSunDirection(sunDirection);
 
         // Update sun animation
-        sunInstance.update();
+        sun.update();
 
         // Update meteor if it exists
         if (currentMeteor) {
           currentMeteor.updateOrbit(absoluteTime);
           currentMeteor.rotate(0.02);
         }
+
+        // Update all meteors from asteroid data
+        meteorsListRef.current.forEach((meteor) => {
+          meteor.updateOrbit(absoluteTime);
+          meteor.rotate(0.01);
+        });
 
         renderer.render(scene, camera);
         stats.end();
@@ -136,7 +232,7 @@ function ThreeDemo() {
           preprocessedObjects
         );
 
-        currentMeteor.startOrbit(sunInstance.getPosition(), 0.002 + Math.random() * 0.003);
+        currentMeteor.startOrbit(sun.getPosition(), 0.002 + Math.random() * 0.003);
         cameraController.setCurrentMeteor(currentMeteor);
 
         console.log('New meteor created!');
@@ -146,6 +242,15 @@ function ThreeDemo() {
         switch(event.code) {
           case 'KeyM':
             createNewRandomMeteor();
+            break;
+          case 'KeyA':
+            // Lock onto first asteroid/meteor from the list
+            if (meteorsListRef.current.length > 0) {
+              const firstMeteor = meteorsListRef.current[0];
+              cameraController.setCurrentMeteor(firstMeteor);
+              cameraController.lockMode = 'meteor';
+              console.log('Camera locked onto first asteroid');
+            }
             break;
         }
       };
@@ -181,7 +286,7 @@ function ThreeDemo() {
 
     function initializeFromScratch() {
       // Fallback to original initialization
-      console.log('ThreeDemo starting with preloaded assets:', assetsPreloaded ? 'Yes' : 'No');
+      console.log('ThreeDemo starting from scratch', assetsPreloaded ? 'Yes' : 'No');
       console.log('Available assets:', Object.keys(preloadedAssets));
       console.log('Available preprocessed objects:', Object.keys(preprocessedObjects));
 
@@ -211,12 +316,17 @@ function ThreeDemo() {
       const earthInstance = new Earth(scene, 1, 16, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
       earthInstance.startOrbit();
 
+      // Set scene and sun for meteor creation
+      setCurrentScene(scene);
+      setSunInstance(sunInstance);
+      setSceneReady(true);
+
       // Add galaxy
       let galaxy;
       if (preprocessedObjects.galaxyGeometry && preprocessedObjects.galaxyMaterial) {
         galaxy = new THREE.Mesh(preprocessedObjects.galaxyGeometry, preprocessedObjects.galaxyMaterial);
       } else {
-        galaxy = new Galaxy(500, 64, preloadedAssets).mesh;
+        galaxy = new Galaxy(10000, 64, preloadedAssets).mesh;
       }
       scene.add(galaxy);
 
@@ -276,6 +386,12 @@ function ThreeDemo() {
 
         sunInstance.update();
 
+        // Update all meteors from asteroid data
+        meteorsListRef.current.forEach((meteor) => {
+          meteor.updateOrbit(absoluteTime);
+          meteor.rotate(0.01);
+        });
+
         if (currentMeteor) {
           currentMeteor.updateOrbit(absoluteTime);
           currentMeteor.rotate(0.02);
@@ -324,6 +440,15 @@ function ThreeDemo() {
         switch(event.code) {
           case 'KeyM':
             createNewMeteor();
+            break;
+          case 'KeyA':
+            // Lock onto first asteroid/meteor from the list
+            if (meteorsListRef.current.length > 0) {
+              const firstMeteor = meteorsListRef.current[0];
+              cameraController.setCurrentMeteor(firstMeteor);
+              cameraController.lockMode = 'meteor';
+              console.log('Camera locked onto first asteroid');
+            }
             break;
         }
       };
