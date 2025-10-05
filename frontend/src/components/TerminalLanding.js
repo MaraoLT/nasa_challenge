@@ -7,7 +7,7 @@ export default function TerminalLanding() {
   // Multi-page texts; advance through each, then navigate
   const texts = [
     `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — the survival of all depends on your action now!\n\nClick to continue...`,
-    `Stay calm and follow the instructions displayed on your terminal.\nAuthorities are coordinating evacuation routes and shelter access.\nBring essentials and assist those nearby if possible.\nYour prompt action helps save lives.\n\nClick to begin training.`
+    `Before taking action, you must endure a serious training on space objects.\nCan you help us?\n\nClick to start experience!`
   ];
 
   const [page, setPage] = useState(0);
@@ -190,11 +190,16 @@ export default function TerminalLanding() {
 
   // Enable click when both text is done and assets are loaded
   useEffect(() => {
+    let t;
     if (!isTyping && assetsLoaded) {
-      setCanClick(true);
+      // Small debounce so a fast double-click that ends typing doesn't also advance
+      t = setTimeout(() => setCanClick(true), 350);
     } else {
       setCanClick(false);
     }
+    return () => {
+      if (t) clearTimeout(t);
+    };
   }, [isTyping, assetsLoaded]);
 
    const containerStyle = {
@@ -242,18 +247,15 @@ export default function TerminalLanding() {
   `;
 
   const handleClick = () => {
-    // If still typing, finish instantly
-    if (isTyping) {
-      setDisplayedText(currentText);
-      setIsTyping(false);
-      setCanClick(true);
-      return;
-    }
+    // If still typing, ignore clicks entirely
+    if (isTyping) return;
+    // Only accept clicks when fully ready
+    if (!canClick) return;
     // Advance to next page, or navigate when done
     if (page < texts.length - 1) {
       setPage((p) => p + 1);
-    } else if (canClick && assetsLoaded) {
-      navigate("/home"); // substitua pelo path desejado
+    } else if (assetsLoaded) {
+      navigate("/star-transition");
     }
   };
 

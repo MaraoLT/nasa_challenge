@@ -16,7 +16,7 @@ export default function Home() {
   const translate = (m) => `translate3d(${offset.x * m}px, ${offset.y * m}px, 0)`;
 
   return (  
-    <div className="scene" style={{
+    <div className="scene fade-in" style={{
     }} onMouseMove={handleMouseMove}>
       {/* Parallax layers */}
       <div className="" style={{ transform: translate(5) }} />
