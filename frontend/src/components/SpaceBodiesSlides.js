@@ -205,7 +205,7 @@ export default function SpaceBodiesSlides() {
 
   const onNext = () => {
     if (animating) return;
-    if (index === SLIDES.length - 1) return exitAnd(() => navigate('/home'));
+    if (index === SLIDES.length - 1) return exitAnd(() => navigate('/cards'));
     const nextIdx = Math.min(SLIDES.length - 1, index + 1);
     // Immediately switch active 3D object and prepare base text
     setIndex(nextIdx); // keep rotation tied to the visible object

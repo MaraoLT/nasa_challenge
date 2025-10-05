@@ -51,7 +51,7 @@ export default function IntroSlide({ topLeft = 'First, calm down. There\'s no ne
 
       {/* SpaceBodies-like nav arrows */}
       <Link to="/home" className="sb-nav__btn left" aria-label="Back">‹</Link>
-      <Link to="/cards" className="sb-nav__btn right" aria-label="Next">›</Link>
+      <Link to="/space-bodies" className="sb-nav__btn right" aria-label="Next">›</Link>
     </div>
   );
 }

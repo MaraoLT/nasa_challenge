@@ -39,7 +39,7 @@ export default function WarningScreen() {
 
   const onClick = () => {
     if (!showContinue) return;
-    navigate('/'); // TerminalLanding is routed at '/'
+    navigate('/terminal');
   };
 
   return (

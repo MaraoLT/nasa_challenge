@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const width = window.innerWidth;
 const height = window.innerHeight;
 
-const BALL_SIZE = width * 0.05; // Tamanho da bola
+const BALL_SIZE = width * 0.04; // Tamanho da bola (metade do anterior)
 const NUM_BALLS = 3;
 const BALL_IMAGE = "/meteoro3.jpg";
 
