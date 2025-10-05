@@ -16,7 +16,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
         'The kinetic impactor is a bold, hands-on method that knocks an asteroid off course by hitting it head-on. NASA’s DART mission proved this strategy works when it slammed into Dimorphos in 2022, changing its orbit by minutes — enough to save a planet in the right scenario.',
         'It’s fast, powerful, and precise, showing how a single well-aimed spacecraft can turn a doomsday rock into a harmless wanderer.'
       ],
-      imgSrc: '/assets/dart-at-didymos.jpg',
+      imgSrc: '/assets/kinetic_impactor.png',
       switch: false,
     },
     {
@@ -25,7 +25,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
         'The gravity tractor method is all about patience and finesse. A spacecraft hovers beside the asteroid, its gravity slowly tugging the rock onto a safer course over months or years.',
         'It’s quiet but powerful, ideal when there’s plenty of warning time. For defenders, this technique is a lesson in control — using the subtle pull of physics to protect an entire world.'
       ],
-      imgSrc: '/assets/nebula.jpg',
+      imgSrc: '/assets/gravity_tractor.png',
       switch: true,
     },
     {
@@ -34,7 +34,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
         'The laser ablation technique uses light as a weapon of precision. Spacecraft focus powerful beams or reflected sunlight onto the asteroid’s surface, vaporizing small amounts of rock and creating jets that nudge it away from danger.',
         'No explosions, no collisions — just focused energy and smart engineering. It’s planetary defense for the patient and precise, where science burns brighter than brute force.'
       ],
-      imgSrc: '/assets/laser-ablation.png',
+      imgSrc: '/assets/laser_ablation.png',
       switch: false,
     },
     {
@@ -43,16 +43,16 @@ export default function BlueprintPage({ wallpaperUrl }) {
         'The ion beam shepherd pushes without touching. A spacecraft fires streams of charged particles toward the asteroid, giving it a steady, gentle shove while counter-thrusting to stay in place.',
         'It’s slow but efficient, turning advanced propulsion technology into a long-term defense tool. This method suits defenders who thrive on balance — mastering delicate control to reshape the motion of worlds.'
       ],
-      imgSrc: '/assets/logo192.png',
+      imgSrc: '/assets/ion_shepherd.png',
       switch: true,
     },
     {
-      title: 'Operations Timeline',
+      title: 'Nuclear blast',
       text: [
         'The nuclear blast is the last, desperate move — a high-stakes gamble when time has run out. A carefully timed explosion near the asteroid’s surface vaporizes material and blasts it off course.',
         'It’s risky and dramatic, but in a planetary emergency, it could mean Earth’s survival. For defenders, this method embodies courage under pressure — where precision and decisiveness decide the fate of the world.'
       ],
-      imgSrc: '/assets/manifest.json', // placeholder; replace with a suitable image
+      imgSrc: '/assets/nuclear_blast.png',
       switch: false,
     },
   ]), []);
@@ -132,7 +132,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
   };
   const onNext = () => {
     if (animating) return;
-    if (index === SUBPAGES.length - 1) return navigate('/ThreeDemo');
+    if (index === SUBPAGES.length - 1) return navigate('/home');
     const nextIdx = Math.min(SUBPAGES.length - 1, index + 1);
     // Prepare base with next content and slide current out to reveal it
     setBaseIndex(nextIdx);
