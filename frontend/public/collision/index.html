@@ -398,7 +398,7 @@
     <div id="results" aria-live="polite" style="margin-top: 2.5%;">
         <div class="header">
             <h3 style="margin: 0">Resultados</h3>
-            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div> 
             <button id="unitToggle" title="Alternar visualização: km/m ↔ mi">mi</button>
             <button id="closeButton" onclick="closeResults()" title="Close results">Close</button>
 
@@ -678,7 +678,7 @@
 
                         terrainHeight = height;
 
-                        console.log(`Alvo definido em: Lon ${longitude.toFixed(3)}, Lat ${latitude.toFixed(3)}, Altura: ${height.toFixed(2)} metros`);
+                        // console.log(`Alvo definido em: Lon ${longitude.toFixed(3)}, Lat ${latitude.toFixed(3)}, Altura: ${height.toFixed(2)} metros`);
 
                         // Atualiza posição do alvo
                         region.longitude = longitude;
@@ -705,7 +705,7 @@
                         const hint = document.getElementById('selectHint');
                         if (hint) hint.style.display = 'none';
 
-                        console.log('Alvo definido em:', longitude.toFixed(3), latitude.toFixed(3));
+                        // console.log('Alvo definido em:', longitude.toFixed(3), latitude.toFixed(3));
                     }
                 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -753,14 +753,14 @@
                     angleOut.textContent = `${impactAngleDeg}°`;
                 });
 
-                const currentMaterialIndex = () => MATERIALS.findIndex(m => m.key === meteorMaterial.key);
+                // const currentMaterialIndex = () => MATERIALS.findIndex(m => m.key === meteorMaterial.key);
 
-                const stepMaterial = (dir) => {
-                    const idx = currentMaterialIndex();
-                    const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
-                    meteorMaterial = MATERIALS[nextIdx];
-                    syncUI();
-                };
+                // const stepMaterial = (dir) => {
+                //     const idx = currentMaterialIndex();
+                //     const nextIdx = (idx + dir + MATERIALS.length) % MATERIALS.length;
+                //     meteorMaterial = MATERIALS[nextIdx];
+                //     syncUI();
+                // };
 
                 materialPrev.addEventListener('click', () => stepMaterial(-1));
                 materialNext.addEventListener('click', () => stepMaterial(1));
@@ -779,15 +779,6 @@
                 alert('Clique no mapa para escolher o alvo primeiro.');
                 return;
             }
-            // Exemplo: log dos parâmetros selecionados (para debugging e futuros cálculos)
-            //console.log('[Parâmetros]', {
-            //    region : region,
-            //    diameter_m: meteorDiameterM,
-            //    velocity_kms: meteorVelocityKms,
-            //    angle_deg: impactAngleDeg,
-            //    material: meteorMaterial
-            //});
-
             const parameters = {
                 diameter: meteorDiameterM,
                 velocity: meteorVelocityKms,
