@@ -9,6 +9,8 @@ export class Meteor extends AstralObject {
 
         this.mesh = this.createMeteorMesh();
         this.setPosition(this.position.x, this.position.y, this.position.z);
+
+        // Add to scene (traceLine is already added by parent constructor)
         this.addToScene();
     }
 

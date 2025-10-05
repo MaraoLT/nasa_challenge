@@ -16,8 +16,12 @@ export class AstralObject {
         this.tracePoints = [];
         this.traceMaxPoints = 100;
         this.traceLine = null;
-        this.traceRefreshRate = 2;
+        this.traceRefreshRate = 20; // Update trace every 20 updates
         this.updates = 0;
+
+        // Create and add trace to scene immediately
+        this.createTraceLine();
+        this.addTraceToScene();
     }
 
     createTraceLine() {
@@ -29,6 +33,12 @@ export class AstralObject {
         const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
         this.traceLine = new THREE.Line(geometry, material);
         this.traceLine.frustumCulled = false;
+    }
+
+    addTraceToScene() {
+        if (this.traceLine && this.scene) {
+            this.scene.add(this.traceLine);
+        }
     }
 
     setPosition(x, y, z) {
@@ -48,9 +58,7 @@ export class AstralObject {
     startOrbit(orbitParams) {
         this.isOrbiting = true;
         this.orbit = new Orbit(orbitParams);
-        if (!this.traceLine) {
-            this.createTraceLine();
-        }
+        // Trace line is already created and added to scene in constructor
     }
 
     stopOrbit() {
@@ -84,10 +92,13 @@ export class AstralObject {
         if (!this.isOrbiting || !this.orbit) return;
         const orbitPosition = this.orbit.walkInTime(time);
         this.setPosition(orbitPosition[0], orbitPosition[2], orbitPosition[1]);
+        console.log('Updates:', this.updates);
         if (this.updates === 0) {
             this.updateTrace();
         }
     }
+
+
 
     addToScene() {
         if (this.mesh) {
@@ -96,9 +107,7 @@ export class AstralObject {
         if (this.atmosphere) {
             this.scene.add(this.atmosphere);
         }
-        if (this.traceLine) {
-            this.scene.add(this.traceLine);
-        }
+        // Don't add traceLine here as it's already added in addTraceToScene()
     }
 
     removeFromScene() {

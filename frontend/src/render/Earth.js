@@ -20,7 +20,7 @@ export class Earth extends AstralObject {
         // Set initial position
         this.setPosition(this.position.x, this.position.y, this.position.z);
 
-        // Add to scene
+        // Add to scene (traceLine is already added by parent constructor)
         this.addToScene();
     }
 
