@@ -31,6 +31,27 @@
             max-width: 300px;
         }
 
+        /* Painel de resultados à direita */
+        #results {
+            position: absolute;
+            top: 20px; /* um pouco mais para baixo */
+            right: 10px;
+            background: rgba(42, 42, 42, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+            max-width: 320px;
+            min-width: 260px;
+            display: none; /* aparece somente após a primeira simulação */
+        }
+
+        #results h3 { margin: 0 0 10px; }
+        #results .row { display: flex; justify-content: space-between; gap: 10px; margin: 6px 0; }
+        #results .label { color: #ddd; font-size: 12px; }
+        #results .value { font-weight: 700; font-size: 13px; background: rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 4px; }
+
         #controls button {
             background: #ff4444;
             color: white;
@@ -44,6 +65,12 @@
 
         #controls button:hover {
             background: #ff6666;
+        }
+
+        #controls button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(20%);
         }
 
         #impact-info {
@@ -106,6 +133,14 @@
             margin-top: 6px;
             color: #ddd;
         }
+
+        /* Linha do seletor de material junto do rótulo */
+        .material-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
+        }
     </style>
 </head>
 
@@ -114,44 +149,61 @@
 
     <div id="controls">
         <h3>Meteor Impact Simulator</h3>
-        <button onclick="simulateImpact()">Simulate Impact</button>
+    <button id="simulateBtn" onclick="simulateImpact()" disabled>Simulate Impact</button>
         <button onclick="resetSimulation()">Reset</button>
         <div id="impact-info">
             <div class="control">
-                <label for="diameterRange">Diâmetro do meteoro
+                <label for="diameterRange">Meteor Diameter
                     <span class="value-badge" id="diameterOut">50 m</span>
                 </label>
                 <input type="range" id="diameterRange" min="1" max="1500" step="1" value="50">
             </div>
 
             <div class="control">
-                <label for="velocityRange">Velocidade
+                <label for="velocityRange">Meteor Speed
                     <span class="value-badge" id="velocityOut">20 km/s</span>
                 </label>
                 <input type="range" id="velocityRange" min="11" max="72" step="1" value="20">
             </div>
 
             <div class="control">
-                <label for="angleRange">Ângulo de impacto
+                <label for="angleRange">Angle of impact
                     <span class="value-badge" id="angleOut">45°</span>
                 </label>
                 <input type="range" id="angleRange" min="5" max="90" step="1" value="45">
             </div>
 
             <div class="control">
-                <label>Material
-                    <span class="value-badge" id="materialOut">stone</span>
-                </label>
-                <div class="stepper" role="group" aria-label="Selecionar material">
-                    <button id="materialPrev" type="button" aria-label="Material anterior">&#8249;</button>
-                    <span class="stepper-value" id="materialValue">stone</span>
-                    <button id="materialNext" type="button" aria-label="Próximo material">&#8250;</button>
+                <div class="material-inline">
+                    <label style="margin: 0">Material</label>
+                    <div class="stepper" role="group" aria-label="Selecionar material">
+                        <button id="materialPrev" type="button" aria-label="Material anterior">&#8249;</button>
+                        <span class="stepper-value" id="materialValue">stone</span>
+                        <button id="materialNext" type="button" aria-label="Próximo material">&#8250;</button>
+                    </div>
                 </div>
-                <small class="material-info">Densidade: <span id="materialDensity">2500</span> kg/m³</small>
+                <small class="material-info">Density: <span id="materialDensity">2500</span> kg/m³</small>
             </div>
 
-            <em>💡 Clique no mapa para escolher o alvo!</em>
+            <em id="selectHint">💡 Click on the map to choose the target!</em>
         </div>
+    </div>
+
+    <!-- Painel de resultados à direita -->
+    <div id="results" aria-live="polite">
+        <h3>Resultados</h3>
+        <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
+        <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
+        <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
+        <div class="row"><span class="label">Energia (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
+        <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
+        <div class="row"><span class="label">Fireball (diâmetro)</span><span class="value" id="r-fireball">—</span></div>
+        <div class="row"><span class="label">Queimaduras leves</span><span class="value" id="r-first">—</span></div>
+        <div class="row"><span class="label">Queimaduras 2º grau</span><span class="value" id="r-second">—</span></div>
+        <div class="row"><span class="label">Queimaduras 3º grau</span><span class="value" id="r-third">—</span></div>
+        <div class="row"><span class="label">Risco roupas pegarem fogo</span><span class="value" id="r-clothes">—</span></div>
+        <div class="row"><span class="label">Estimativa de mortes</span><span class="value" id="r-deaths">—</span></div>
+        <div class="row"><span class="label">Estimativa de feridos</span><span class="value" id="r-feridos">—</span></div>
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
@@ -218,15 +270,12 @@
                 viewer.cesiumWidget.creditContainer.style.display = "none";
                 viewer.scene.globe.depthTestAgainstTerrain = true;
 
-                viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 80000),
-                    orientation: { heading: Cesium.Math.toRadians(0.0), pitch: Cesium.Math.toRadians(-90.0), roll: 0.0 },
-                    duration: 3
-                });
-
-                viewer.entities.add({
-                    position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude),
-                    point: { pixelSize: 15, color: Cesium.Color.CYAN, outlineColor: Cesium.Color.WHITE, outlineWidth: 3, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }
+                // Inicia com visão global do globo (sem alvo inicial)
+                viewer.camera.setView({
+                    destination: Cesium.Cartesian3.fromDegrees(-79.186, 12.915, 15000000),
+                    orientation: { heading: Cesium.Math.toRadians(0.0),
+                    pitch: Cesium.Math.toRadians(-90.0),
+                    roll: 0.0 }
                 });
 
                 // Adiciona handler de clique no mapa para escolher o alvo
@@ -259,6 +308,12 @@
                             }
                         });
 
+                        // Habilita simulação e esconde dica após selecionar alvo
+                        const btn = document.getElementById('simulateBtn');
+                        if (btn) btn.disabled = false;
+                        const hint = document.getElementById('selectHint');
+                        if (hint) hint.style.display = 'none';
+
                         console.log('Alvo definido em:', longitude.toFixed(3), latitude.toFixed(3));
                     }
                 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -273,7 +328,6 @@
                 const diameterOut = $('diameterOut');
                 const velocityOut = $('velocityOut');
                 const angleOut = $('angleOut');
-                const materialOut = $('materialOut');
                 const materialValue = $('materialValue');
                 const materialDensity = $('materialDensity');
 
@@ -283,7 +337,6 @@
                     diameterOut.textContent = fmtMeters(meteorDiameterM);
                     velocityOut.textContent = `${meteorVelocityKms} km/s`;
                     angleOut.textContent = `${impactAngleDeg}°`;
-                    materialOut.textContent = meteorMaterial.key;
                     materialValue.textContent = meteorMaterial.key;
                     materialDensity.textContent = meteorMaterial.density;
                 };
@@ -326,14 +379,19 @@
 
         // Função para simular o impacto do meteoro
         async function simulateImpact() {
+            // Bloqueia simulação sem alvo selecionado
+            if (region.longitude == null || region.latitude == null) {
+                alert('Clique no mapa para escolher o alvo primeiro.');
+                return;
+            }
             // Exemplo: log dos parâmetros selecionados (para debugging e futuros cálculos)
-            console.log('[Parâmetros]', {
-                region : region,
-                diameter_m: meteorDiameterM,
-                velocity_kms: meteorVelocityKms,
-                angle_deg: impactAngleDeg,
-                material: meteorMaterial
-            });
+            //console.log('[Parâmetros]', {
+            //    region : region,
+            //    diameter_m: meteorDiameterM,
+            //    velocity_kms: meteorVelocityKms,
+            //    angle_deg: impactAngleDeg,
+            //    material: meteorMaterial
+            //});
 
             const parameters = {
                 diameter: meteorDiameterM,
@@ -349,11 +407,16 @@
             craterMinorRadius = results.diametroCrateraTransiente;
             craterMajorRadius = results.diametroCrateraTransiente;
             craterDepth = results.profundidadeCrateraTrasiente;
+            // Atualiza painel de resultados
+            updateResultsPanel(results);
+            // Mostra o painel de resultados após a primeira simulação
+            const resultsPanel = document.getElementById('results');
+            if (resultsPanel) resultsPanel.style.display = 'block';
             
             resetSimulation();
-            createMeteor();
+            //createMeteor();
             setTimeout(() => {
-                createExplosion();
+                createExplosion(results.diameterFireball);
                 removeMeteor();
             }, 3000);
             setTimeout(() => {
@@ -364,7 +427,62 @@
 
                 removeExplosion();
             }, 4000);
-            setTimeout(createDestructionZones, 6000);
+            setTimeout(() => {
+                console.log(results);
+                createDestructionZones(results.diameterFireball, results.clothesBurn, results.thirdDegreeBurn, results.secondDegreeBurn);
+            }, 6000);
+        }
+
+        // Atualiza o painel de resultados à direita
+        function updateResultsPanel(res) {
+            const isNum = (v) => Number.isFinite(v);
+            const byId = (id) => document.getElementById(id);
+            const setText = (id, text) => {
+                const el = byId(id);
+                if (!el) {
+                    // Evita quebra caso o elemento não exista por alguma razão de renderização
+                    console.warn(`[results] elemento não encontrado: #${id}`);
+                    return;
+                }
+                el.textContent = text;
+            };
+
+            const fmtMeters = (m) => {
+                if (!isNum(m)) return '—';
+                if (Math.abs(m) >= 1000) return `${(m/1000).toFixed(2)} km`;
+                return `${m} m`;
+            };
+            const fmtEnergyJ = (j) => {
+                if (!isNum(j)) return '—';
+                const units = [
+                    { u: 'J', v: 1 },
+                    { u: 'kJ', v: 1e3 },
+                    { u: 'MJ', v: 1e6 },
+                    { u: 'GJ', v: 1e9 },
+                    { u: 'TJ', v: 1e12 },
+                    { u: 'PJ', v: 1e15 }
+                ];
+                let picked = units[0];
+                for (const cand of units) if (j >= cand.v) picked = cand;
+                return `${(j / picked.v).toFixed(2)} ${picked.u}`;
+            };
+            const fmtInt = (n) => {
+                if (!isNum(n)) return '—';
+                return n.toLocaleString('pt-BR');
+            };
+
+            setText('r-diametroCratera', fmtMeters(res.diametroCrateraTransiente));
+            setText('r-profundidadeCratera', fmtMeters(res.profundidadeCrateraTrasiente));
+            setText('r-energiaImpacto', fmtEnergyJ(res.energiaDoImpacto));
+            setText('r-energiaTNT', `${fmtInt(res.energiaDoImpactoTNT)} t TNT`);
+            setText('r-energiaMTNT', `${fmtInt(res.energiaDoImpactoMTNT)} Mt TNT`);
+            setText('r-fireball', fmtMeters(res.diameterFireball));
+            setText('r-first', fmtMeters(res.firstDegreeBurn));
+            setText('r-second', fmtMeters(res.secondDegreeBurn));
+            setText('r-third', fmtMeters(res.thirdDegreeBurn));
+            setText('r-clothes', fmtMeters(res.clothesBurn));
+            setText('r-deaths', fmtInt(res.deaths));
+            setText('r-feridos', fmtInt(res.feridos));
         }
 
         // Função para criar cratera: corta terreno e coloca modelo GLB
@@ -471,20 +589,28 @@
 
             // Não remove o targetMarker para manter o alvo selecionado
 
-            viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 80000),
-                orientation: { heading: Cesium.Math.toRadians(0.0), pitch: Cesium.Math.toRadians(-90.0), roll: 0.0 },
-                duration: 0
-            });
+            // Se há alvo, volta para ele; caso contrário, mantém visão global
+            if (region.longitude != null && region.latitude != null) {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 80000),
+                    orientation: { heading: Cesium.Math.toRadians(0.0), pitch: Cesium.Math.toRadians(-90.0), roll: 0.0 },
+                    duration: 0
+                });
+            } else {
+                viewer.camera.setView({
+                    destination: Cesium.Cartesian3.fromDegrees(0, 0, 3.2e7),
+                    orientation: { heading: Cesium.Math.toRadians(0.0), pitch: Cesium.Math.toRadians(-25.0), roll: 0.0 }
+                });
+            }
         }
 
         // --- DEMAIS FUNÇÕES (SEM ALTERAÇÃO) ---
         function createDestroyedGroundTexture() { const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512; const ctx = canvas.getContext('2d'); const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256); gradient.addColorStop(0, '#1a0f0a'); gradient.addColorStop(.5, '#4a2c1a'); gradient.addColorStop(.9, '#8b5a3c'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 512, 512); ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; ctx.lineWidth = 3; for (let i = 0; i < 30; i++) { ctx.beginPath(); ctx.moveTo(256 + Math.random() * 200 - 100, 256 + Math.random() * 200 - 100); ctx.lineTo(256 + Math.random() * 240 - 120, 256 + Math.random() * 240 - 120); ctx.stroke() } return canvas.toDataURL() }
         function createMeteor() { const startTime = viewer.clock.currentTime; const endTime = Cesium.JulianDate.addSeconds(startTime, 3, new Cesium.JulianDate()); const startPosition = Cesium.Cartesian3.fromDegrees(region.longitude - 1, region.latitude + 1, 15e4); const endPosition = Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 0); const positionProperty = new Cesium.SampledPositionProperty(); positionProperty.addSample(startTime, startPosition); positionProperty.addSample(endTime, endPosition); meteorEntity = viewer.entities.add({ name: "Meteoro", position: positionProperty, point: { pixelSize: 35, color: Cesium.Color.ORANGE, outlineColor: Cesium.Color.RED, outlineWidth: 4, scaleByDistance: new Cesium.NearFarScalar(1e3, 2, 1e5, .5) }, path: { show: !0, leadTime: 0, trailTime: 2, width: 10, resolution: 1, material: new Cesium.PolylineGlowMaterialProperty({ glowPower: .5, color: Cesium.Color.ORANGE, taperPower: .7 }) }}); viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 6e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 } }) }
         function removeMeteor() { if (meteorEntity) { viewer.entities.remove(meteorEntity); meteorEntity = null; } }
-        function createExplosion() { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 1e3), ellipse: { semiMinorAxis: 5e3, semiMajorAxis: 5e3, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * .5 + .5; return Cesium.Color.ORANGE.withAlpha(i * .8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED }}) }
+        function createExplosion(diameterFireball) { explosionEntity = viewer.entities.add({ name: "Explosão", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 1e3), ellipse: { semiMinorAxis: diameterFireball, semiMajorAxis: diameterFireball, height: 1e3, material: new Cesium.ColorMaterialProperty(new Cesium.CallbackProperty(function (e, t) { const i = Math.sin(Cesium.JulianDate.secondsDifference(e, viewer.clock.currentTime) * 10) * 0.5 + .5; return Cesium.Color.ORANGE.withAlpha(i * 0.8) }, !1)), outline: !0, outlineColor: Cesium.Color.RED }}) }
         function removeExplosion() { if (explosionEntity) { viewer.entities.remove(explosionEntity); explosionEntity = null; } }
-        function createDestructionZones() { const e = viewer.entities.add({ name: "Destruição Total", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: 5e3, semiMajorAxis: 5e3, material: Cesium.Color.RED.withAlpha(.3), outline: !0, outlineColor: Cesium.Color.DARKRED, outlineWidth: 3, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), t = viewer.entities.add({ name: "Destruição Severa", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: 15e3, semiMajorAxis: 15e3, material: Cesium.Color.ORANGE.withAlpha(.2), outline: !0, outlineColor: Cesium.Color.DARKORANGE, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), i = viewer.entities.add({ name: "Danos Moderados", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: 3e4, semiMajorAxis: 3e4, material: Cesium.Color.YELLOW.withAlpha(.15), outline: !0, outlineColor: Cesium.Color.GOLD, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}); impactZones.push(e, t, i); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 12e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 }, duration: 3 }) }
+        function createDestructionZones(diameterFireball, clothesBurn, thirdDegreeBurn, secondDegreeBurn) { const e = viewer.entities.add({ name: "Destruição Total", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: diameterFireball*1, semiMajorAxis: diameterFireball*1, material: Cesium.Color.RED.withAlpha(.3), outline: !0, outlineColor: Cesium.Color.DARKRED, outlineWidth: 3, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), t = viewer.entities.add({ name: "Destruição Severa", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: clothesBurn*1, semiMajorAxis: clothesBurn*1, material: Cesium.Color.ORANGE.withAlpha(.2), outline: !0, outlineColor: Cesium.Color.DARKORANGE, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}), i = viewer.entities.add({ name: "Danos Moderados", position: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude), ellipse: { semiMinorAxis: thirdDegreeBurn*1, semiMajorAxis: thirdDegreeBurn*1, material: Cesium.Color.YELLOW.withAlpha(.15), outline: !0, outlineColor: Cesium.Color.GOLD, outlineWidth: 2, heightReference: Cesium.HeightReference.CLAMP_TO_GROUND }}); impactZones.push(e, t, i); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(region.longitude, region.latitude, 12e4), orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-90), roll: 0 }, duration: 3 }) }
 
     </script>
 </body>
