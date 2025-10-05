@@ -208,6 +208,7 @@ function ThreeDemo() {
       const handleKeyPress = (event) => {
         switch(event.code) {
           case 'KeyA':
+            console.log('KeyA) pressed');
             // Lock onto first asteroid/meteor from the list
             if (meteorsListRef.current.length > 0) {
               const firstMeteor = meteorsListRef.current[0];
