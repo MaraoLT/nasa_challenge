@@ -22,13 +22,16 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(42, 42, 42, 0.9);
+            background: rgba(30, 30, 30, 0.92);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px 16px 12px;
+            border-radius: 12px;
             z-index: 1000;
             font-family: Arial, sans-serif;
             max-width: 300px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(4px);
         }
 
         /* Painel de resultados à direita */
@@ -36,15 +39,18 @@
             position: absolute;
             top: 10px; /* um pouco mais para baixo */
             right: 10px;
-            background: rgba(42, 42, 42, 0.9);
+            background: rgba(30, 30, 30, 0.92);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px 16px 12px;
+            border-radius: 12px;
             z-index: 1000;
             font-family: Arial, sans-serif;
-            max-width: 320px;
-            min-width: 260px;
+            max-width: 360px;
+            min-width: 280px;
             display: none; /* aparece somente após a primeira simulação */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(4px);
         }
 
         #results h3 {
@@ -63,13 +69,33 @@
             font-size: 12px;
         }
 
+        /* Chip de valor (Material-ish) */
         #results .value {
             font-weight: 700;
-            font-size: 13px;
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
+            font-size: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.12);
+            letter-spacing: 0.2px;
         }
+
+        /* Seções e divisores (Material-ish) */
+        #results .section-title {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #a0c4ff;
+            opacity: 0.9;
+            margin: 10px 0 6px;
+        }
+        #results .divider {
+            height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            margin: 10px 0;
+            border-radius: 1px;
+        }
+        #results .rows { margin-top: 4px; }
 
         /* Cabeçalho do painel de resultados com botão de unidades */
         #results .header {
@@ -80,35 +106,42 @@
             margin-bottom: 8px;
         }
         #unitToggle {
-            background: #2b2b2b;
+            background: #2b2f3a;
             color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.18);
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
         }
         #unitToggle:hover { filter: brightness(1.15); }
 
-        #controls button {
-            background: #ff4444;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 5px;
+        /* Botões Material-ish */
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 6px; }
+        .btn {
+            appearance: none;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 700;
+            font-size: 13px;
             cursor: pointer;
-            font-weight: bold;
+            color: #fff;
+            background: #2b2f3a;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            transition: transform .04s ease, filter .15s ease;
         }
-
-        #controls button:hover {
-            background: #ff6666;
+        .btn:hover { filter: brightness(1.1); }
+        .btn:active { transform: translateY(1px); }
+        .btn:disabled { opacity: .6; cursor: not-allowed; filter: grayscale(20%); }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff5151, #ff2e2e);
+            border-color: rgba(255,255,255,0.22);
         }
-
-        #controls button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            filter: grayscale(20%);
+        .btn-secondary {
+            background: #2b2f3a;
+            border-color: rgba(255,255,255,0.18);
         }
 
         #impact-info {
@@ -134,11 +167,13 @@
 
         .value-badge {
             display: inline-block;
-            background: rgba(255,255,255,0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+            padding: 4px 8px;
+            border-radius: 999px;
             margin-left: 6px;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
         }
 
         .stepper {
@@ -178,6 +213,22 @@
             align-items: center;
             gap: 8px;
             justify-content: space-between;
+        }
+
+        /* Títulos e divisores compartilhados */
+        #controls .section-title {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #a0c4ff;
+            opacity: 0.9;
+            margin: 10px 0 6px;
+        }
+        #controls .divider {
+            height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            margin: 10px 0;
+            border-radius: 1px;
         }
     </style>
 </head>
@@ -276,10 +327,16 @@
     </style>
 
     <div id="controls">
-        <h3>Meteor Impact Simulator</h3>
-        <button id="simulateBtn" onclick="simulateImpact()" disabled>Simulate Impact</button>
-        <button onclick="resetSimulation()">Reset</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <h3 style="margin:0">Meteor Impact Simulator</h3>
+            <div class="actions">
+                <button id="simulateBtn" class="btn btn-primary" onclick="simulateImpact()" disabled>Simulate Impact</button>
+                <button class="btn btn-secondary" onclick="resetSimulation()">Reset</button>
+            </div>
+        </div>
+
         <div id="impact-info">
+            <div class="section-title">Parâmetros do meteoro</div>
             <div class="control">
                 <label for="diameterRange">Meteor Diameter
                     <span class="value-badge" id="diameterOut">50 m</span>
@@ -301,9 +358,11 @@
                 <input type="range" id="angleRange" min="5" max="90" step="1" value="45">
             </div>
 
+            <div class="divider"></div>
+            <div class="section-title">Material</div>
             <div class="control">
                 <div class="material-inline">
-                    <label style="margin: 0">Material</label>
+                    <label style="margin: 0">Type</label>
                     <div class="stepper" role="group" aria-label="Selecionar material">
                         <button id="materialPrev" type="button" aria-label="Material anterior">&#8249;</button>
                         <span class="stepper-value" id="materialValue">stone</span>
@@ -313,9 +372,13 @@
                 <small class="material-info">Density: <span id="materialDensity">2500</span> kg/m³</small>
             </div>
 
-            <em id="selectHint">💡 Click on the map to choose the target!</em>
-            <button id="simulateBtn" onclick="returnHome()" >Return</button>
-            <button id="simulateBtn" onclick="nextSession()" disabled>Next</button>
+            <div class="divider"></div>
+            <div class="section-title">Ações</div>
+            <em id="selectHint" style="display:block;margin-bottom:6px;">💡 Click on the map to choose the target!</em>
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="returnHome()">Return</button>
+                <button class="btn btn-secondary" onclick="nextSession()" disabled>Next</button>
+            </div>
         </div>
     </div>
 
@@ -325,18 +388,27 @@
             <h3 style="margin: 0">Resultados</h3>
             <button id="unitToggle" title="Alternar visualização: km/m ↔ mi">mi</button>
         </div>
-        <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
-        <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
-        <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
-        <div class="row"><span class="label">Energia (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
-        <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
-        <div class="row"><span class="label">Fireball (diâmetro)</span><span class="value" id="r-fireball">—</span></div>
-        <div class="row"><span class="label">Queimaduras leves</span><span class="value" id="r-first">—</span></div>
-        <div class="row"><span class="label">Queimaduras 2º grau</span><span class="value" id="r-second">—</span></div>
-        <div class="row"><span class="label">Queimaduras 3º grau</span><span class="value" id="r-third">—</span></div>
-        <div class="row"><span class="label">Risco roupas pegarem fogo</span><span class="value" id="r-clothes">—</span></div>
-        <div class="row"><span class="label">Estimativa de mortes</span><span class="value" id="r-deaths">—</span></div>
-        <div class="row"><span class="label">Estimativa de feridos</span><span class="value" id="r-feridos">—</span></div>
+
+        <div class="section-title">Cratera e impacto</div>
+        <div class="rows">
+            <div class="row"><span class="label">Cratera (Ø transiente)</span><span class="value" id="r-diametroCratera">—</span></div>
+            <div class="row"><span class="label">Profundidade cratera</span><span class="value" id="r-profundidadeCratera">—</span></div>
+            <div class="row"><span class="label">Energia do impacto</span><span class="value" id="r-energiaImpacto">—</span></div>
+            <div class="row"><span class="label">Energia (TNT)</span><span class="value" id="r-energiaTNT">—</span></div>
+            <div class="row"><span class="label">Energia (Megatons)</span><span class="value" id="r-energiaMTNT">—</span></div>
+            <div class="row"><span class="label">Fireball (diâmetro)</span><span class="value" id="r-fireball">—</span></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">Pessoas</div>
+        <div class="rows">
+            <div class="row"><span class="label">Queimaduras leves</span><span class="value" id="r-first">—</span></div>
+            <div class="row"><span class="label">Queimaduras 2º grau</span><span class="value" id="r-second">—</span></div>
+            <div class="row"><span class="label">Queimaduras 3º grau</span><span class="value" id="r-third">—</span></div>
+            <div class="row"><span class="label">Risco roupas pegarem fogo</span><span class="value" id="r-clothes">—</span></div>
+            <div class="row"><span class="label">Estimativa de mortes</span><span class="value" id="r-deaths">—</span></div>
+            <div class="row"><span class="label">Estimativa de feridos</span><span class="value" id="r-feridos">—</span></div>
+        </div>
     </div>
     <script src="./lib/calculator.js"></script>
     <script>
