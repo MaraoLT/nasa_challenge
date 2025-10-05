@@ -6,6 +6,8 @@ import { CameraController } from './controller/CameraController';
 import { Sun } from './render/Sun';
 import { Meteor } from './render/Meteor';
 import { ThreeInitializer } from './utils/ThreeInitializer';
+import musicManager from './utils/MusicManager';
+import audioContextManager from './utils/AudioContextManager';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
@@ -19,6 +21,15 @@ function ThreeDemo() {
     if (!mountRef.current) return;
 
     console.log('ThreeDemo starting...');
+
+    // Initialize audio context manager
+    audioContextManager.init();
+
+    // Start playing the space music - use correct path
+    const playResult = musicManager.playTrack('/resources/sounds/Drifting Through the Void.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
 
     // Check if we have a background scene ready
     if (ThreeInitializer.isSceneReady()) {
@@ -329,6 +340,9 @@ function ThreeDemo() {
 
     // Cleanup function
     return () => {
+      // Stop music when leaving ThreeDemo
+      musicManager.fadeOut(500);
+      
       if (window.threeCleanup) {
         window.threeCleanup();
         window.threeCleanup = null;

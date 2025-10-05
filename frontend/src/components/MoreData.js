@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/moredata.css';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 
 export default function MoreData() {
   const navigate = useNavigate();
@@ -47,6 +49,22 @@ export default function MoreData() {
     startCount(0, to);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [index, SLIDES, startCount]);
+
+  // Start music when component mounts
+  React.useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
+    
+    return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+    };
+  }, []);
 
   const onPrev = () => {
     if (index === 0) return navigate('/home');

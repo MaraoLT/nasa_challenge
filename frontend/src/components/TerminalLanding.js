@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import * as THREE from 'three';
 import { ThreeInitializer } from '../utils/ThreeInitializer';
+import audioContextManager from '../utils/AudioContextManager';
 
 export default function TerminalLanding() {
   // Multi-page texts; advance through each, then navigate
@@ -22,6 +23,11 @@ export default function TerminalLanding() {
   const navigate = useNavigate();
 
   const fullText = currentText;
+
+  // Initialize audio context manager
+  useEffect(() => {
+    audioContextManager.init();
+  }, []);
 
   // Preload terminal sound effect
   useEffect(() => {
@@ -213,7 +219,8 @@ export default function TerminalLanding() {
       // Only play sound for letters, numbers, and some punctuation
       const shouldPlaySound = currentChar && 
           /[a-zA-Z0-9!?.,]/.test(currentChar) && 
-          (currentTime - lastSoundTime) >= soundCooldown;
+          (currentTime - lastSoundTime) >= soundCooldown &&
+          audioContextManager.isAudioEnabled(); // Only play if audio is enabled
       
       if (shouldPlaySound && terminalSound && Array.isArray(terminalSound)) {
         try {
@@ -318,18 +325,8 @@ export default function TerminalLanding() {
   `;
 
   const handleClick = () => {
-    // Enable audio context on first user interaction (required by browsers)
-    if (terminalSound && Array.isArray(terminalSound)) {
-      const firstAudio = terminalSound[0];
-      if (firstAudio && firstAudio.paused) {
-        firstAudio.play().then(() => {
-          firstAudio.pause();
-          firstAudio.currentTime = 0;
-        }).catch(e => {
-          console.log('Audio initialization prevented:', e.message);
-        });
-      }
-    }
+    // This click will trigger the AudioContextManager to enable audio globally
+    // No need to manually enable audio here, AudioContextManager handles it
     
     // If still typing, ignore clicks entirely
     if (isTyping) return;

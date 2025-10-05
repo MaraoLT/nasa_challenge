@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import audioContextManager from '../utils/AudioContextManager';
 
 export default function StarTransition() {
   const canvasRef = useRef(null);
@@ -8,6 +9,9 @@ export default function StarTransition() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     let width = 0, height = 0, dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -19,12 +23,17 @@ export default function StarTransition() {
       audio.volume = 0.7; // Adjust volume as needed
       audioRef.current = audio;
       
-      // Play the warp sound with a slight delay to sync with visual
-      setTimeout(() => {
-        audio.play().catch(e => {
-          console.log('Audio play prevented:', e.message);
-        });
-      }, 500); // 500ms delay for better sync with star animation
+      // Only play if audio is enabled
+      if (audioContextManager.isAudioEnabled()) {
+        // Play the warp sound with a slight delay to sync with visual
+        setTimeout(() => {
+          audio.play().catch(e => {
+            console.log('Audio play prevented:', e.message);
+          });
+        }, 500); // 500ms delay for better sync with star animation
+      } else {
+        console.log('Warp sound ready but waiting for audio to be enabled');
+      }
     };
 
   const FADE_MS = 2000; // stars render in
