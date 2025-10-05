@@ -41,6 +41,9 @@ export class CameraController {
         this.lockMode = 'none'; // 'none', 'sun', 'earth'
         this.isTransitioning = false; // Flag to prevent input during transitions
         
+        // Meteors list for asteroid locking
+        this.meteorsList = [];
+
         this.update();
     }
     
@@ -149,6 +152,17 @@ export class CameraController {
             case 'Digit2':
                 // Lock onto meteor if it exists
                 this.lockOntoMeteorIfExists();
+                break;
+            case 'KeyA':
+                // Lock onto first asteroid/meteor from the list
+                if (this.meteorsList.length > 0) {
+                    const firstMeteor = this.meteorsList[0];
+                    this.setCurrentMeteor(firstMeteor);
+                    this.lockOntoMeteor(firstMeteor);
+                    console.log('Camera locked onto first asteroid');
+                } else {
+                    console.log('No asteroids available to lock onto');
+                }
                 break;
             case 'Escape':
                 // Unlock from any target
@@ -263,6 +277,11 @@ export class CameraController {
         this.currentMeteor = meteorInstance;
     }
     
+    // Set meteors list for asteroid locking
+    setMeteorsList(meteorsList) {
+        this.meteorsList = meteorsList;
+    }
+
     // Internal method to lock onto meteor if one exists
     lockOntoMeteorIfExists() {
         if (this.currentMeteor) {

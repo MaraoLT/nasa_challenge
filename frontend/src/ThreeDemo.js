@@ -86,6 +86,9 @@ function ThreeDemo() {
       );
       setMeteorsList(meteors);
       meteorsListRef.current = meteors; // Update ref for animation loops
+
+      // Pass meteors list to camera controller for asteroid locking
+
     }
   }, [asteroidOrbits, sceneReady, currentScene, sunInstance, currentCamera]);
 
@@ -166,10 +169,15 @@ function ThreeDemo() {
 
       // Variables for this component
       let animationId;
-
-      // Start the visible animation loop using the background scene's start time
+        console.log("first if CameraController");
+        if (meteorsListRef.current.length > 0) {
+            // Find the camera controller and set the meteors list
+            // We need to get the camera controller instance from the scene
+            console.log("Pass list CameraController");
+            cameraController.setMeteorsList(meteorsListRef.current);
+        }
+      // Start the visi     ble animation loop using the background scene's start time
       let lastTimestamp = performance.now();
-
       const animate = (currentTimestamp) => {
         stats.begin();
         const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
@@ -205,22 +213,9 @@ function ThreeDemo() {
       // Start animation immediately
       animationId = requestAnimationFrame(animate);
 
-      const handleKeyPress = (event) => {
-        switch(event.code) {
-          case 'KeyA':
-            console.log('KeyA) pressed');
-            // Lock onto first asteroid/meteor from the list
-            if (meteorsListRef.current.length > 0) {
-              const firstMeteor = meteorsListRef.current[0];
-              cameraController.setCurrentMeteor(firstMeteor);
-              cameraController.lockMode = 'meteor';
-              console.log('Camera locked onto first asteroid');
-            }
-            break;
-        }
-      };
 
-      window.addEventListener('keydown', handleKeyPress);
+
+
 
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -234,7 +229,6 @@ function ThreeDemo() {
       window.threeCleanup = () => {
         if (animationId) cancelAnimationFrame(animationId);
         cameraController.disableControls(renderer.domElement);
-        window.removeEventListener('keydown', handleKeyPress);
         window.removeEventListener('resize', handleResize);
         // Remove stats panel from container
         if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
@@ -325,7 +319,13 @@ function ThreeDemo() {
 
       // Variables for this component
       let animationId;
-
+        console.log("first if CameraController, meteorsListRef.current: ", meteorsListRef.current.length);
+      if (meteorsListRef.current.length > 0) {
+            // Find the camera controller and set the meteors list
+            // We need to get the camera controller instance from the scene
+          console.log("Pass list CameraController");
+          cameraController.setMeteorsList(meteorsListRef.current);
+      }
       // Start animation
       const startTimestamp = performance.now();
       let lastTimestamp = startTimestamp;
@@ -361,21 +361,9 @@ function ThreeDemo() {
 
       animationId = requestAnimationFrame(animate);
 
-      const handleKeyPress = (event) => {
-        switch(event.code) {
-          case 'KeyA':
-            // Lock onto first asteroid/meteor from the list
-            if (meteorsListRef.current.length > 0) {
-              const firstMeteor = meteorsListRef.current[0];
-              cameraController.setCurrentMeteor(firstMeteor);
-              cameraController.lockMode = 'meteor';
-              console.log('Camera locked onto first asteroid');
-            }
-            break;
-        }
-      };
 
-      window.addEventListener('keydown', handleKeyPress);
+
+
 
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -389,7 +377,6 @@ function ThreeDemo() {
       window.threeCleanup = () => {
         if (animationId) cancelAnimationFrame(animationId);
         cameraController.disableControls(renderer.domElement);
-        window.removeEventListener('keydown', handleKeyPress);
         window.removeEventListener('resize', handleResize);
         if (sunInstance) sunInstance.dispose();
         if (earthInstance) earthInstance.dispose();
