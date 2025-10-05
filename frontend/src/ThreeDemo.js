@@ -5,6 +5,7 @@ import { Galaxy } from './render/Galaxy';
 import { CameraController } from './controller/CameraController';
 import { Sun } from './render/Sun';
 import { Meteor } from './render/Meteor';
+import { ThreeInitializer } from './utils/ThreeInitializer';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
@@ -17,137 +18,42 @@ function ThreeDemo() {
   useEffect(() => {
     if (!mountRef.current) return;
 
-    console.log('ThreeDemo starting with preloaded assets:', assetsPreloaded ? 'Yes' : 'No');
-    console.log('Available assets:', Object.keys(preloadedAssets));
-    console.log('Available preprocessed objects:', Object.keys(preprocessedObjects));
-
-    // Clear any existing content first
-    mountRef.current.innerHTML = '';
-
-    // Create scene, camera, and renderer with loading optimizations
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: false, // Disable for faster initialization, re-enable after load
-      powerPreference: "high-performance",
-      stencil: false
-    });
-
-    // Fast initial setup
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000000);
-    renderer.shadowMap.enabled = false; // Disable shadows during loading
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
+    console.log('ThreeDemo starting...');
     
-    // Append to the ref div
-    mountRef.current.appendChild(renderer.domElement);
+    // Check if we have a background scene ready
+    if (ThreeInitializer.isSceneReady()) {
+      console.log('Background scene is ready! Taking it over...');
+      takeOverBackgroundScene();
+    } else {
+      console.log('No background scene ready, initializing from scratch...');
+      initializeFromScratch();
+    }
 
-    // Variables for smooth initialization
-    let sunInstance, earthInstance, cameraController;
-    let currentMeteor = null;
-    let animationId;
+    function takeOverBackgroundScene() {
+      const backgroundScene = ThreeInitializer.getBackgroundScene();
+      if (!backgroundScene) {
+        console.warn('Background scene not available, falling back to normal init');
+        initializeFromScratch();
+        return;
+      }
 
-    // Progressive loading function to prevent blocking
-    const initializeSceneProgressive = () => {
-      // Step 1: Create sun first (lightest object)
-      console.log('Creating sun...');
-      sunInstance = new Sun(scene, 15, preloadedAssets, preprocessedObjects);
-      sunInstance.setPosition(0, 0, 0);
+      console.log('Taking over background scene...');
       
-      // Render the sun immediately so user sees something
-      camera.position.set(0, 0, 50);
-      renderer.render(scene, camera);
-
-      // Step 2: Add Earth after a micro-delay
-      setTimeout(() => {
-        console.log('Creating Earth...');
-        earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
-        earthInstance.startOrbit();
-        
-        // Render with Earth
-        renderer.render(scene, camera);
-
-        // Step 3: Add Galaxy after another micro-delay
-        setTimeout(() => {
-          console.log('Creating Galaxy...');
-          let galaxy;
-          if (preprocessedObjects.galaxyGeometry && preprocessedObjects.galaxyMaterial) {
-            console.log('Using preprocessed galaxy objects');
-            galaxy = new THREE.Mesh(preprocessedObjects.galaxyGeometry, preprocessedObjects.galaxyMaterial);
-          } else {
-            console.log('Creating galaxy normally');
-            galaxy = new Galaxy(500, 64, preloadedAssets).mesh;
-          }
-          scene.add(galaxy);
-
-          // Step 4: Add lighting and effects
-          setTimeout(() => {
-            console.log('Setting up lighting and camera...');
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.1);
-            scene.add(ambientLight);
-            sunInstance.addCorona();
-
-            // Initialize camera controller
-            cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 20, 500);
-            cameraController.enableControls(renderer.domElement);
-            cameraController.setZoomLimits(20, 500);
-            cameraController.setTargetObjects(sunInstance, earthInstance);
-
-            const sunDirection = sunInstance.getPosition().clone().sub(earthInstance.getPosition()).normalize();
-            earthInstance.updateSunDirection(sunDirection);
-
-            // Step 5: Final camera setup and start animation
-            setTimeout(() => {
-              console.log('Final setup and starting animation...');
-              initializeCamera();
-              
-              // Re-enable antialiasing now that everything is loaded
-              if (renderer.getContext().getParameter(renderer.getContext().SAMPLES) > 0) {
-                // Create new renderer with antialiasing for smooth operation
-                const smoothRenderer = new THREE.WebGLRenderer({ 
-                  antialias: true,
-                  powerPreference: "high-performance"
-                });
-                smoothRenderer.setSize(window.innerWidth, window.innerHeight);
-                smoothRenderer.setClearColor(0x000000);
-                smoothRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                
-                // Replace renderer in DOM
-                mountRef.current.removeChild(renderer.domElement);
-                mountRef.current.appendChild(smoothRenderer.domElement);
-                
-                // Update references
-                Object.assign(renderer, smoothRenderer);
-                cameraController.enableControls(smoothRenderer.domElement);
-              }
-              
-              startAnimation();
-            }, 16); // ~1 frame delay
-          }, 16); // ~1 frame delay
-        }, 16); // ~1 frame delay
-      }, 16); // ~1 frame delay
-    };
-
-    const initializeCamera = () => {
-      const earthPos = earthInstance.getPosition();
-      const direction = new THREE.Vector3(0, 0, 1).normalize();
-      const cameraDistance = 8;
+      // Clear any existing content first
+      mountRef.current.innerHTML = '';
       
-      camera.position.copy(earthPos).add(direction.multiplyScalar(cameraDistance));
-      camera.lookAt(earthPos);
+      // Take ownership of the background scene
+      const { scene, camera, renderer, sunInstance, earthInstance, galaxy, cameraController, ambientLight, startTimestamp } = backgroundScene;
       
-      cameraController.target.copy(earthPos);
-      cameraController.spherical.setFromVector3(camera.position.clone().sub(earthPos));
-      cameraController.currentDistance = cameraDistance;
+      // Attach the renderer to our DOM element
+      backgroundScene.attachToDOM(mountRef.current);
       
-      setTimeout(() => {
-        cameraController.lockOntoEarthWithTransition(1000);
-      }, 100);
-    };
-
-    const startAnimation = () => {
-      const startTimestamp = performance.now();
-      let lastTimestamp = startTimestamp;
+      // Variables for this component
+      let currentMeteor = null;
+      let animationId;
+      
+      // Start the visible animation loop using the background scene's start time
+      let lastTimestamp = performance.now();
       
       const animate = (currentTimestamp) => {
         const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
@@ -157,7 +63,7 @@ function ThreeDemo() {
         // Update camera controller
         cameraController.update();
         
-        // Update Earth's orbital position with absolute time
+        // Update Earth's orbital position with absolute time from background scene start
         earthInstance.updateOrbit(absoluteTime);
         earthInstance.rotate(0.5 * deltaTime);
         earthInstance.updateMatrixWorld();
@@ -179,102 +85,253 @@ function ThreeDemo() {
         animationId = requestAnimationFrame(animate);
       };
 
+      // Start animation immediately
       animationId = requestAnimationFrame(animate);
-    };
 
-    // Meteor management
-    const createNewMeteor = () => {
-      // Remove existing meteor if any
-      if (currentMeteor) {
-        currentMeteor.dispose();
-        currentMeteor = null;
-        // Clear meteor reference in camera controller
-        cameraController.setCurrentMeteor(null);
-      }
+      // Meteor management functions
+      const createNewMeteor = () => {
+        if (currentMeteor) {
+          currentMeteor.dispose();
+          currentMeteor = null;
+          cameraController.setCurrentMeteor(null);
+        }
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 200 + Math.random() * 150;
+        const height = (Math.random() - 0.5) * 100;
+        
+        const meteorPosition = new THREE.Vector3(
+          Math.cos(angle) * distance,
+          height,
+          Math.sin(angle) * distance
+        );
+        
+        currentMeteor = Meteor.createRandomMeteor(
+          scene,
+          5, 20,
+          meteorPosition,
+          preloadedAssets,
+          preprocessedObjects
+        );
+        
+        currentMeteor.startOrbit(sunInstance.getPosition(), 0.002 + Math.random() * 0.003);
+        cameraController.setCurrentMeteor(currentMeteor);
+        
+        console.log('New meteor created!');
+      };
       
-      // Create new meteor with random position around the system
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 200 + Math.random() * 150; // Distance between 200-350 units (beyond Earth's orbit)
-      const height = (Math.random() - 0.5) * 100; // Some vertical spread
+      const handleKeyPress = (event) => {
+        switch(event.code) {
+          case 'KeyM':
+            createNewMeteor();
+            break;
+        }
+      };
       
-      const meteorPosition = new THREE.Vector3(
-        Math.cos(angle) * distance,
-        height,
-        Math.sin(angle) * distance
-      );
+      window.addEventListener('keydown', handleKeyPress);
       
-      // Create meteor with appropriate size for the new scale
-      currentMeteor = Meteor.createRandomMeteor(
-        scene,
-        5, 20, // radius between 5 and 20 (scaled up from 0.5-2.0)
-        meteorPosition,
-        preloadedAssets,
-        preprocessedObjects
-      );
+      const handleResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      };
       
-      // Add some orbital motion
-      currentMeteor.startOrbit(sunInstance.getPosition(), 0.002 + Math.random() * 0.003);
+      window.addEventListener('resize', handleResize);
       
-      // Set meteor reference in camera controller
-      cameraController.setCurrentMeteor(currentMeteor);
-      
-      console.log('New meteor created!');
-    };
-    
-    // Keyboard event handler for meteor creation
-    const handleKeyPress = (event) => {
-      switch(event.code) {
-        case 'KeyM':
-          createNewMeteor();
-          break;
-      }
-    };
-    
-    // Add keyboard event listener
-    window.addEventListener('keydown', handleKeyPress);
+      // Store cleanup function for this component
+      window.threeCleanup = () => {
+        if (animationId) cancelAnimationFrame(animationId);
+        cameraController.disableControls(renderer.domElement);
+        window.removeEventListener('keydown', handleKeyPress);
+        window.removeEventListener('resize', handleResize);
+        if (currentMeteor) {
+          currentMeteor.dispose();
+          cameraController.setCurrentMeteor(null);
+        }
+        // Don't dispose of background scene objects here - they're managed by ThreeInitializer
+        if (mountRef.current) mountRef.current.innerHTML = '';
+      };
+    }
 
-    // Handle window resize
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+    function initializeFromScratch() {
+      // Fallback to original initialization
+      console.log('ThreeDemo starting with preloaded assets:', assetsPreloaded ? 'Yes' : 'No');
+      console.log('Available assets:', Object.keys(preloadedAssets));
+      console.log('Available preprocessed objects:', Object.keys(preprocessedObjects));
+
+      // Clear any existing content first
+      mountRef.current.innerHTML = '';
+
+      // Create scene, camera, and renderer
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        powerPreference: "high-performance",
+        stencil: false
+      });
+
       renderer.setSize(window.innerWidth, window.innerHeight);
-    };
+      renderer.setClearColor(0x000000);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      
+      // Append to the ref div
+      mountRef.current.appendChild(renderer.domElement);
 
-    window.addEventListener('resize', handleResize);
+      // Create scene objects
+      const sunInstance = new Sun(scene, 15, preloadedAssets, preprocessedObjects);
+      sunInstance.setPosition(0, 0, 0);
+      
+      const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
+      earthInstance.startOrbit();
 
-    // Start progressive initialization
-    initializeSceneProgressive();
+      // Add galaxy
+      let galaxy;
+      if (preprocessedObjects.galaxyGeometry && preprocessedObjects.galaxyMaterial) {
+        galaxy = new THREE.Mesh(preprocessedObjects.galaxyGeometry, preprocessedObjects.galaxyMaterial);
+      } else {
+        galaxy = new Galaxy(500, 64, preloadedAssets).mesh;
+      }
+      scene.add(galaxy);
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.1);
+      scene.add(ambientLight);
+      sunInstance.addCorona();
+
+      // Initialize camera controller
+      const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 20, 500);
+      cameraController.enableControls(renderer.domElement);
+      cameraController.setZoomLimits(20, 500);
+      cameraController.setTargetObjects(sunInstance, earthInstance);
+
+      // Set initial camera position to look at Earth
+      const earthPos = earthInstance.getPosition();
+      const direction = new THREE.Vector3(0, 0, 1).normalize();
+      const cameraDistance = 8;
+      
+      camera.position.copy(earthPos).add(direction.multiplyScalar(cameraDistance));
+      camera.lookAt(earthPos);
+      
+      cameraController.target.copy(earthPos);
+      cameraController.spherical.setFromVector3(camera.position.clone().sub(earthPos));
+      cameraController.currentDistance = cameraDistance;
+
+      // Lock onto Earth immediately (no transition needed since we're already positioned correctly)
+      setTimeout(() => {
+        cameraController.lockedTarget = earthInstance;
+        cameraController.lockMode = 'earth';
+        cameraController.updateMinDistanceForTarget();
+        console.log('Camera locked onto Earth from start');
+      }, 100);
+
+      // Variables for this component
+      let currentMeteor = null;
+      let animationId;
+
+      // Start animation
+      const startTimestamp = performance.now();
+      let lastTimestamp = startTimestamp;
+      
+      const animate = (currentTimestamp) => {
+        const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
+        lastTimestamp = currentTimestamp;
+        const absoluteTime = (currentTimestamp - startTimestamp) / 1000;
+
+        cameraController.update();
+        
+        earthInstance.updateOrbit(absoluteTime);
+        earthInstance.rotate(0.5 * deltaTime);
+        earthInstance.updateMatrixWorld();
+        
+        const sunDirection = sunInstance.getPosition().clone().sub(earthInstance.getPosition()).normalize();
+        earthInstance.updateSunDirection(sunDirection);
+
+        sunInstance.update();
+        
+        if (currentMeteor) {
+          currentMeteor.updateOrbit(absoluteTime);
+          currentMeteor.rotate(0.02);
+        }
+
+        renderer.render(scene, camera);
+        animationId = requestAnimationFrame(animate);
+      };
+
+      animationId = requestAnimationFrame(animate);
+
+      // Event handlers (same as background scene version)
+      const createNewMeteor = () => {
+        if (currentMeteor) {
+          currentMeteor.dispose();
+          currentMeteor = null;
+          cameraController.setCurrentMeteor(null);
+        }
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 200 + Math.random() * 150;
+        const height = (Math.random() - 0.5) * 100;
+        
+        const meteorPosition = new THREE.Vector3(
+          Math.cos(angle) * distance,
+          height,
+          Math.sin(angle) * distance
+        );
+        
+        currentMeteor = Meteor.createRandomMeteor(
+          scene,
+          5, 20,
+          meteorPosition,
+          preloadedAssets,
+          preprocessedObjects
+        );
+        
+        currentMeteor.startOrbit(sunInstance.getPosition(), 0.002 + Math.random() * 0.003);
+        cameraController.setCurrentMeteor(currentMeteor);
+        
+        console.log('New meteor created!');
+      };
+      
+      const handleKeyPress = (event) => {
+        switch(event.code) {
+          case 'KeyM':
+            createNewMeteor();
+            break;
+        }
+      };
+      
+      window.addEventListener('keydown', handleKeyPress);
+      
+      const handleResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      
+      // Store cleanup function
+      window.threeCleanup = () => {
+        if (animationId) cancelAnimationFrame(animationId);
+        cameraController.disableControls(renderer.domElement);
+        window.removeEventListener('keydown', handleKeyPress);
+        window.removeEventListener('resize', handleResize);
+        if (sunInstance) sunInstance.dispose();
+        if (earthInstance) earthInstance.dispose();
+        if (currentMeteor) {
+          currentMeteor.dispose();
+          cameraController.setCurrentMeteor(null);
+        }
+        renderer.dispose();
+        if (mountRef.current) mountRef.current.innerHTML = '';
+      };
+    }
 
     // Cleanup function
     return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-      
-      // Disable camera controls
-      if (cameraController) {
-        cameraController.disableControls(renderer.domElement);
-      }
-      
-      // Remove keyboard event listener
-      window.removeEventListener('keydown', handleKeyPress);
-      
-      window.removeEventListener('resize', handleResize);
-      
-      // Dispose of objects
-      if (sunInstance) sunInstance.dispose();
-      if (earthInstance) earthInstance.dispose();
-      if (currentMeteor) {
-        currentMeteor.dispose();
-        // Clear meteor reference in camera controller
-        if (cameraController) cameraController.setCurrentMeteor(null);
-      }
-      
-      renderer.dispose();
-      
-      // Clear the mount point
-      if (mountRef.current) {
-        mountRef.current.innerHTML = '';
+      if (window.threeCleanup) {
+        window.threeCleanup();
+        window.threeCleanup = null;
       }
     };
   }, []);

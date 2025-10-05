@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import * as THREE from 'three';
+import { ThreeInitializer } from '../utils/ThreeInitializer';
 
 export default function TerminalLanding() {
   // Multi-page texts; advance through each, then navigate
@@ -21,7 +22,7 @@ export default function TerminalLanding() {
 
   const fullText = currentText;
 
-  // Preload Three.js assets and preprocessed objects
+  // Preload Three.js assets, preprocessed objects, and initialize scene
   useEffect(() => {
     const loadingManager = new THREE.LoadingManager();
     const textureLoader = new THREE.TextureLoader(loadingManager);
@@ -39,7 +40,7 @@ export default function TerminalLanding() {
     // Object to hold loaded assets and preprocessed objects
     const loadedAssets = {};
     const preprocessedObjects = {};
-    let totalItems = texturePaths.length + 4; // textures + 4 preprocessing steps
+    let totalItems = texturePaths.length + 4 + 1; // textures + 4 preprocessing steps + scene initialization
     let loadedItems = 0;
 
     const updateProgress = () => {
@@ -103,6 +104,19 @@ export default function TerminalLanding() {
           updateProgress();
 
           console.log('All preprocessing completed!');
+          
+          // Now initialize the Three.js scene in background using the shared initializer
+          console.log('Starting background Three.js scene initialization...');
+          ThreeInitializer.initializeInBackground(loadedAssets, preprocessedObjects)
+            .then(() => {
+              console.log('Background scene initialization complete!');
+              updateProgress();
+            })
+            .catch((error) => {
+              console.error('Error initializing background scene:', error);
+              updateProgress(); // Continue even if background init fails
+            });
+          
           setPreloadedAssets(loadedAssets);
           setAssetsLoaded(true);
           
@@ -139,6 +153,9 @@ export default function TerminalLanding() {
     });
 
     return () => {
+      // Stop and cleanup background scene if running
+      ThreeInitializer.cleanup();
+      
       // Cleanup if component unmounts
       Object.values(loadedAssets).forEach(texture => {
         if (texture.dispose) texture.dispose();
@@ -241,11 +258,7 @@ export default function TerminalLanding() {
   };
 
   const getDisplayText = () => {
-    let text = displayedText;
-    if (!assetsLoaded) {
-      text += `\n\nLoading assets... ${Math.round(loadingProgress)}%`;
-    }
-    return text;
+    return displayedText;
   };
 
   // Helper function to create meteor geometry with procedural deformation
@@ -291,12 +304,6 @@ export default function TerminalLanding() {
             {getDisplayText()}
             <span style={cursorStyle}>|</span>
           </pre>
-          {/* Optional: show loading progress */}
-          {!assetsLoaded && (
-            <div style={{color: "#00ff00", fontSize: "1rem", marginTop: "20px"}}>
-              Loading assets... {Math.round(loadingProgress)}%
-            </div>
-          )}
         </div>
       </div>
   );
