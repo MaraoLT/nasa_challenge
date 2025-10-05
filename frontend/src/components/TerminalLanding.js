@@ -5,11 +5,13 @@ import { ThreeInitializer } from '../utils/ThreeInitializer';
 import audioContextManager from '../utils/AudioContextManager';
 
 export default function TerminalLanding() {
-  // Multi-page texts; advance through each, then navigate
-  const texts = [
+  const defaultTexts = [
     `Attention, citizens! A colossal meteor is on a collision course with Earth!\nEveryone must immediately seek shelter in bunkers or underground safe locations!\nThe government is mobilizing unprecedented technology to try to stop the catastrophe,\nbut every second counts — you can help us in this mission!\n\nClick to continue...`,
     `Information will be your best ally.\nBefore taking action, you must endure a serious training on space objects.\nCan you help us?\n\nClick to start experience!`
   ];
+  const texts = Array.isArray(arguments[0]?.texts) ? arguments[0].texts : defaultTexts;
+  const defaultPath = '/star-transition'
+  const path = arguments[0]?.path || defaultPath;
 
   const [page, setPage] = useState(0);
   const currentText = texts[page] ?? "";
@@ -346,7 +348,7 @@ export default function TerminalLanding() {
     } else if (assetsLoaded) {
       // Play a short ease-out before navigating
       setCanClick(false);
-      setTimeout(() => navigate("/star-transition"), 520);
+      setTimeout(() => navigate(path), 520);
     }
   };
 
