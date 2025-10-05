@@ -24,16 +24,26 @@ export class Earth extends AstralObject {
     }
 
     createEarthMesh() {
-        const geometry = new THREE.SphereGeometry(this.radius, this.segments, this.segments);
+        // Use preprocessed geometry if available, otherwise create new
+        let geometry;
+        if (this.preprocessedObjects.earthGeometry) {
+            console.log('Using preprocessed earth geometry');
+            geometry = this.preprocessedObjects.earthGeometry.clone();
+            geometry.scale(this.radius, this.radius, this.radius);
+        } else {
+            console.log('Creating earth geometry normally');
+            geometry = new THREE.SphereGeometry(this.radius, this.segments, this.segments);
+        }
 
-        // Create texture loader
+        // Use preloaded textures if available, otherwise load normally
         const textureLoader = new THREE.TextureLoader();
-
-        // Load Earth textures from public folder
-        const earthDayTexture = textureLoader.load('/resources/earth/Earth Map.jpg');
-        const earthNightTexture = textureLoader.load('/resources/earth/Earth Night Map.jpg');
-        const bumpTexture = textureLoader.load('/resources/earth/Earth Topographic Map.png');
-
+        const earthDayTexture = this.preloadedAssets['/resources/earth/Earth Map.jpg']
+            || textureLoader.load('/resources/earth/Earth Map.jpg');
+        const earthNightTexture = this.preloadedAssets['/resources/earth/Earth Night Map.jpg']
+            || textureLoader.load('/resources/earth/Earth Night Map.jpg');
+        const bumpTexture = this.preloadedAssets['/resources/earth/Earth Topographic Map.png']
+            || textureLoader.load('/resources/earth/Earth Topographic Map.png');
+        
         // Configure texture settings for better quality
         earthDayTexture.wrapS = THREE.RepeatWrapping;
         earthDayTexture.wrapT = THREE.RepeatWrapping;
@@ -117,6 +127,10 @@ export class Earth extends AstralObject {
 
         const mesh = new THREE.Mesh(geometry, material);
 
+        // Ensure Earth doesn't cast shadows that could interfere with galaxy
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+
         // Store reference to material for updating sun direction
         mesh.userData.material = material;
 
@@ -124,11 +138,21 @@ export class Earth extends AstralObject {
     }
 
     createAtmosphere() {
-        const atmosphereGeometry = new THREE.SphereGeometry(this.radius * 1.02, this.segments, this.segments);
+        // Use preprocessed atmosphere geometry if available, otherwise create new
+        let atmosphereGeometry;
+        if (this.preprocessedObjects.atmosphereGeometry) {
+            console.log('Using preprocessed atmosphere geometry');
+            atmosphereGeometry = this.preprocessedObjects.atmosphereGeometry.clone();
+            atmosphereGeometry.scale(this.radius * 1.02, this.radius * 1.02, this.radius * 1.02);
+        } else {
+            console.log('Creating atmosphere geometry normally');
+            atmosphereGeometry = new THREE.SphereGeometry(this.radius * 1.02, this.segments, this.segments);
+        }
 
-        const TextureLoader = new THREE.TextureLoader();
-        const atmosphereTexture = TextureLoader.load('/resources/earth/Earth Clouds.jpg');
-
+        const textureLoader = new THREE.TextureLoader();
+        const atmosphereTexture = this.preloadedAssets['/resources/earth/Earth Clouds.jpg']
+            || textureLoader.load('/resources/earth/Earth Clouds.jpg');
+        
         // Use MeshBasicMaterial so it's not affected by directional lighting
         const atmosphereMaterial = new THREE.MeshBasicMaterial({
             alphaMap: atmosphereTexture,
@@ -138,6 +162,11 @@ export class Earth extends AstralObject {
         });
 
         const atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+
+        // Ensure atmosphere doesn't cast shadows
+        atmosphereMesh.castShadow = false;
+        atmosphereMesh.receiveShadow = false;
+
         return atmosphereMesh;
     }
 
