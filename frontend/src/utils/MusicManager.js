@@ -147,6 +147,14 @@ class MusicManager {
       }
     }, 50);
   }
+
+  isCurrentlyPlaying(trackPath) {
+    return this.isPlaying && this.currentTrackPath === trackPath;
+  }
+
+  getCurrentTrackPath() {
+    return this.currentTrackPath;
+  }
 }
 
 // Create global instance

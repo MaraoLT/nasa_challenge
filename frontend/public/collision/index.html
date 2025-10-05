@@ -525,15 +525,21 @@
             
             console.log(`Returning to: ${returnUrl} (from: ${fromParam || parentFromParam || 'referrer'}, referrer: ${referrer})`);
             
-            // Try to navigate parent window if we're in iframe
+            // Try to communicate with parent React application
             try {
                 if (window.parent && window.parent !== window) {
-                    window.parent.location.href = returnUrl;
+                    // Send message to parent React app to navigate
+                    window.parent.postMessage({
+                        type: 'NAVIGATE',
+                        url: returnUrl
+                    }, '*');
                 } else {
+                    // Fallback: direct navigation (shouldn't happen in normal usage)
                     window.location.href = returnUrl;
                 }
             } catch (e) {
-                // Fallback to current window navigation
+                // Final fallback
+                console.warn('Navigation failed, using fallback:', e);
                 window.location.href = returnUrl;
             }
         }
@@ -557,24 +563,24 @@
             const referrer = document.referrer;
             
             let nextUrl = '/blueprint'; // Default
-            
-            // If we came from home, go to blueprint
-            // If we came from more-data, go to credits (end of flow)
-            if (fromParam === 'more-data' || parentFromParam === 'more-data' || referrer.includes('/more-data')) {
-                nextUrl = '/credits';
-            }
-            
+                        
             console.log(`Going to next: ${nextUrl} (from: ${fromParam || parentFromParam || 'referrer'})`);
             
-            // Try to navigate parent window if we're in iframe
+            // Try to communicate with parent React application
             try {
                 if (window.parent && window.parent !== window) {
-                    window.parent.location.href = nextUrl;
+                    // Send message to parent React app to navigate
+                    window.parent.postMessage({
+                        type: 'NAVIGATE',
+                        url: nextUrl
+                    }, '*');
                 } else {
+                    // Fallback: direct navigation (shouldn't happen in normal usage)
                     window.location.href = nextUrl;
                 }
             } catch (e) {
-                // Fallback to current window navigation
+                // Final fallback
+                console.warn('Navigation failed, using fallback:', e);
                 window.location.href = nextUrl;
             }
         }

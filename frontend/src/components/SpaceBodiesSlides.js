@@ -71,9 +71,17 @@ export default function SpaceBodiesSlides() {
 
     // Initialize audio context manager and start music when component mounts
     audioContextManager.init();
-    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
-    if (!playResult) {
-      console.log('Music will play after user interaction');
+    
+    const targetTrack = '/resources/sounds/Eternal Horizon.mp3';
+    
+    // Only start music if it's not already playing the correct track
+    if (!musicManager.isCurrentlyPlaying(targetTrack)) {
+      const playResult = musicManager.playTrack(targetTrack, true);
+      if (!playResult) {
+        console.log('Music will play after user interaction');
+      }
+    } else {
+      console.log('Music already playing, continuing current track');
     }
 
     const scene = new THREE.Scene();
@@ -144,8 +152,8 @@ export default function SpaceBodiesSlides() {
     animate();
 
     return () => {
-      // Fade out music when leaving the component
-      musicManager.fadeOut(500);
+      // Don't fade out music when leaving - let the next component handle it
+      // This prevents music interruption during navigation
       
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', onResize);
