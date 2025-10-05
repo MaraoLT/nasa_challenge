@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 
 export class Galaxy {
-    constructor(radius = 1500, segments = 64) {
+    constructor(radius = 500, segments = 64, preloadedAssets = {}) {
         this.radius = radius;
         this.segments = segments;
+        this.preloadedAssets = preloadedAssets;
         this.mesh = this.createGalaxyMesh(radius, segments);
         // this.group = new THREE.Group(); --- IGNORE ---
         // this.group.add(this.mesh); --- IGNORE ---
@@ -12,11 +13,10 @@ export class Galaxy {
     createGalaxyMesh() {
         const geometry = new THREE.SphereGeometry(this.radius, this.segments, this.segments);
         
-        // Create texture loader
+        // Use preloaded texture if available, otherwise load normally
         const textureLoader = new THREE.TextureLoader();
-        
-        // Load Earth textures from public folder
-        const galaxyTexture = textureLoader.load('/resources/galaxy/Galaxy Map.jpg');
+        const galaxyTexture = this.preloadedAssets['/resources/galaxy/Galaxy Map.jpg'] 
+            || textureLoader.load('/resources/galaxy/Galaxy Map.jpg');
         
         // Configure texture settings for better quality
         galaxyTexture.wrapS = THREE.RepeatWrapping;

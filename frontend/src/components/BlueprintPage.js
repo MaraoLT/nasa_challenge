@@ -32,7 +32,7 @@ export default function BlueprintPage({ wallpaperUrl }) {
         'The laser ablation technique uses light as a weapon of precision. Spacecraft focus powerful beams or reflected sunlight onto the asteroid’s surface, vaporizing small amounts of rock and creating jets that nudge it away from danger.',
         'No explosions, no collisions — just focused energy and smart engineering. It’s planetary defense for the patient and precise, where science burns brighter than brute force.'
       ],
-      imgSrc: '/assets/logo512.png',
+      imgSrc: '/assets/laser-ablation.png',
       switch: false,
     },
     {

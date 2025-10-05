@@ -1,0 +1,100 @@
+/* Styles for SpaceBodiesSlides (3D + panels) */
+
+.sb {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 50% 120%, #02040a 0%, #04070f 60%, #01030a 100%);
+  color: #eaf2ff;
+  padding: 2rem;
+  display: grid;
+  place-items: center;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+}
+
+.sb__stage {
+  position: relative;
+  width: min(1000px, 92vw);
+  height: min(600px, 75vh);
+}
+
+.sb__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.sb__text {
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  width: 46%;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+.sb__text.left { left: -20%; }
+.sb__text.right { right: -20%; }
+.sb__text.overlay { z-index: 3; }
+
+.sb__title {
+  margin: 0 0 0.75rem 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+}
+
+.sb__content { flex: 1 1 auto; overflow: auto; }
+
+.sb__content p {
+  margin: 0 0 0.65rem 0;
+  line-height: 1.65;
+  font-size: clamp(1.05rem, 2.2vw, 1.22rem);
+}
+
+/* Nav buttons */
+.sb-nav__btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color: #eaf2ff;
+  font-size: 26px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 5;
+}
+.sb-nav__btn.left { left: 16px; }
+.sb-nav__btn.right { right: 16px; }
+
+/* Fade animations */
+@keyframes sb-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sb-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+.sb-anim-fade-in { animation: sb-fade-in 280ms ease-out both; }
+.sb-anim-fade-out { animation: sb-fade-out 240ms ease-in both; }
+
+.sb-animating { pointer-events: none; }
+
+/* Meteor slide: three fixed points */
+.sb__points {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.sb__points.overlay { z-index: 3; }
+.sb__point {
+  position: absolute;
+  max-width: 42%;
+  color: #ffffff;
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  line-height: 1.6;
+}
+.sb__pointTitle { font-weight: 700; margin: 0 0 0.25rem 0; letter-spacing: 0.02em; font-size: clamp(1.25rem, 3.2vw, 1.8rem); }
+.sb__pointBody { opacity: 0.95; }
+.sb__point.ul { top: 6%; left: -20%; }
+.sb__point.ur { top: 6%; right: -20%; text-align: right; }
+.sb__point.mb { bottom: -10%; left: 50%; transform: translateX(-50%); text-align: center; max-width: 60%; }

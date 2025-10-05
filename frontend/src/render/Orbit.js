@@ -4,9 +4,9 @@ export class Orbit {
     constructor({
                     semiMajorAxis = 1,
                     eccentricity = 1 / Math.sqrt(2),
-                    inclination = Math.PI / 5,
-                    omega = Math.PI / 4,
-                    raan =0,
+                    inclination = 0,
+                    omega = 0,
+                    raan = 0,
                     period = 120,
                     tau = 0,
                     numPoints = 80
