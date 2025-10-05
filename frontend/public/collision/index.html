@@ -263,6 +263,16 @@
             margin: 10px 0;
             border-radius: 1px;
         }
+
+        /* Bottom-left global actions (Return / Next) */
+        #footer-actions {
+            position: fixed;
+            left: 10px;
+            bottom: 10px;
+            z-index: 1100;
+            display: flex;
+            gap: 8px;
+        }
     </style>
 </head>
 
@@ -412,10 +422,6 @@
             <div class="divider"></div>
             <div class="section-title">Actions</div>
             <em id="selectHint" style="display:block;margin-bottom:6px;">💡 Click on the map to choose the target!</em>
-            <div class="actions">
-                <button class="btn btn-secondary" onclick="returnHome()">Return</button>
-                <button class="btn btn-secondary" onclick="nextSession()">Next</button>
-            </div>
         </div>
     </div>
 
@@ -455,6 +461,12 @@
         <div class="rows" id="tsunami-section" style="display:none;">
             <div class="row" id="row-tsunami"><span class="label">Initial wave size</span><span class="value" id="r-tsunamiWave">—</span></div>
         </div>
+    </div>
+
+    <!-- Global footer actions (bottom-left) -->
+    <div id="footer-actions">
+        <button class="btn btn-secondary" onclick="returnHome()">Return</button>
+        <button class="btn btn-secondary" onclick="nextSession()">Next</button>
     </div>
     <script src="./lib/calculator.js"></script>
     <script>

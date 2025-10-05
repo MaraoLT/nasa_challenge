@@ -13,6 +13,7 @@ import Credits from './components/Credits';
 import IntroSlide from './components/IntroSlide';
 import DraggableCards from './components/DraggableCards';
 import TypesOfSpaceBodiesSlide from './components/TypesOfSpaceBodiesSlide';
+import MitigationIntroSlide from './components/MitigationIntroSlide';
 
 export default function App() {
   return (
@@ -26,12 +27,14 @@ export default function App() {
         <Route path="/blueprint" element={<BlueprintPage />} />
         <Route path="/space-bodies" element={<SpaceBodiesSlides />} />
         <Route path="/more-data" element={<MoreData />} />
+        <Route path="/mitigation" element={<MitigationIntroSlide />} />
         <Route path="/warning" element={<WarningScreen />} />
         <Route path="/credits" element={<Credits />} />
         <Route path="/intro" element={<IntroSlide />} />
         <Route path="/types-of-space-bodies" element={<TypesOfSpaceBodiesSlide />} />
         <Route path="/cards" element={<DraggableCards />} />
-        <Route path="/meteor-impact-simulator" element={<MeteorImpactSimulator />}/>
+        <Route path="/meteor-impact-simulator" element={<MeteorImpactSimulator />} />
+        <Route path="/ending" element={<TerminalLanding texts={['End of training. You are now fully prepared to protect planet Earth. Congratulations.\n\nClick to finish routine.']} path={'/credits'} />} />
       </Routes>
     </BrowserRouter>
   );
