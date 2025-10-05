@@ -1,6 +1,6 @@
 # Project Summary
 
-Our project aims to create an engaging interactive web application that allows it's users to visualize and understand how meteor impacts can impact our lives on Earth and also learn how we identify this objects and possible mitigation strategies, and ultimately raise awareness about this topic that is not discussed enough. We hope to accomplish this throught our website that combines modern visuals, 3d and 2d visualization tools and engaging narrative to create a intuitive experience for all users. To accomplish this we garnered NASA and other sources data to create our models and predictions. Only by community engagement and awareness we can mitigate the dangers that these extraterrestrial objects impose on earth and it's population, that's why we believe our project can have a Global Impact to futher advance this objective.
+Our project aims to create an engaging, interactive web application that allows its users to visualize and understand how meteor impacts can impact our lives on Earth and also learn how we identify these objects and possible mitigation strategies and ultimately raise awareness about this topic that is not discussed enough. We hope to accomplish this through our website that combines modern visuals, 3D and 2D visualization tools, and engaging narrative to create an intuitive experience for all users. To accomplish this, we garnered data from NASA and other sources to create our models and predictions. Only by community engagement and awareness can we mitigate the dangers that these extraterrestrial objects impose on Earth and its population; that's why we believe our project can have a global impact to further advance this objective.
 
 # Project Demonstration
 
@@ -8,19 +8,19 @@ Our project aims to create an engaging interactive web application that allows i
 
 # Project Details
 
-**Disclaimer**: For a better user experience we recommend you run your project on a Desktop with the tested browsers: Google Chrome, Firefox, Brave.
+**Disclaimer**: For a better user experience, we recommend you run your project on a desktop with the tested browsers: Google Chrome, Firefox, and Brave.
 
 ## Introduction
 
-Our group is compromised of 6 Computer Engineer students from Universidade Estadual de Campinas (UNICAMP) that wanted to take a chance at a NASA Hackaton. Our project will take it's user throught a narrative starting from a warning that a meteor is in collision course with Earth, and tasks the user with taking a course on these objects and mitigations strategies.
+Our group is composed of 6 computer engineering students from Universidade Estadual de Campinas (UNICAMP) that wanted to take a chance at a NASA hackathon. Our project will take its user through a narrative starting from a warning that a meteor is on a collision course with Earth and tasks the user with taking a course on these objects and mitigation strategies.
 
 <IMAGE>
 
-After that we can choose the take Beware of the Rocks Trainning Course, look at an interactive simulation of earth, there we can create meteors and see their trajectories, we also can choose to go to a earth meteor impact simulation where we can define the parameters of the meteor that will impact earth and where it lands, displaying a lot of statistics about the impact, including stats like the size of the crater and the force of the impact. The course is the recommended way to experience the project for the first time.
+After that, we can choose to take the Beware of the Rocks Training Course and look at an interactive simulation of Earth. There we can create meteors and see their trajectories. We also can choose to go to an Earth meteor impact simulation where we can define the parameters of the meteor that will impact Earth and where it lands, displaying a lot of statistics about the impact, including stats like the size of the crater and the force of the impact. The course is the recommended way to experience the project for the first time.
 
 <IMAGE>
 
-## Trainning Course
+## Training Course
 
 There we will start the course with a simulation of the Near Earth Objects (NEOs), where we can see any NEO that are near us and information about them.
 
@@ -30,7 +30,7 @@ After that we have an interactive gallery about ways that we can identify these 
 
 <IMAGE>
 
-After that we are taken the Earth Impact Simulation, where we can visualize the consequences of a direct impact and associated statistics about it.
+After that we are taken to the Earth Impact Simulation, where we can visualize the consequences of a direct impact and associated statistics about it.
 
 <IMAGE>
 
@@ -81,9 +81,9 @@ Our project was built using JavaScript and React to build the webpages. We heavi
 
 ### Source Code: <LINK>
 
-# Artificial Inteligence Disclaimer
+# Artificial Intelligence Disclaimer
 
-In this project we used intensevely AI tools to help us with code generation, code revision, image generation, sound generation and others. We mainly used the following LLMs: ChatGPT, Claude, Gemini.
+In this project we used intensively AI tools to help us with code generation, code revision, image generation, sound generation and others. We mainly used the following LLMs: ChatGPT, Claude, Gemini.
 
 # NASA DATA
 
@@ -101,3 +101,4 @@ In this project we used intensevely AI tools to help us with code generation, co
 * [Earth Impact Effects Paper](https://impact.ese.ic.ac.uk/ImpactEarth/ImpactEffects/effects.pdf)
 * [Population Vulnerability Models for Asteroid Impact Risk Assessment](https://www.researchgate.net/publication/313857682_Population_Vulnerability_Models_for_Asteroid_Impact_Risk_Assessment)
 * [FEMA's Blast Impact Prevension Plan](https://www.fema.gov/pdf/plan/prevent/rms/426/fema426_ch4.pdf)
+
