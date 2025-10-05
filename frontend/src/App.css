@@ -55,7 +55,7 @@ html, body, #root { height: 100%; margin: 0; }
 
 /* Home fade-in */
 .scene.fade-in {
-  animation: homeFadeIn 650ms ease-out both;
+  animation: homeFadeIn 1000ms ease-out both;
 }
 
 @keyframes homeFadeIn {

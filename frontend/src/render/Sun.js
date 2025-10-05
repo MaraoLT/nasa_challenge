@@ -16,7 +16,7 @@ export class Sun {
             this.sunGeometry.scale(this.radius, this.radius, this.radius);
         } else {
             console.log('Creating sun geometry normally');
-            this.sunGeometry = new THREE.SphereGeometry(this.radius, 64, 64);
+            this.sunGeometry = new THREE.SphereGeometry(this.radius, 16, 16);
         }
 
         // Initialize meshes and light (will be created in create methods)

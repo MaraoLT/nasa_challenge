@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import * as THREE from 'three';
 import { ThreeInitializer } from '../utils/ThreeInitializer';
+import audioContextManager from '../utils/AudioContextManager';
 
 import { getMeteorData } from "../lib/calculator";
 
@@ -20,9 +21,37 @@ export default function TerminalLanding() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [preloadedAssets, setPreloadedAssets] = useState({});
   const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [terminalSound, setTerminalSound] = useState(null);
   const navigate = useNavigate();
 
   const fullText = currentText;
+
+  // Initialize audio context manager
+  useEffect(() => {
+    audioContextManager.init();
+  }, []);
+
+  // Preload terminal sound effect
+  useEffect(() => {
+    // Create multiple audio instances to avoid cutting off sounds
+    const audioPool = [];
+    for (let i = 0; i < 8; i++) { // Increased from 5 to 8 instances
+      const audio = new Audio('/resources/sounds/Terminal Sound.wav');
+      audio.preload = 'auto';
+      audio.volume = 1.0; // Reduced volume to prevent harsh overlapping
+      audioPool.push(audio);
+    }
+    setTerminalSound(audioPool);
+    
+    return () => {
+      audioPool.forEach(audio => {
+        if (audio) {
+          audio.pause();
+          audio.src = '';
+        }
+      });
+    };
+  }, []);
 
   // Preload Three.js assets, preprocessed objects, and initialize scene
   useEffect(() => {
@@ -177,18 +206,67 @@ export default function TerminalLanding() {
     setIsTyping(true);
     setCanClick(false);
     let i = 0;
+    let audioIndex = 0;
+    let lastSoundTime = 0;
+    const soundCooldown = 60; // Minimum ms between sounds for better spacing
+    
     const interval = setInterval(() => {
       i += 1;
       setDisplayedText(currentText.slice(0, i));
+      
+      // Play terminal sound for each character (except spaces, newlines, and punctuation)
+      const currentChar = currentText[i - 1];
+      const currentTime = Date.now();
+      
+      // Only play sound for letters, numbers, and some punctuation
+      const shouldPlaySound = currentChar && 
+          /[a-zA-Z0-9!?.,]/.test(currentChar) && 
+          (currentTime - lastSoundTime) >= soundCooldown &&
+          audioContextManager.isAudioEnabled(); // Only play if audio is enabled
+      
+      if (shouldPlaySound && terminalSound && Array.isArray(terminalSound)) {
+        try {
+          // Find an audio instance that's not currently playing
+          let audio = null;
+          for (let j = 0; j < terminalSound.length; j++) {
+            const candidate = terminalSound[(audioIndex + j) % terminalSound.length];
+            if (candidate.paused || candidate.ended || candidate.currentTime === 0) {
+              audio = candidate;
+              audioIndex = (audioIndex + j + 1) % terminalSound.length;
+              break;
+            }
+          }
+          
+          // If no free audio found, use the next one anyway but stop it first
+          if (!audio) {
+            audio = terminalSound[audioIndex];
+            audioIndex = (audioIndex + 1) % terminalSound.length;
+            audio.pause();
+            audio.currentTime = 0;
+          }
+          
+          // Play the audio
+          audio.currentTime = 0;
+          audio.play().catch(e => {
+            // Ignore play errors (browser autoplay policies)
+            console.log('Audio play prevented:', e.message);
+          });
+          
+          lastSoundTime = currentTime;
+        } catch (error) {
+          console.log('Audio error:', error);
+        }
+      }
+      
       if (i >= currentText.length) {
         clearInterval(interval);
         setIsTyping(false);
         setCanClick(true);
       }
-    }, 30);
+    }, 40); // Increased from 30ms to 40ms for more natural spacing
 
     return () => clearInterval(interval);
-  }, [currentText]);
+  }, [currentText, terminalSound]);
 
   // Enable click when both text is done and assets are loaded
   useEffect(() => {
@@ -249,6 +327,9 @@ export default function TerminalLanding() {
   `;
 
   const handleClick = () => {
+    // This click will trigger the AudioContextManager to enable audio globally
+    // No need to manually enable audio here, AudioContextManager handles it
+    
     // If still typing, ignore clicks entirely
     if (isTyping) return;
     // Only accept clicks when fully ready

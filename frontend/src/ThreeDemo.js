@@ -6,9 +6,13 @@ import { CameraController } from './controller/CameraController';
 import { Sun } from './render/Sun';
 import { Meteor } from './render/Meteor';
 import { ThreeInitializer } from './utils/ThreeInitializer';
+import Stats from 'stats.js';
+import musicManager from './utils/MusicManager';
+import audioContextManager from './utils/AudioContextManager';
 
 function ThreeDemo() {
   const mountRef = useRef(null);
+  const statsContainerRef = useRef(null);
 
   // Get preloaded assets and preprocessed objects from global window object
   const preloadedAssets = window.preloadedAssets || {};
@@ -16,9 +20,25 @@ function ThreeDemo() {
   const assetsPreloaded = sessionStorage.getItem('assetsPreloaded') === 'true';
 
   useEffect(() => {
+    // Stats initialization
+    const stats = new Stats();
+    stats.showPanel(0);
+    if (statsContainerRef.current) {
+      statsContainerRef.current.appendChild(stats.dom);
+    }
+
     if (!mountRef.current) return;
 
     console.log('ThreeDemo starting...');
+
+    // Initialize audio context manager
+    audioContextManager.init();
+
+    // Start playing the space music - use correct path
+    const playResult = musicManager.playTrack('/resources/sounds/Drifting Through the Void.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
 
     // Check if we have a background scene ready
     if (ThreeInitializer.isSceneReady()) {
@@ -56,6 +76,7 @@ function ThreeDemo() {
       let lastTimestamp = performance.now();
 
       const animate = (currentTimestamp) => {
+        stats.begin();
         const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
         lastTimestamp = currentTimestamp;
         const absoluteTime = (currentTimestamp - startTimestamp) / 1000;
@@ -82,6 +103,7 @@ function ThreeDemo() {
         }
 
         renderer.render(scene, camera);
+        stats.end();
         animationId = requestAnimationFrame(animate);
       };
 
@@ -148,6 +170,10 @@ function ThreeDemo() {
           currentMeteor.dispose();
           cameraController.setCurrentMeteor(null);
         }
+        // Remove stats panel from container
+        if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
+          statsContainerRef.current.removeChild(stats.dom);
+        }
         // Don't dispose of background scene objects here - they're managed by ThreeInitializer
         if (mountRef.current) mountRef.current.innerHTML = '';
       };
@@ -182,7 +208,7 @@ function ThreeDemo() {
       const sunInstance = new Sun(scene, 15, preloadedAssets, preprocessedObjects);
       sunInstance.setPosition(0, 0, 0);
 
-      const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
+      const earthInstance = new Earth(scene, 1, 16, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
       earthInstance.startOrbit();
 
       // Add galaxy
@@ -200,9 +226,9 @@ function ThreeDemo() {
       sunInstance.addCorona();
 
       // Initialize camera controller
-      const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 20, 500);
+      const cameraController = new CameraController(camera, new THREE.Vector3(0, 0, 0), 80, 500);
       cameraController.enableControls(renderer.domElement);
-      cameraController.setZoomLimits(20, 500);
+      cameraController.setZoomLimits(80, 500);
       cameraController.setTargetObjects(sunInstance, earthInstance);
 
       // Set initial camera position to look at Earth
@@ -234,6 +260,7 @@ function ThreeDemo() {
       let lastTimestamp = startTimestamp;
 
       const animate = (currentTimestamp) => {
+        stats.begin();
         const deltaTime = (currentTimestamp - lastTimestamp) / 1000;
         lastTimestamp = currentTimestamp;
         const absoluteTime = (currentTimestamp - startTimestamp) / 1000;
@@ -255,6 +282,7 @@ function ThreeDemo() {
         }
 
         renderer.render(scene, camera);
+        stats.end();
         animationId = requestAnimationFrame(animate);
       };
 
@@ -323,15 +351,26 @@ function ThreeDemo() {
           cameraController.setCurrentMeteor(null);
         }
         renderer.dispose();
+        // Remove stats panel from container
+        if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
+          statsContainerRef.current.removeChild(stats.dom);
+        }
         if (mountRef.current) mountRef.current.innerHTML = '';
       };
     }
 
     // Cleanup function
     return () => {
+      // Stop music when leaving ThreeDemo
+      musicManager.fadeOut(500);
+
       if (window.threeCleanup) {
         window.threeCleanup();
         window.threeCleanup = null;
+      }
+      // Remove stats panel from container (fallback cleanup)
+      if (statsContainerRef.current && stats.dom.parentNode === statsContainerRef.current) {
+        statsContainerRef.current.removeChild(stats.dom);
       }
     };
   }, []);
@@ -370,6 +409,7 @@ function ThreeDemo() {
         }}>← Back to Home</a>
       </div>
       <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
+      <div ref={statsContainerRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 200 }} />
     </div>
   );
 }

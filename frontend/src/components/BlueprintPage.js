@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/blueprint.css';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 
 export default function BlueprintPage({ wallpaperUrl }) {
   const navigate = useNavigate();
@@ -67,6 +69,22 @@ export default function BlueprintPage({ wallpaperUrl }) {
     setBaseIndex(index);
     setOverlayIndex(index);
   }, [index]);
+
+  // Start music when component mounts
+  React.useEffect(() => {
+    // Initialize audio context manager
+    audioContextManager.init();
+    
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
+    
+    return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+    };
+  }, []);
 
   const pageFor = (i) => SUBPAGES[i] || SUBPAGES[0];
   const paragraphsFor = (p) => {

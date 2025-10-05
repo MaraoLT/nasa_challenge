@@ -42,7 +42,7 @@ export class ThreeInitializer {
       // Small delay to prevent blocking
       await new Promise(resolve => setTimeout(resolve, 16));
       
-      const earthInstance = new Earth(scene, 1, 32, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
+      const earthInstance = new Earth(scene, 1, 16, new THREE.Vector3(150, 0, 0), preloadedAssets, preprocessedObjects);
       earthInstance.startOrbit();
 
       // Another small delay

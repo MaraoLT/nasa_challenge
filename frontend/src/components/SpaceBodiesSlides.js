@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Meteor } from '../render/Meteor';
 import { Comet } from '../render/Comet';
 import '../styles/spacebodies.css';
+import musicManager from '../utils/MusicManager';
+import audioContextManager from '../utils/AudioContextManager';
 
 export default function SpaceBodiesSlides() {
   const navigate = useNavigate();
@@ -66,6 +68,13 @@ export default function SpaceBodiesSlides() {
   React.useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
+
+    // Initialize audio context manager and start music when component mounts
+    audioContextManager.init();
+    const playResult = musicManager.playTrack('/resources/sounds/Eternal Horizon.mp3', true);
+    if (!playResult) {
+      console.log('Music will play after user interaction');
+    }
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -135,6 +144,9 @@ export default function SpaceBodiesSlides() {
     animate();
 
     return () => {
+      // Fade out music when leaving the component
+      musicManager.fadeOut(500);
+      
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', onResize);
       meteorsRef.current.forEach(m => m.dispose());
